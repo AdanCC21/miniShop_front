@@ -1,0 +1,1 @@
+export const backendRoute = import.meta.env['NG_APP_BACKEND_ROUTE'];

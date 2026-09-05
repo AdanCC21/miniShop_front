@@ -3,9 +3,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { findProductByCode } from '../products.data';
 import { placeholderImage } from '../product-card/product-card';
-import { ModalComponent } from '../../ui/modal/modal';
-import { ButtonComponent } from '../../ui/button/button';
-import { InputComponent } from '../../ui/input/input';
+import { ModalComponent } from '../../../ui/modal/modal';
+import { ButtonComponent } from '../../../ui/button/button';
+import { InputComponent } from '../../../ui/input/input';
 
 @Component({
   selector: 'app-product-details',

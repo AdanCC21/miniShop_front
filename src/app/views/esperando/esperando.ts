@@ -1,9 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { AuthService } from '../auth/auth.service';
-import { ButtonComponent } from '../ui/button/button';
-import { ThemeToggleComponent } from '../ui/theme-toggle/theme-toggle';
+import { AuthService } from '../../auth/auth.service';
+import { ButtonComponent } from '../../ui/button/button';
+import { ThemeToggleComponent } from '../../ui/theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-esperando',

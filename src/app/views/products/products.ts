@@ -1,7 +1,7 @@
 import { Component, computed, signal } from '@angular/core';
 
 import { ProductCardComponent } from './product-card/product-card';
-import { SelectComponent, SelectOption } from '../ui/select/select';
+import { SelectComponent, SelectOption } from '../../ui/select/select';
 import { PRODUCTS } from './products.data';
 
 export type SortOption = 'date' | 'price' | 'name';

@@ -1,12 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { AuthService, UserRole } from '../auth/auth.service';
-import { AuthMode, AuthTabsComponent } from '../ui/auth-tabs/auth-tabs';
-import { ButtonComponent } from '../ui/button/button';
-import { InputComponent } from '../ui/input/input';
-import { ThemeToggleComponent } from '../ui/theme-toggle/theme-toggle';
-import { ToastService } from '../ui/toast/toast.service';
+import { AuthService, UserRole } from '../../auth/auth.service';
+import { AuthMode, AuthTabsComponent } from '../../ui/auth-tabs/auth-tabs';
+import { ButtonComponent } from '../../ui/button/button';
+import { InputComponent } from '../../ui/input/input';
+import { ThemeToggleComponent } from '../../ui/theme-toggle/theme-toggle';
+import { ToastService } from '../../ui/toast/toast.service';
+import { Login } from '../../api/auth';
 
 @Component({
   selector: 'app-auth-page',
@@ -65,12 +66,13 @@ export class AuthPageComponent {
       this.toast.error(error, 'Formulario incompleto');
       return;
     }
-    const user = this.auth.login(this.loginEmail(), this.loginPassword());
-    if (!user) {
-      this.toast.error('Correo o contraseña incorrectos.');
-      return;
-    }
-    this.redirectAfterAuth(user.role);
+    const data = Login(this.loginEmail(), this.loginPassword(), this.toast);
+    // const user = this.auth.login(this.loginEmail(), this.loginPassword());
+    // if (!user) {
+    //   this.toast.error('Correo o contraseña incorrectos.');
+    //   return;
+    // }
+    // this.redirectAfterAuth(user.role);
   }
 
   protected submitRegister(): void {

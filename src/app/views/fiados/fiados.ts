@@ -1,12 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
 
 import { FiadoPerson, personLastDate, personTotal } from './fiados.data';
-import { StoreService } from '../store.service';
+import { StoreService } from '../../store.service';
 import { formatDate } from '../orders/orders.data';
-import { ButtonComponent } from '../ui/button/button';
-import { InputComponent } from '../ui/input/input';
-import { ModalComponent } from '../ui/modal/modal';
-import { ToastService } from '../ui/toast/toast.service';
+import { ButtonComponent } from '../../ui/button/button';
+import { InputComponent } from '../../ui/input/input';
+import { ModalComponent } from '../../ui/modal/modal';
+import { ToastService } from '../../ui/toast/toast.service';
 
 @Component({
   selector: 'app-fiados',

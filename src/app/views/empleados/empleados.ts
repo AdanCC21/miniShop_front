@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 
-import { AuthService, PendingEmployee, StoreEmployee } from '../auth/auth.service';
-import { ButtonComponent } from '../ui/button/button';
+import { AuthService, PendingEmployee, StoreEmployee } from '../../auth/auth.service';
+import { ButtonComponent } from '../../ui/button/button';
 
 @Component({
   selector: 'app-empleados',

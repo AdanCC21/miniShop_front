@@ -2,8 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { findTiendaById, StoreMember } from '../admin.data';
-import { ButtonComponent } from '../../ui/button/button';
-import { ConfirmModalComponent } from '../../ui/confirm-modal/confirm-modal';
+import { ButtonComponent } from '../../../ui/button/button';
+import { ConfirmModalComponent } from '../../../ui/confirm-modal/confirm-modal';
 
 @Component({
   selector: 'app-store-details',

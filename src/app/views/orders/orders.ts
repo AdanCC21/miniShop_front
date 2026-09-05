@@ -11,14 +11,14 @@ import {
   SUPPLIERS
 } from './orders.data';
 import { dayOfMonth, nextOccurrence, recurrenceLabel as getRecurrenceLabel, weekdayName } from './recurrence';
-import { ModalComponent } from '../ui/modal/modal';
-import { ButtonComponent } from '../ui/button/button';
-import { ConfirmModalComponent } from '../ui/confirm-modal/confirm-modal';
-import { InputComponent } from '../ui/input/input';
-import { SearchSuggestionsComponent } from '../ui/search-suggestions/search-suggestions';
-import { SelectComponent, SelectOption } from '../ui/select/select';
-import { ToastService } from '../ui/toast/toast.service';
-import { StoreService } from '../store.service';
+import { ModalComponent } from '../../ui/modal/modal';
+import { ButtonComponent } from '../../ui/button/button';
+import { ConfirmModalComponent } from '../../ui/confirm-modal/confirm-modal';
+import { InputComponent } from '../../ui/input/input';
+import { SearchSuggestionsComponent } from '../../ui/search-suggestions/search-suggestions';
+import { SelectComponent, SelectOption } from '../../ui/select/select';
+import { ToastService } from '../../ui/toast/toast.service';
+import { StoreService } from '../../store.service';
 
 export type OrdersTab = 'waiting' | 'unconfirmed' | 'finalized';
 export type DateFilter = 'todos' | 'hoy' | 'semana';

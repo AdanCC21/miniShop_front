@@ -1,8 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 
-import { Order, ORDERS } from './orders/orders.data';
-import { SaleRecord } from './cajero/cajero.data';
-import { FIADOS, FiadoPerson } from './fiados/fiados.data';
+import { Order, ORDERS } from './views/orders/orders.data';
+import { SaleRecord } from './views/cajero/cajero.data';
+import { FIADOS, FiadoPerson } from './views/fiados/fiados.data';
 
 export interface DailyClosure {
   date: string;

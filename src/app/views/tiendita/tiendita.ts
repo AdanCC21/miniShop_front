@@ -1,13 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
 
 import { MONTHLY_SALES } from './tiendita.data';
-import { StoreService, DailyClosure } from '../store.service';
+import { StoreService, DailyClosure } from '../../store.service';
 import { CartLine, PaymentMethod, SaleRecord, saleCashPortion, salePaymentLines } from '../cajero/cajero.data';
 import { formatDate, Order } from '../orders/orders.data';
-import { ButtonComponent } from '../ui/button/button';
-import { InputComponent } from '../ui/input/input';
-import { ModalComponent } from '../ui/modal/modal';
-import { ToastService } from '../ui/toast/toast.service';
+import { ButtonComponent } from '../../ui/button/button';
+import { InputComponent } from '../../ui/input/input';
+import { ModalComponent } from '../../ui/modal/modal';
+import { ToastService } from '../../ui/toast/toast.service';
 
 @Component({
   selector: 'app-tiendita',
