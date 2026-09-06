@@ -7,7 +7,9 @@ import { ButtonComponent } from '../../ui/button/button';
 import { InputComponent } from '../../ui/input/input';
 import { ThemeToggleComponent } from '../../ui/theme-toggle/theme-toggle';
 import { ToastService } from '../../ui/toast/toast.service';
-import { Login } from '../../api/auth';
+import { Login, Register } from '../../api/auth';
+import { RegisterDTO, RegShopDTO, RegUserDto } from '../../dto/auth';
+import { Role } from '../../entities/Role';
 
 @Component({
   selector: 'app-auth-page',
@@ -35,7 +37,7 @@ export class AuthPageComponent {
 
   constructor() {
     if (this.auth.isLoggedIn) {
-      this.redirectAfterAuth(this.auth.role);
+      // this.redirectAfterAuth(this.auth.role);
     }
   }
 
@@ -60,37 +62,45 @@ export class AuthPageComponent {
     this.step.set(1);
   }
 
-  protected submitLogin(): void {
+  protected async submitLogin() {
     const error = this.validateLogin();
     if (error) {
       this.toast.error(error, 'Formulario incompleto');
       return;
     }
-    const data = Login(this.loginEmail(), this.loginPassword(), this.toast);
-    // const user = this.auth.login(this.loginEmail(), this.loginPassword());
-    // if (!user) {
-    //   this.toast.error('Correo o contraseña incorrectos.');
-    //   return;
-    // }
-    // this.redirectAfterAuth(user.role);
+    const data = await Login({ email: this.loginEmail(), password: this.loginPassword(), }, this.toast);
+    if (data) {
+      this.redirectAfterAuth(data.user.role);
+    }
   }
 
-  protected submitRegister(): void {
+  protected async submitRegister() {
     const error = this.validateRegister();
     if (error) {
       this.toast.error(error, 'Formulario incompleto');
       return;
     }
-    this.auth.register({
-      name: this.registerName(),
-      email: this.registerEmail(),
-      password: this.registerPassword(),
-      role: this.role(),
-      storeUid: this.role() === 'empleado' ? this.storeUid() : undefined,
-      storeName: this.role() === 'encargado' ? this.storeName() : undefined,
-      storeAddress: this.role() === 'encargado' ? this.storeAddress() : undefined
-    });
-    this.redirectAfterAuth(this.role());
+
+    const dto: RegisterDTO = {
+      user: {
+        name: this.registerName(),
+        password: this.registerPassword(),
+        email: this.registerEmail()
+      } as RegUserDto,
+      shop: this.role() === 'empleado' ?
+        this.storeUid() : {
+          name: this.storeName(),
+          address: this.storeAddress()
+        } as RegShopDTO
+    }
+
+    const res = await Register(dto, this.toast);
+    if (res) {
+      this.toast.info("Su usuario fue creado de manera exitosa, porfavor inicia sesion para ingresar.")
+      setTimeout(() => {
+        window.location.reload();
+      }, 3200);
+    }
   }
 
   private validateLogin(): string | null {
@@ -158,11 +168,24 @@ export class AuthPageComponent {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   }
 
-  private redirectAfterAuth(role: UserRole | null): void {
-    if (role === 'admin') {
-      this.router.navigate(['/admin']);
+  private redirectAfterAuth(role: Role | null): void {
+    if (!role) {
+      this.toast.error('El rol del usuario no es valido. Intente iniciar sesion de nuevo')
       return;
+    };
+
+    switch (role) {
+      case Role.EMPLOYEE:
+        this.router.navigate(['/dashboard']);
+        break;
+      case Role.WAITING:
+        this.router.navigate(['/esperando']);
+        break;
+      case Role.ADMIN:
+        this.router.navigate(['/admin']);
+        break;
+      default:
+        console.log("Rol invalido o no especificado");
     }
-    this.router.navigate([this.auth.isPending ? '/esperando' : '/dashboard']);
   }
 }

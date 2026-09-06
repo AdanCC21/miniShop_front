@@ -2,13 +2,25 @@ import axios from "axios";
 import { backendRoute } from "../constants/global";
 import { showError } from "../scripts/error";
 import { ToastService } from "../ui/toast/toast.service";
+import { LoginDTO, RegisterDTO } from "../dto/auth";
 
-export async function Login(email: string, password: string, toast:ToastService): Promise<boolean | null> {
+export async function Login(dto: LoginDTO, toast: ToastService): Promise<any | null> {
     try {
-        const { data } = await axios.post(`http://localhost:3000/auth/login`, { email, password });
-        return data ? true : false
+        const response = await axios.post(`${backendRoute}/auth/login`, dto, { withCredentials: true });
+        console.log(response.data);
+        return response.data
     } catch (e) {
-        showError(e,toast);
+        showError(e, toast);
+        return null;
+    }
+}
+
+export async function Register(dto: RegisterDTO, toast: ToastService) {
+    try {
+        const res = await axios.post(`${backendRoute}/auth/register`, dto, { withCredentials: true });
+        return res.data ? true : false;
+    } catch (e) {
+        showError(e, toast);
         return null;
     }
 }
