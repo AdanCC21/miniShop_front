@@ -4,20 +4,29 @@
     <p class="text-sm text-gray-500">Resumen de ventas del día de hoy</p>
   </div>
 
+  @if(this.salesToday().length === 0){
+  <section class="flex flex-col gap-2 p-2 border border-white/10 rounded-lg">
+    <h5 class="text-center text-2xl font-bold">No hay ventas</h5>
+    <span class="text-center text-base">Aun no hay ventas registradas el dia de hoy</span>
+  </section>
+  }
+  @else {
   <section>
     <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Resumen del día</h2>
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       @for (card of summaryCards; track card.label; let i = $index) {
-        <div class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in" [style.--index]="i">
-          <p class="text-sm font-medium text-gray-500">{{ card.label }}</p>
-          <p class="mt-2 text-2xl font-bold text-black sm:text-3xl">{{ card.value }}</p>
-        </div>
+      <div class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in" [style.--index]="i">
+        <p class="text-sm font-medium text-gray-500">{{ card.label }}</p>
+        <p class="mt-2 text-2xl font-bold text-black sm:text-3xl">{{ card.value }}</p>
+      </div>
       }
     </div>
   </section>
 
   <section>
-    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Historial de ventas del día de hoy</h2>
+
+    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Historial de ventas del día de hoy
+    </h2>
     <div class="overflow-x-auto rounded-lg border border-gray-200 bg-(--card)">
       <table class="w-full text-left text-sm">
         <thead>
@@ -29,17 +38,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr
-            *ngFor="let sale of sales"
-            class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50"
-          >
+          @for(sale of this.salesToday(); track sale.id){
+          <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
             <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ sale.id }}</td>
             <td class="px-4 py-3 text-gray-700">{{ sale.name }}</td>
             <td class="px-4 py-3 font-medium text-gray-900">${{ sale.price }}</td>
             <td class="px-4 py-3 text-gray-500">{{ sale.time }}</td>
           </tr>
+          }
         </tbody>
       </table>
     </div>
   </section>
+  }
 </div>

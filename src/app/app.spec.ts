@@ -3,14 +3,24 @@ import { provideRouter, Router } from '@angular/router';
 
 import { App } from './app';
 import { AuthService } from './auth/auth.service';
+import { SessionService } from './auth/session.service';
 import { routes } from './app.routes';
+
+const sessionServiceMock = {
+  current: vi.fn()
+};
 
 describe('App', () => {
   beforeEach(async () => {
     localStorage.clear();
+    sessionServiceMock.current.mockReset();
+    sessionServiceMock.current.mockResolvedValue(null);
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes)]
+      providers: [
+        provideRouter(routes),
+        { provide: SessionService, useValue: sessionServiceMock }
+      ]
     }).compileComponents();
   });
 
@@ -21,7 +31,12 @@ describe('App', () => {
   });
 
   it('should render the brand for a logged-in store member', async () => {
-    TestBed.inject(AuthService).login('carlos.ruiz@ejemplo.com', 'encargado123');
+    sessionServiceMock.current.mockResolvedValue({
+      userId: '1',
+      email: 'carlos.ruiz@ejemplo.com',
+      role: 'MANAGER',
+      shopUuid: 'ST-0001'
+    });
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
@@ -40,6 +55,12 @@ describe('App', () => {
   });
 
   it('should hide sidebar and header on the esperando page', async () => {
+    sessionServiceMock.current.mockResolvedValue({
+      userId: '3',
+      email: 'ana.torres@ejemplo.com',
+      role: 'WAITING',
+      shopUuid: 'ST-0001'
+    });
     TestBed.inject(AuthService).login('ana.torres@ejemplo.com', 'pendiente123');
     const router = TestBed.inject(Router);
     const fixture = TestBed.createComponent(App);
@@ -49,5 +70,16 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('app-sidebar')).toBeNull();
     expect(compiled.querySelector('app-header')).toBeNull();
+  });
+
+  it('redirects a user without a valid session to /auth', async () => {
+    const router = TestBed.inject(Router);
+    const fixture = TestBed.createComponent(App);
+    await router.navigate(['/dashboard']);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(router.url).toContain('/auth');
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-sidebar')).toBeNull();
   });
 });

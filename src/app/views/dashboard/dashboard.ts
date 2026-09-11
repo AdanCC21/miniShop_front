@@ -1,25 +1,46 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import axios from 'axios';
+import { backendRoute } from '../../constants/global';
+import { showError } from '../../scripts/error';
+import { ToastService } from '../../ui/toast/toast.service';
 
 @Component({
   selector: 'app-dashboard',
   imports: [CommonModule],
   templateUrl: './dashboard.html'
 })
-export class DashboardComponent {
-  protected readonly summaryCards = [
-    { label: 'Productos vendidos hoy', value: '42' },
-    { label: 'Cantidad total vendida', value: '87' },
-    { label: 'Detalles de la última venta', value: '3 productos · $25.99' }
-  ];
+export class DashboardComponent implements OnInit {
+  protected readonly toast = inject(ToastService);
+  protected salesToday = signal<any[]>([]);
 
-  protected readonly sales = [
-    { id: '#0001', name: 'Playera Básica', price: 12.5, time: '09:15' },
-    { id: '#0002', name: 'Taza Cerámica', price: 8.75, time: '09:42' },
-    { id: '#0003', name: 'Libreta A5', price: 4.99, time: '10:03' },
-    { id: '#0004', name: 'Auriculares BT', price: 35.0, time: '11:27' },
-    { id: '#0005', name: 'Botella Térmica', price: 15.5, time: '12:50' },
-    { id: '#0006', name: 'Camiseta Deportiva', price: 18.0, time: '13:33' },
-    { id: '#0007', name: 'Mochila Urbana', price: 42.75, time: '14:18' }
+  async ngOnInit() {
+    try{
+      const res = await axios.get(`${backendRoute}/sale/myshop?today=true`, { withCredentials: true })
+      console.log(res.data);
+      this.salesToday.set(res.data);
+    }catch(e){
+      showError(e, this.toast);
+    }
+  }
+
+  getTotalSaled() {
+    let amount = 0;
+    this.salesToday().forEach((sale, indx) => {
+      amount += sale.total;
+    })
+    return amount
+  }
+
+  getLastSale() {
+    if(this.salesToday.length === 0) return `Sin ventas`
+    const lastSale = this.salesToday()[this.salesToday().length];
+    return `${lastSale.details?.length} productos - ${lastSale.total}`
+  }
+
+  protected readonly summaryCards = [
+    { label: 'Productos vendidos hoy', value: this.salesToday.length },
+    { label: 'Cantidad total vendida', value: this.getTotalSaled() },
+    { label: 'Detalles de la última venta', value: this.getLastSale() }
   ];
 }

@@ -12,7 +12,6 @@ export class HeaderComponent implements OnInit {
   protected readonly shopName = signal("");
 
   async ngOnInit() {
-    const shop = await JSON.parse(localStorage.getItem("minishop_session") || "");
-    shop && shop.storeName.trim() ? this.shopName.set(shop.storeName) : this.shopName.set("Indefinida");
+    
   }
 }

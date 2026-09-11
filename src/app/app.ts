@@ -4,8 +4,9 @@ import { filter } from 'rxjs';
 
 import { HeaderComponent } from './ui/header/header';
 import { SidebarComponent } from './ui/sidebar/sidebar';
-import { ThemeService } from './ui/theme-toggle/theme.service';
 import { ToastComponent } from './ui/toast/toast';
+import { registerAuthErrorHandler } from './api/auth-errors';
+import { AuthService } from './auth/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -17,14 +18,15 @@ export class App {
   protected readonly sidebarOpen = signal(false);
   protected readonly sidebarWidth = signal(this.defaultSidebarWidth());
 
-  private readonly theme = inject(ThemeService);
-
   protected readonly isBarePage = computed(() => {
     const url = this.currentUrl();
     return url.startsWith('/auth') || url.startsWith('/esperando');
   });
 
   constructor(private readonly router: Router) {
+    const auth = inject(AuthService);
+    registerAuthErrorHandler(auth, this.router);
+
     this.currentUrl.set(this.router.url);
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))

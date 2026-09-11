@@ -13,63 +13,60 @@ import { EmpleadosComponent } from './views/empleados/empleados';
 import { AdminComponent } from './views/admin/admin';
 import { StoreDetailsComponent } from './views/admin/store-details/store-details';
 
-import { adminGuard } from './auth/admin.guard';
-import { encargadoGuard } from './auth/encargado.guard';
-import { pendingGuard } from './auth/pending.guard';
-import { storeMemberGuard } from './auth/store-member.guard';
+import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'auth', component: AuthPageComponent },
-  { path: 'esperando', component: EsperandoComponent, canActivate: [pendingGuard] },
+  { path: 'esperando', component: EsperandoComponent, canActivate: [authGuard] },
   {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: []
+    canActivate: [authGuard]
   },
   {
     path: 'products',
     component: ProductsComponent,
-    canActivate: [storeMemberGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'products/:code',
     component: ProductDetailsComponent,
-    canActivate: [storeMemberGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'cajero',
     component: CajeroComponent,
-    canActivate: [storeMemberGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'fiados',
     component: FiadosComponent,
-    canActivate: [storeMemberGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'pedidos',
     component: OrdersComponent,
-    canActivate: [storeMemberGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'tiendita',
     component: TienditaComponent,
-    canActivate: [encargadoGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'empleados',
     component: EmpleadosComponent,
-    canActivate: [encargadoGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'admin',
     component: AdminComponent,
-    canActivate: [adminGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'admin/:id',
     component: StoreDetailsComponent,
-    canActivate: [adminGuard]
+    canActivate: [authGuard]
   }
 ];

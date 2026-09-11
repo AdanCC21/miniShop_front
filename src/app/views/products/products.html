@@ -2,7 +2,7 @@
   <div class="flex flex-wrap items-start justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-black">{{ storeName }}</h1>
-      <p class="text-sm text-gray-500">{{ visibleProducts().length }} productos</p>
+      <p class="text-sm text-gray-500">{{ this.products().length }} productos</p>
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
@@ -18,11 +18,12 @@
         [options]="sortOptions"
         (valueChange)="onSortChange($event)"
       />
+      <app-button text="Agregar" />
     </div>
   </div>
 
   <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-    @for (product of visibleProducts(); track product.code; let i = $index) {
+    @for (product of this.products(); track product.code; let i = $index) {
       <app-product-card
         animate.enter="ms-card-in"
         [style.--index]="i"

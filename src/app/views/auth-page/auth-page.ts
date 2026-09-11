@@ -68,8 +68,11 @@ export class AuthPageComponent {
       this.toast.error(error, 'Formulario incompleto');
       return;
     }
+    
     const data = await Login({ email: this.loginEmail(), password: this.loginPassword(), }, this.toast);
+    console.log("Loged", data);
     if (data) {
+      this.auth.setSessionFromBackend(data.user);
       this.redirectAfterAuth(data.user.role);
     }
   }
@@ -174,8 +177,12 @@ export class AuthPageComponent {
       return;
     };
 
+    console.log(role);
     switch (role) {
       case Role.EMPLOYEE:
+        this.router.navigate(['/dashboard']);
+        break;
+      case Role.MANAGER:
         this.router.navigate(['/dashboard']);
         break;
       case Role.WAITING:

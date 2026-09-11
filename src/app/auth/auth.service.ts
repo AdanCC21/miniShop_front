@@ -5,16 +5,33 @@ export type UserRole = 'encargado' | 'empleado' | 'admin';
 export type AccountStatus = 'pending' | 'approved';
 
 export interface SessionUser {
-  id: number;
+  id: number | string;
   name: string;
   email: string;
   role: UserRole;
   status: AccountStatus;
-  storeUid?: string;
-  storeName?: string;
+  shopUuid?: string;
+  shopName?: string;
 }
 
-interface StoredUser extends SessionUser {
+export interface BackendSessionUser {
+  id?: number | string;
+  name?: string;
+  email: string;
+  role: string;
+  shopUuid?: string | null;
+  shop?: { name?: string } | null;
+}
+
+export interface BackendSessionProfile {
+  userId: number | string;
+  email: string;
+  role: string;
+  shopUuid?: string | null;
+}
+
+interface StoredUser extends Omit<SessionUser, 'id'> {
+  id: number;
   password: string;
   createdAt: string;
   joinedAt?: string;
@@ -25,9 +42,9 @@ export interface RegisterData {
   email: string;
   password: string;
   role: 'encargado' | 'empleado';
-  storeUid?: string;
-  storeName?: string;
-  storeAddress?: string;
+  shopUuid?: string;
+  shopName?: string;
+  shopAddress?: string;
 }
 
 export interface PendingEmployee {
@@ -58,8 +75,8 @@ const DEMO_USERS: StoredUser[] = [
     password: 'encargado123',
     role: 'encargado',
     status: 'approved',
-    storeUid: 'ST-0001',
-    storeName: 'miniShop Centro',
+    shopUuid: 'ST-0001',
+    shopName: 'miniShop Centro',
     createdAt: '2026-01-15',
     joinedAt: '2026-01-15'
   },
@@ -70,8 +87,8 @@ const DEMO_USERS: StoredUser[] = [
     password: 'empleado123',
     role: 'empleado',
     status: 'approved',
-    storeUid: 'ST-0001',
-    storeName: 'miniShop Centro',
+    shopUuid: 'ST-0001',
+    shopName: 'miniShop Centro',
     createdAt: '2026-03-02',
     joinedAt: '2026-03-02'
   },
@@ -82,8 +99,8 @@ const DEMO_USERS: StoredUser[] = [
     password: 'pendiente123',
     role: 'empleado',
     status: 'pending',
-    storeUid: 'ST-0001',
-    storeName: 'miniShop Centro',
+    shopUuid: 'ST-0001',
+    shopName: 'miniShop Centro',
     createdAt: '2026-08-12'
   },
   {
@@ -130,8 +147,8 @@ export class AuthService {
     const user: StoredUser = {
       ...data,
       email: data.email.trim().toLowerCase(),
-      storeUid: data.storeUid?.trim(),
-      storeName: data.storeName?.trim(),
+      shopUuid: data.shopUuid?.trim(),
+      shopName: data.shopName?.trim(),
       status: data.role === 'empleado' ? 'pending' : 'approved',
       createdAt: this.todayISO(),
       id: users.reduce((max, item) => Math.max(max, item.id), 0) + 1
@@ -148,13 +165,54 @@ export class AuthService {
     localStorage.removeItem(SESSION_KEY);
   }
 
+  setSessionFromBackend(user: BackendSessionUser): void {
+    const { role: userRole, status } = this.mapBackendRole(user.role);
+    this.setSession({
+      id: user.id ?? '',
+      name: user.name?.trim() || 'Usuario',
+      email: user.email,
+      role: userRole,
+      status,
+      shopUuid: user.shopUuid?.trim() || undefined,
+      shopName: user.shop?.name?.trim() || undefined
+    });
+  }
+
+  syncFromBackend(profile: BackendSessionProfile): void {
+    const current = this.currentUser();
+    const { role, status } = this.mapBackendRole(profile.role);
+    this.setSession({
+      id: current?.id ?? profile.userId,
+      name: current?.name?.trim() ?? profile.email,
+      email: profile.email,
+      role,
+      status,
+      shopUuid: profile.shopUuid?.trim() || current?.shopUuid,
+      shopName: current?.shopName
+    });
+  }
+
+  private mapBackendRole(backendRole: string): { role: UserRole; status: AccountStatus } {
+    switch ((backendRole ?? '').toUpperCase()) {
+      case 'MANAGER':
+        return { role: 'encargado', status: 'approved' };
+      case 'WAITING':
+        return { role: 'empleado', status: 'pending' };
+      case 'ADMIN':
+        return { role: 'admin', status: 'approved' };
+      case 'EMPLOYEE':
+      default:
+        return { role: 'empleado', status: 'approved' };
+    }
+  }
+
   pendingEmployees(): PendingEmployee[] {
-    const storeUid = this.currentUser()?.storeUid;
+    const storeUid = this.currentUser()?.shopName;
     if (!storeUid) {
       return [];
     }
     return this.readUsers()
-      .filter((user) => user.storeUid === storeUid && user.role === 'empleado' && user.status === 'pending')
+      .filter((user) => user.shopUuid === storeUid && user.role === 'empleado' && user.status === 'pending')
       .map((user) => ({
         id: user.id,
         name: user.name,
@@ -164,12 +222,12 @@ export class AuthService {
   }
 
   storeEmployees(): StoreEmployee[] {
-    const storeUid = this.currentUser()?.storeUid;
+    const storeUid = this.currentUser()?.shopUuid;
     if (!storeUid) {
       return [];
     }
     return this.readUsers()
-      .filter((user) => user.storeUid === storeUid && user.status === 'approved')
+      .filter((user) => user.shopUuid === storeUid && user.status === 'approved')
       .map((user) => ({
         id: user.id,
         name: user.name,

@@ -1,7 +1,9 @@
-import { Component, computed, HostListener, inject, input, output } from '@angular/core';
+import { Component, computed, HostListener, inject, input, output, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../auth/auth.service';
+import { LogOut } from '../../api/auth';
+import { ToastService } from '../toast/toast.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -13,23 +15,35 @@ export class SidebarComponent {
   readonly close = output<void>();
   readonly widthChange = output<number>();
 
-  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthService);
 
-  protected readonly user = this.auth.user;
+  protected readonly user = computed(() => this.auth.user());
 
   protected readonly isStoreMember = computed(() => {
-    const role = this.auth.role;
-    return role === 'encargado' || role === 'empleado';
+    const currentUser = this.auth.user();
+    if (!currentUser || currentUser.status !== 'approved') {
+      return false;
+    }
+    return currentUser.role === 'empleado' || currentUser.role === 'encargado';
   });
 
-  protected readonly isEncargado = computed(() => this.auth.role === 'encargado');
+  protected readonly isManager = computed(() => {
+    return this.auth.role === 'encargado';
+  });
 
-  protected readonly isAdmin = computed(() => this.auth.role === 'admin');
+  protected readonly isAdmin = computed(() => {
+    return this.auth.role === 'admin';
+  });
 
-  protected logout(): void {
-    this.auth.logout();
-    this.router.navigate(['/auth']);
+  protected async logout() {
+    try {
+      await LogOut(this.toast);
+    } finally {
+      this.auth.logout();
+      this.router.navigate(['/auth']);
+    }
   }
 
   private readonly minWidthVw = 10;

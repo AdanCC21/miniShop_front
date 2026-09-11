@@ -12,5 +12,11 @@ export const PRODUCTS: Product[] = [
 ];
 
 export function findProductByCode(code: string): Product | undefined {
-  return PRODUCTS.find((product) => product.code === code);
+  // const product =
+  //  PRODUCTS.find((product) => product.code === code);
+  return undefined
+}
+
+export function findProductById(){
+  
 }
