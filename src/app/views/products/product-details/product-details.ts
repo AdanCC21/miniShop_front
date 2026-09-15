@@ -4,10 +4,9 @@ import { placeholderImage } from '../product-card/product-card';
 import { ModalComponent } from '../../../ui/modal/modal';
 import { ButtonComponent } from '../../../ui/button/button';
 import { InputComponent } from '../../../ui/input/input';
-import { GetProdByCode } from '../../../api/products';
+import { GetProdByCode, UpdateProduct, updateQuantity } from '../../../api/products';
 import { ToastService } from '../../../ui/toast/toast.service';
-import { GetCategory } from '../../../api/category';
-import { ProductDTO } from '../../../dto/product.dto';
+import { ProductDTO, UpdateProductDTO } from '../../../dto/product.dto';
 
 @Component({
   selector: 'app-product-details',
@@ -24,11 +23,38 @@ export class ProductDetailsComponent implements OnInit {
   protected readonly editOpen = signal(false);
   protected readonly editName = signal('');
   protected readonly editPrice = signal('');
+  protected readonly editCode = signal('');
+
+  protected readonly editQuantity = signal(false);
+  protected readonly newQuantity = signal(0);
 
   async ngOnInit() {
     const code = this.route.snapshot.paramMap.get('code') ?? '';
     const product = await GetProdByCode(code, this.toast);
     this.product.set(product);
+  }
+
+  protected toggleUpdateQuantity(newState: boolean) {
+    newState ? this.newQuantity.set(this.product()?.quantity || 0) : 0
+    this.editQuantity.set(newState);
+  }
+
+  protected handleQuantity(value: string) {
+    this.newQuantity.set(Number(value));
+  }
+
+  protected async saveQuantity() {
+    if (this.newQuantity() < 0) {
+      this.toast.error("La cantidad no puede ser menor a 0");
+      return;
+    }
+
+    const res = await updateQuantity([{ id: this.product()!.id, quantity: `${this.newQuantity()}` }], this.toast);
+    if (res) {
+      this.toast.success(`La cantidad de ${this.product()?.name} a sido actualizada a ${this.newQuantity()}`, "Exito")
+      setTimeout(() => { window.location.reload() }, 2000)
+      this.toggleUpdateQuantity(false)
+    }
   }
 
   protected openEdit(): void {
@@ -37,6 +63,7 @@ export class ProductDetailsComponent implements OnInit {
     }
     this.editName.set(this.product()!.name);
     this.editPrice.set(String(this.product()!.price));
+    this.editCode.set(this.product()!.code);
     this.editOpen.set(true);
   }
 
@@ -52,7 +79,11 @@ export class ProductDetailsComponent implements OnInit {
     this.editPrice.set(value);
   }
 
-  protected saveEdit(): void {
+  protected onCodeChange(value: string): void {
+    this.editCode.set(value);
+  }
+
+  protected async saveEdit() {
     if (!this.product() || !this.editName().trim()) {
       return;
     }
@@ -60,8 +91,18 @@ export class ProductDetailsComponent implements OnInit {
     if (Number.isNaN(price) || price < 0) {
       return;
     }
-    this.product()!.name = this.editName().trim();
-    this.product()!.price = price;
-    this.editOpen.set(false);
+
+    const dto: UpdateProductDTO = {
+      id: this.product()?.id,
+      name: this.editName().trim() ?? this.product()!.name,
+      price: Number(this.editPrice()) ?? this.product()!.price,
+      code: this.editCode() ?? this.product()!.code,
+    }
+    const res = await UpdateProduct(dto, this.toast);
+    if (res) {
+      this.toast.success(`Producto actualizado con exito`, "Exito");
+      this.editOpen.set(false);
+      setTimeout(() => { window.location.reload() }, 2000)
+    }
   }
 }

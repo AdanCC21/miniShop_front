@@ -14,6 +14,8 @@ export function showError(e: unknown, toast: ToastService, router?: Router) {
             msg = "El servidor no responde, por favor inténtalo de nuevo más tarde.";
         }
         console.error(err.response?.data);
+    }else{
+        console.error(e);
     }
 
     toast.error(msg);

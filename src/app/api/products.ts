@@ -2,7 +2,7 @@ import axios from "axios";
 import { backendRoute } from "../constants/global";
 import { showError } from "../scripts/error";
 import { ToastService } from "../ui/toast/toast.service";
-import { ProductDTO } from "../dto/product.dto";
+import { ProductDTO, UpdateProductDTO } from "../dto/product.dto";
 
 export async function GetProducts(toast: ToastService, category?: string): Promise<ProductDTO[] | []> {
     try {
@@ -51,6 +51,18 @@ export async function CreateProduct(dto: CreateProductPayload, toast: ToastServi
     } catch (e) {
         showError(e, toast);
         return null;
+    }
+}
+
+export async function UpdateProduct(dto: UpdateProductDTO, toast: ToastService) {
+    try {
+        if(!dto.id) throw new Error("Para actualizar un producto en especifico necesitamos el id de este mismo");
+
+        const res = await axios.patch(`${backendRoute}/product/byid/${dto.id}`, dto, { withCredentials: true });
+        return res.data ? true : false;
+    } catch (e) {
+        showError(e, toast);
+        return false
     }
 }
 

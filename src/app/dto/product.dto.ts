@@ -26,3 +26,13 @@ export interface CreateProductDTO {
     price: number
     quantity: number
 }
+
+export interface UpdateProductDTO {
+    id?: string
+    image?: string
+    name?: string
+    price?: number
+    code?: string
+    quantity?: number
+    categoryId?: string
+}
