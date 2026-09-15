@@ -21,16 +21,19 @@ export function showError(e: unknown, toast: ToastService, router?: Router) {
 
 function handleStatusCode(err: AxiosError<{ message?: string }>, router?: Router) {
     let msg = `Error ${err.response?.status}: ${err.response?.data?.message ?? "Error en la petición"}`;
-    
+
     switch (err.response?.status) {
         case 401:
             router?.navigate(['/auth']);
-            msg = `Por favor inicie sesion para continuar`;
+            msg = err.response?.data?.message ?? `Por favor inicie sesion para continuar`;
+            break;
+        case 403:
+            msg = err.response?.data?.message ?? `No tienes autorizacion para esta pagina`;
+            router?.navigate(['/'])
             break;
         case 404:
-            msg = `El elemento que busca no existe`;
+            msg = err.response?.data?.message ?? `El elemento que busca no existe`;
             break;
     }
-
     return msg;
 }

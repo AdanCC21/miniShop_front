@@ -1,81 +1,74 @@
-@if (product; as product) {
-  <div class="space-y-6" animate.enter="ms-fade-in-up">
-    <div class="flex flex-wrap items-start justify-between gap-4">
+
+
+@if (this.product(); as product) {
+<div class="space-y-6" animate.enter="ms-fade-in-up">
+  <nav class="flex items-center gap-1 text-sm text-gray-500">
+    <a routerLink="/products" class="transition hover:text-(--primary)">Productos</a>
+    <span>/</span>
+    <span class="text-gray-700 line-clamp-1">{{ product.name }}</span>
+  </nav>
+
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-black">{{ product.name }}</h1>
+      <p class="text-sm text-gray-500">Código: {{ product.code }}</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <app-button text="Editar" variant="secondary" (clicked)="openEdit()" />
+      <app-button text="Eliminar" variant="outline" />
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-[280px_1fr]">
+    <img [src]="product.image ?? fallbackImage" [alt]="product.name"
+      class="h-56 w-full rounded-lg border border-gray-200 object-cover" />
+
+    <div class="space-y-4 rounded-lg border border-gray-200 bg-(--card) p-6">
       <div>
-        <h1 class="text-2xl font-bold text-black">{{ product.name }}</h1>
-        <p class="text-sm text-gray-500">Código: {{ product.code }}</p>
+        <p class="text-sm font-medium text-gray-500">Precio</p>
+        <p class="text-2xl font-bold text-(--primary-bright)">${{ product.price }}</p>
       </div>
-      <div class="flex items-center gap-2">
-        <app-button text="Editar" variant="secondary" (clicked)="openEdit()" />
-        <app-button text="Eliminar" variant="outline" />
+      <div>
+        <p class="text-sm font-medium text-gray-500">Cantidad en stock</p>
+        <p class="text-2xl font-bold text-(--primary-bright)">{{ product.quantity }}</p>
       </div>
-    </div>
-
-    <div class="grid gap-6 lg:grid-cols-[280px_1fr]">
-      <img
-        [src]="product.image ?? fallbackImage"
-        [alt]="product.name"
-        class="h-56 w-full rounded-lg border border-gray-200 object-cover"
-      />
-
-      <div class="space-y-4 rounded-lg border border-gray-200 bg-(--card) p-6">
+      @if(product.category){
         <div>
-          <p class="text-sm font-medium text-gray-500">Precio</p>
-          <p class="text-2xl font-bold text-(--primary-bright)">${{ product.price }}</p>
+          <p class="text-sm font-medium text-gray-500">Categoria</p>
+          <span class="rounded-md bg-(--secondary) px-2 py-0.5 text-xs font-medium text-(--secondary-foreground)">
+            {{ product.category?.name }}
+          </span>
         </div>
-        <div>
-          <p class="text-sm font-medium text-gray-500">Categorías</p>
-          <div class="mt-2 flex flex-wrap gap-1">
-            @for (category of product.categories; track category) {
-              <span class="rounded-md bg-(--secondary) px-2 py-0.5 text-xs font-medium text-(--secondary-foreground)">
-                {{ category }}
-              </span>
-            }
-          </div>
-        </div>
-        <div>
-          <p class="text-sm font-medium text-gray-500">Fecha de agregado</p>
-          <p class="text-sm text-gray-700">{{ product.dateAdded }}</p>
-        </div>
+      }
+      <div>
+        <p class="text-sm font-medium text-gray-500">Fecha de agregado</p>
+        <p class="text-sm text-gray-700">{{ product.createdAt }}</p>
       </div>
     </div>
   </div>
+</div>
 } @else {
-  <div class="space-y-4" animate.enter="ms-fade-in-up">
-    <h1 class="text-2xl font-bold text-black">Producto no encontrado</h1>
-    <p class="text-sm text-gray-500">El producto que buscas no existe.</p>
-    <a
-      routerLink="/products"
-      class="inline-block rounded-lg border border-gray-300 bg-(--card) px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-    >
-      Volver a productos
-    </a>
-  </div>
+<div class="space-y-4" animate.enter="ms-fade-in-up">
+  <h1 class="text-2xl font-bold text-black">Producto no encontrado</h1>
+  <p class="text-sm text-gray-500">El producto que buscas no existe.</p>
+  <a routerLink="/products"
+    class="inline-block rounded-lg border border-gray-300 bg-(--card) px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100">
+    Volver a productos
+  </a>
+</div>
 }
 
-@if (product && editOpen()) {
-  <app-modal title="Editar producto" size="md" (close)="closeEdit()">
-    <form class="space-y-4">
-      <app-input
-        id="edit-name"
-        label="Nombre"
-        type="text"
-        placeholder="Nombre del producto"
-        [value]="editName()"
-        (valueChange)="onNameChange($event)"
-      />
-      <app-input
-        id="edit-price"
-        label="Precio"
-        type="number"
-        placeholder="0.00"
-        [value]="editPrice()"
-        (valueChange)="onPriceChange($event)"
-      />
-      <div class="flex justify-end gap-3">
-        <app-button variant="outline" text="Cancelar" (clicked)="closeEdit()" />
-        <app-button text="Guardar" (clicked)="saveEdit()" />
-      </div>
-    </form>
-  </app-modal>
+@if (this.product() && editOpen()) {
+<app-modal title="Editar producto" size="md" (close)="closeEdit()">
+  <form class="flex flex-col gap-4">
+    <app-input id="edit-name" label="Nombre" type="text" placeholder="Nombre del producto" [value]="editName()"
+      (valueChange)="onNameChange($event)" />
+    <app-input id="edit-price" label="Precio" type="number" placeholder="0.00" [value]="editPrice()"
+      (valueChange)="onPriceChange($event)" />
+    <div class="flex justify-end gap-3">
+      <app-button variant="outline" text="Cancelar" (clicked)="closeEdit()" />
+      <app-button text="Guardar" (clicked)="saveEdit()" />
+    </div>
+  </form>
+</app-modal>
 }

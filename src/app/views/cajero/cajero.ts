@@ -1,8 +1,6 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 
-import { CartLine, PaymentMethod, SaleRecord, saleCashPortion, salePaymentLines } from './cajero.data';
-import { Product } from '../products/product-card/product-card';
-import { PRODUCTS } from '../products/products.data';
+import { CartLine, SaleRecord, saleCashPortion, salePaymentLines } from './cajero.data';
 import { StoreService } from '../../store.service';
 import { ButtonComponent } from '../../ui/button/button';
 import { ConfirmModalComponent } from '../../ui/confirm-modal/confirm-modal';
@@ -10,22 +8,34 @@ import { InputComponent } from '../../ui/input/input';
 import { ModalComponent } from '../../ui/modal/modal';
 import { SearchSuggestionsComponent } from '../../ui/search-suggestions/search-suggestions';
 import { ToastService } from '../../ui/toast/toast.service';
+import { GetProducts, updateQuantity } from '../../api/products';
+import { ProductDTO } from '../../dto/product.dto';
 
-const CAJA_INITIAL_KEY = 'minishop_caja_initial';
-const CAJA_SALES_KEY = 'minishop_caja_sales';
-const CAJA_COUNT_KEY = 'minishop_caja_count';
-const CAJA_PRODUCTS_KEY = 'minishop_caja_products';
-const CAJA_HISTORY_KEY = 'minishop_caja_history';
+import { exceedsStock, firstStockError } from './scripts/validations';
+import { formatPrice as formatPriceFn, paymentMethodLabel as paymentMethodLabelFn } from './scripts/formatters';
+import { nowTime, todayISO } from './scripts/dates';
+import { CAJA_COUNT_KEY, CAJA_HISTORY_KEY, CAJA_INITIAL_KEY, CAJA_PRODUCTS_KEY, CAJA_SALES_KEY, closeLocalStorage, loadHistory, loadNumber } from './scripts/storage';
+import { cartTotal, cartTotalQuantity } from './scripts/cart';
+import { buildStockUpdates } from './scripts/inventory';
+import { saleProductCount } from './scripts/sales';
+import { PaymentMethod } from '../../entities/PaymentMethod';
+import { CreateSaleDetailDTO, CreateSaleDTO, SaleDetail, SaleDTO } from '../../dto/sale.dto';
+import { PostSales } from '../../api/sales';
 
 @Component({
   selector: 'app-cajero',
   imports: [ButtonComponent, ConfirmModalComponent, InputComponent, ModalComponent, SearchSuggestionsComponent],
   templateUrl: './cajero.html'
 })
-export class CajeroComponent {
+export class CajeroComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly store = inject(StoreService);
 
+  protected readonly PaymentMethod = PaymentMethod;
+
+  protected readonly products = signal<ProductDTO[]>([]);
+
+  protected readonly selectedProduct = signal<ProductDTO | null>(null);
   protected readonly productQuery = signal('');
   protected readonly quantity = signal(1);
   protected readonly byWeight = signal(false);
@@ -35,30 +45,36 @@ export class CajeroComponent {
   protected readonly receivedPayment = signal(0);
   protected readonly receivedCard = signal(0);
   protected readonly receivedCash = signal(0);
-  protected readonly paymentMethod = signal<PaymentMethod>('efectivo');
+  protected readonly paymentMethod = signal<PaymentMethod>(PaymentMethod.CASH);
   protected readonly fiadoQuery = signal('');
   protected readonly selectedFiadoPerson = signal<string>('');
-  protected readonly initialCash = signal<number | null>(this.loadNumber(CAJA_INITIAL_KEY));
+  protected readonly initialCash = signal<number | null>(loadNumber(CAJA_INITIAL_KEY));
   protected readonly initialDraft = signal(this.initialCash() !== null ? String(this.initialCash()) : '');
   protected readonly editingInitial = signal(this.initialCash() === null);
-  protected readonly salesTotal = signal(this.loadNumber(CAJA_SALES_KEY) ?? 0);
-  protected readonly salesCount = signal(this.loadNumber(CAJA_COUNT_KEY) ?? 0);
-  protected readonly productsSold = signal(this.loadNumber(CAJA_PRODUCTS_KEY) ?? 0);
-  protected readonly salesHistory = signal<SaleRecord[]>(this.loadHistory());
+  protected readonly salesTotal = signal(loadNumber(CAJA_SALES_KEY) ?? 0);
+  protected readonly salesCount = signal(loadNumber(CAJA_COUNT_KEY) ?? 0);
+  protected readonly productsSold = signal(loadNumber(CAJA_PRODUCTS_KEY) ?? 0);
+  protected readonly salesHistory = signal<SaleRecord[]>(loadHistory());
   protected readonly selectedSale = signal<SaleRecord | null>(null);
   protected readonly closeOpen = signal(false);
   protected readonly addFiadoPersonOpen = signal(false);
+  protected readonly ventasOpen = signal(false);
+  protected readonly cajaOpen = signal(false);
+
+  async ngOnInit() {
+    const products = await GetProducts(this.toast);
+    this.products.set(products);
+  }
 
   protected getEarnings(): number {
     return this.salesTotal();
   }
-  
+
   protected readonly matches = computed(() => {
     const query = this.productQuery().trim().toLowerCase();
-    if (!query) {
-      return [];
-    }
-    return PRODUCTS.filter(
+    if (!query) return [];
+
+    return this.products().filter(
       (product) =>
         product.name.toLowerCase().includes(query) || product.code.toLowerCase().includes(query)
     );
@@ -68,15 +84,9 @@ export class CajeroComponent {
     () => `Sin resultados para "${this.productQuery()}"`
   );
 
-  protected readonly selectedProduct = signal<Product | null>(null);
+  protected readonly totalQuantity = computed(() => cartTotalQuantity(this.cart()));
 
-  protected readonly totalQuantity = computed(() =>
-    this.cart().reduce((sum, line) => sum + line.quantity, 0)
-  );
-
-  protected readonly total = computed(() =>
-    this.cart().reduce((sum, line) => sum + line.price * line.quantity, 0)
-  );
+  protected readonly total = computed(() => cartTotal(this.cart()));
 
   protected readonly change = computed(() => {
     const diff = this.receivedPayment() - this.total();
@@ -109,13 +119,13 @@ export class CajeroComponent {
       return false;
     }
     const method = this.paymentMethod();
-    if (method === 'tarjeta') {
+    if (method === PaymentMethod.CARD) {
       return true;
     }
-    if (method === 'multiple') {
+    if (method === PaymentMethod.MIXED) {
       return this.receivedCash() >= this.cardRemaining();
     }
-    if (method === 'fiar') {
+    if (method === PaymentMethod.CREDIT) {
       return this.receivedPayment() < this.total() && this.selectedFiadoPerson() !== '';
     }
     return this.receivedPayment() >= this.total();
@@ -134,7 +144,7 @@ export class CajeroComponent {
     this.selectedProduct.set(null);
   }
 
-  protected selectProduct(product: Product): void {
+  protected selectProduct(product: ProductDTO): void {
     this.selectedProduct.set(product);
     this.productQuery.set(product.name);
   }
@@ -229,8 +239,16 @@ export class CajeroComponent {
     if (!product || this.quantity() <= 0) {
       return;
     }
-
     const quantity = this.byWeight() ? this.quantity() : Math.round(this.quantity());
+    const stock = Number(product.quantity);
+    if (exceedsStock(quantity, stock)) {
+      this.toast.error(
+        'Stock insuficiente',
+        `${product.name} solo tiene ${stock} en inventario.`
+      );
+      return;
+    }
+
     this.cart.update((lines) => {
       const existing = lines.find((line) => line.code === product.code);
       if (existing) {
@@ -238,12 +256,28 @@ export class CajeroComponent {
           line.code === product.code ? { ...line, quantity: line.quantity + quantity } : line
         );
       }
-      return [...lines, { code: product.code, name: product.name, price: product.price, quantity, byWeight: this.byWeight() }];
+      return [...lines, {
+        id: product.id,
+        code: product.code,
+        name: product.name,
+        price: Number(product.price),
+        quantity: Number(quantity),
+        byWeight: this.byWeight()
+      }];
     });
 
     this.selectedProduct.set(null);
     this.productQuery.set('');
     this.quantity.set(1);
+  }
+
+  private async updateStock(): Promise<void> {
+    const ok = await updateQuantity(buildStockUpdates(this.cart(), this.products()), this.toast);
+    if (!ok) {
+      this.toast.error('No se actualizo el inventario correctamente');
+      return;
+    }
+    // window.location.reload();
   }
 
   protected removeLine(code: string): void {
@@ -263,29 +297,23 @@ export class CajeroComponent {
     this.paymentMethod.set(method);
   }
 
-  protected paymentMethodLabel(method: PaymentMethod | undefined): string {
-    if (method === 'tarjeta') {
-      return 'Tarjeta';
-    }
-    if (method === 'multiple') {
-      return 'Múltiple';
-    }
-    if (method === 'fiar') {
-      return 'Fiado';
-    }
-    return 'Efectivo';
-  }
-
   protected paymentLines(sale: SaleRecord) {
     return salePaymentLines(sale);
   }
 
-  protected charge(): void {
+  protected async charge() {
     const total = this.total();
     if (total <= 0) {
       this.toast.error('Venta vacía', 'Agrega productos antes de cobrar.');
       return;
     }
+
+    const stockError = firstStockError(this.cart(), this.products());
+    if (stockError) {
+      this.toast.error(stockError.title, stockError.message);
+      return;
+    }
+
     const method = this.paymentMethod();
 
     let received = 0;
@@ -295,10 +323,10 @@ export class CajeroComponent {
     let fiadoName: string | undefined;
     let fiadoAmount: number | undefined;
 
-    if (method === 'tarjeta') {
+    if (method === PaymentMethod.CARD) {
       received = total;
       receivedCard = total;
-    } else if (method === 'multiple') {
+    } else if (method === PaymentMethod.MIXED) {
       const remaining = this.cardRemaining();
       if (this.receivedCash() < remaining) {
         this.toast.error('Efectivo insuficiente', 'El efectivo no cubre el restante de la venta.');
@@ -308,7 +336,7 @@ export class CajeroComponent {
       receivedCash = this.receivedCash();
       received = receivedCard + receivedCash;
       change = this.cashChange();
-    } else if (method === 'fiar') {
+    } else if (method === PaymentMethod.CREDIT) {
       const name = this.selectedFiadoPerson().trim();
       if (name === '') {
         this.toast.error('Falta la persona', 'Selecciona a quién se le fía.');
@@ -327,30 +355,38 @@ export class CajeroComponent {
         return;
       }
       received = this.receivedPayment();
+      receivedCash = this.receivedPayment();
       change = received - total;
     }
 
     const products = this.cart().reduce((sum, line) => sum + line.quantity, 0);
-    const sale: SaleRecord = {
-      id: Date.now(),
-      time: this.nowTime(),
-      products: this.cart().map((line) => ({ ...line })),
+    const sale: CreateSaleDTO = {
       total,
-      received,
-      change,
-      paymentMethod: method,
-      receivedCard,
-      receivedCash,
-      fiadoName,
-      fiadoAmount
+      paidCash: receivedCash,
+      paidCard: receivedCard,
+      method,
     };
-    if (method === 'fiar' && fiadoName && fiadoAmount !== undefined) {
-      this.store.addFiado(fiadoName, fiadoAmount, this.todayISO());
+
+    const saleDetails: CreateSaleDetailDTO[] = [];
+    this.cart().forEach((cur) => {
+      saleDetails.push({
+        productId: cur.id,
+        quantity: cur.quantity,
+        unitPrice: cur.price
+      } as CreateSaleDetailDTO)
+    })
+    
+    const posted = await PostSales({ sale, details: saleDetails }, this.toast);
+    if(!posted) return;
+
+    if (method === PaymentMethod.CREDIT && fiadoName && fiadoAmount !== undefined) {
+      this.store.addFiado(fiadoName, fiadoAmount, todayISO());
     }
-    this.salesHistory.update((list) => [...list, sale]);
+    // this.salesHistory.update((list) => [...list, sale]);
     this.salesTotal.update((sum) => sum + total);
     this.salesCount.update((count) => count + 1);
     this.productsSold.update((sum) => sum + products);
+    this.updateStock();
     localStorage.setItem(CAJA_SALES_KEY, String(this.salesTotal()));
     localStorage.setItem(CAJA_COUNT_KEY, String(this.salesCount()));
     localStorage.setItem(CAJA_PRODUCTS_KEY, String(this.productsSold()));
@@ -361,7 +397,7 @@ export class CajeroComponent {
     this.receivedCash.set(0);
     this.fiadoQuery.set('');
     this.selectedFiadoPerson.set('');
-    if (method === 'fiar' && fiadoName && fiadoAmount !== undefined) {
+    if (method === PaymentMethod.CREDIT && fiadoName && fiadoAmount !== undefined) {
       this.toast.success(
         'Venta fiada',
         `Se fiaron $${this.formatPrice(fiadoAmount)} a ${fiadoName}.`
@@ -382,8 +418,24 @@ export class CajeroComponent {
     this.selectedSale.set(null);
   }
 
+  protected openVentas(): void {
+    this.ventasOpen.set(true);
+  }
+
+  protected closeVentas(): void {
+    this.ventasOpen.set(false);
+  }
+
+  protected openCaja(): void {
+    this.cajaOpen.set(true);
+  }
+
+  protected closeCaja(): void {
+    this.cajaOpen.set(false);
+  }
+
   protected saleProducts(sale: SaleRecord): number {
-    return sale.products.reduce((sum, line) => sum + line.quantity, 0);
+    return saleProductCount(sale);
   }
 
   protected askClose(): void {
@@ -400,7 +452,7 @@ export class CajeroComponent {
 
   protected confirmClose(): void {
     this.store.addClosure({
-      date: this.todayISO(),
+      date: todayISO(),
       sales: this.salesCount(),
       productsSold: this.productsSold(),
       total: this.salesTotal(),
@@ -413,57 +465,22 @@ export class CajeroComponent {
     this.productsSold.set(0);
     this.salesHistory.set([]);
     this.selectedSale.set(null);
-    localStorage.removeItem(CAJA_INITIAL_KEY);
-    localStorage.removeItem(CAJA_SALES_KEY);
-    localStorage.removeItem(CAJA_COUNT_KEY);
-    localStorage.removeItem(CAJA_PRODUCTS_KEY);
-    localStorage.removeItem(CAJA_HISTORY_KEY);
+
     this.editingInitial.set(true);
     this.initialDraft.set('');
     this.cart.set([]);
     this.receivedPayment.set(0);
     this.closeOpen.set(false);
+    closeLocalStorage();
+
     this.toast.success('Cierre de caja', 'La caja se cerró y quedó registrada.');
   }
 
+  protected paymentMethodLabel(method: PaymentMethod | undefined): string {
+    return paymentMethodLabelFn(method);
+  }
+
   protected formatPrice(value: number): string {
-    return value.toFixed(2);
-  }
-
-  private todayISO(): string {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  private nowTime(): string {
-    return new Intl.DateTimeFormat('es-MX', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }).format(new Date());
-  }
-
-  private loadNumber(key: string): number | null {
-    const raw = localStorage.getItem(key);
-    if (raw === null) {
-      return null;
-    }
-    const parsed = Number(raw);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-
-  private loadHistory(): SaleRecord[] {
-    const raw = localStorage.getItem(CAJA_HISTORY_KEY);
-    if (!raw) {
-      return [];
-    }
-    try {
-      return JSON.parse(raw) as SaleRecord[];
-    } catch {
-      return [];
-    }
+    return formatPriceFn(value);
   }
 }

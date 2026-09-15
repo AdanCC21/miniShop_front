@@ -2,7 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 
 import { MONTHLY_SALES } from './tiendita.data';
 import { StoreService, DailyClosure } from '../../store.service';
-import { CartLine, PaymentMethod, SaleRecord, saleCashPortion, salePaymentLines } from '../cajero/cajero.data';
+import { CartLine, SaleRecord, saleCashPortion, salePaymentLines } from '../cajero/cajero.data';
+import { PaymentMethod } from '../../entities/PaymentMethod';
 import { formatDate, Order } from '../orders/orders.data';
 import { ButtonComponent } from '../../ui/button/button';
 import { InputComponent } from '../../ui/input/input';
@@ -17,6 +18,8 @@ import { ToastService } from '../../ui/toast/toast.service';
 export class TienditaComponent {
   private readonly store = inject(StoreService);
   protected readonly toast = inject(ToastService);
+
+  protected readonly PaymentMethod = PaymentMethod;
 
   protected readonly storeUid = 'ST-0001';
   protected readonly storeName = signal('miniShop');
@@ -126,11 +129,16 @@ export class TienditaComponent {
     const history = this.todayClosure()?.history ?? [];
     return history.reduce(
       (acc, sale) => {
-        const method = sale.paymentMethod ?? 'efectivo';
+        const method = sale.paymentMethod ?? PaymentMethod.CASH;
         acc[method] += sale.total;
         return acc;
       },
-      { efectivo: 0, tarjeta: 0, multiple: 0, fiar: 0 }
+      {
+        [PaymentMethod.CASH]: 0,
+        [PaymentMethod.CARD]: 0,
+        [PaymentMethod.MIXED]: 0,
+        [PaymentMethod.CREDIT]: 0
+      }
     );
   });
 
@@ -138,11 +146,16 @@ export class TienditaComponent {
     const history = this.todayClosure()?.history ?? [];
     return history.reduce(
       (acc, sale) => {
-        const method = sale.paymentMethod ?? 'efectivo';
+        const method = sale.paymentMethod ?? PaymentMethod.CASH;
         acc[method] += 1;
         return acc;
       },
-      { efectivo: 0, tarjeta: 0, multiple: 0, fiar: 0 }
+      {
+        [PaymentMethod.CASH]: 0,
+        [PaymentMethod.CARD]: 0,
+        [PaymentMethod.MIXED]: 0,
+        [PaymentMethod.CREDIT]: 0
+      }
     );
   });
 
@@ -153,7 +166,7 @@ export class TienditaComponent {
 
   protected readonly todayFiadoCount = computed(() => {
     const history = this.todayClosure()?.history ?? [];
-    return history.filter((sale) => (sale.paymentMethod ?? 'efectivo') === 'fiar').length;
+    return history.filter((sale) => (sale.paymentMethod ?? PaymentMethod.CASH) === PaymentMethod.CREDIT).length;
   });
 
   protected paymentLines(sale: SaleRecord) {
@@ -161,13 +174,13 @@ export class TienditaComponent {
   }
 
   protected paymentMethodLabel(method: PaymentMethod | undefined): string {
-    if (method === 'tarjeta') {
+    if (method === PaymentMethod.CARD) {
       return 'Tarjeta';
     }
-    if (method === 'multiple') {
+    if (method === PaymentMethod.MIXED) {
       return 'Múltiple';
     }
-    if (method === 'fiar') {
+    if (method === PaymentMethod.CREDIT) {
       return 'Fiado';
     }
     return 'Efectivo';

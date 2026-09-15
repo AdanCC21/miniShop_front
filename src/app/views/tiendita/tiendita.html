@@ -230,18 +230,18 @@
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-4">
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <p class="text-xs uppercase tracking-wider text-gray-400">Efectivo</p>
-        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(todayTotalsByMethod().efectivo) }}</p>
-        <p class="text-xs text-gray-500">{{ todayCountByMethod().efectivo }} ventas</p>
+        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(todayTotalsByMethod()[PaymentMethod.CASH]) }}</p>
+        <p class="text-xs text-gray-500">{{ todayCountByMethod()[PaymentMethod.CASH] }} ventas</p>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <p class="text-xs uppercase tracking-wider text-gray-400">Tarjeta</p>
-        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(todayTotalsByMethod().tarjeta) }}</p>
-        <p class="text-xs text-gray-500">{{ todayCountByMethod().tarjeta }} ventas</p>
+        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(todayTotalsByMethod()[PaymentMethod.CARD]) }}</p>
+        <p class="text-xs text-gray-500">{{ todayCountByMethod()[PaymentMethod.CARD] }} ventas</p>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <p class="text-xs uppercase tracking-wider text-gray-400">Múltiple</p>
-        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(todayTotalsByMethod().multiple) }}</p>
-        <p class="text-xs text-gray-500">{{ todayCountByMethod().multiple }} ventas</p>
+        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(todayTotalsByMethod()[PaymentMethod.MIXED]) }}</p>
+        <p class="text-xs text-gray-500">{{ todayCountByMethod()[PaymentMethod.MIXED] }} ventas</p>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <p class="text-xs uppercase tracking-wider text-gray-400">Fiado</p>
@@ -267,11 +267,11 @@
             <td class="px-4 py-3 text-gray-700">{{ saleProducts(sale) }}</td>
             <td class="px-4 py-3 text-gray-700">
               <span class="rounded-full px-2 py-0.5 text-xs font-medium"
-                [class]="sale.paymentMethod === 'tarjeta'
+                [class]="sale.paymentMethod === PaymentMethod.CARD
                   ? 'bg-(--secondary) text-(--secondary-foreground)'
-                  : sale.paymentMethod === 'multiple'
+                  : sale.paymentMethod === PaymentMethod.MIXED
                     ? 'bg-purple-50 text-purple-700'
-                    : sale.paymentMethod === 'fiar'
+                    : sale.paymentMethod === PaymentMethod.CREDIT
                       ? 'bg-red-50 text-red-700'
                       : 'bg-emerald-50 text-emerald-700'">
                 {{ paymentMethodLabel(sale.paymentMethod) }}

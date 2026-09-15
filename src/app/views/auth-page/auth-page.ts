@@ -70,7 +70,6 @@ export class AuthPageComponent {
     }
     
     const data = await Login({ email: this.loginEmail(), password: this.loginPassword(), }, this.toast);
-    console.log("Loged", data);
     if (data) {
       this.auth.setSessionFromBackend(data.user);
       this.redirectAfterAuth(data.user.role);

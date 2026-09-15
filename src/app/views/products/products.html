@@ -5,33 +5,50 @@
       <p class="text-sm text-gray-500">{{ this.products().length }} productos</p>
     </div>
 
-    <div class="flex flex-wrap items-center gap-3">
-      <app-select
-        label="Categoría"
-        [value]="selectedCategory()"
-        [options]="categoryOptions()"
-        (valueChange)="onCategoryChange($event)"
-      />
-      <app-select
-        label="Ordenar"
-        [value]="sortBy()"
-        [options]="sortOptions"
-        (valueChange)="onSortChange($event)"
-      />
-      <app-button text="Agregar" />
+    <div class="flex flex-wrap items-end gap-3">
+      <app-select label="Categoría" [value]="selectedCategory()" [options]="categoryOptions()"
+        (valueChange)="onCategoryChange($event)" />
+      <app-select label="Ordenar" [value]="sortBy()" [options]="sortOptions" (valueChange)="onSortChange($event)" />
+      <app-button text="Nuevo Producto" (clicked)="openAdd()" />
     </div>
   </div>
 
   <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
     @for (product of this.products(); track product.code; let i = $index) {
-      <app-product-card
-        animate.enter="ms-card-in"
-        [style.--index]="i"
-        [name]="product.name"
-        [categories]="product.categories"
-        [code]="product.code"
-        [price]="product.price"
-      />
+    <app-product-card animate.enter="ms-card-in" [style.--index]="i" [name]="product.name"
+      [categories]="product.categories ?? []" [code]="product.code" [price]="product.price" />
     }
   </section>
 </div>
+
+@if (addOpen()) {
+<app-modal title="Agregar producto" size="md" (close)="closeAdd()">
+  <form class="flex flex-col gap-4">
+    <app-input id="add-name" label="Nombre" type="text" placeholder="Nombre del producto" [value]="addName()"
+      (valueChange)="onAddNameChange($event)" />
+    <app-input id="add-code" label="Código" type="text" placeholder="Ej. PRD-009" [value]="addCode()"
+      (valueChange)="onAddCodeChange($event)" />
+
+    <div class="flex flex-col gap-4">
+      @if(!this.newCat()){
+      <app-select label="Categoría" [value]="selectedCategoryId()" [options]="categoryOptionsForFetch()"
+        (valueChange)="onCategoryIdChange($event)" />
+      } @else {
+      <app-input id="NewCategoryName" label="Nueva Categoria" type="text" placeholder="Categoria" [value]="newCatName()"
+        (valueChange)="onChangeNewCategoryName($event)" />
+      }
+      <app-button [text]="newCat() ? 'Cancelar' : 'Nueva categoría'" (clicked)="setNewCat()" variant="outline"
+        class="ml-auto" />
+    </div>
+
+    <app-input id="add-price" label="Precio" type="number" placeholder="0.00" [value]="addPrice()"
+      (valueChange)="onAddPriceChange($event)" />
+    <app-input id="add-quantity" label="Cantidad" type="number" placeholder="1" [value]="addQuantity()"
+      (valueChange)="onAddQuantityChange($event)" />
+    <div class="flex justify-end gap-3">
+      <app-button variant="outline" text="Cancelar" (clicked)="closeAdd()" />
+      <app-button text="Guardar" (clicked)="saveProduct()" />
+    </div>
+  </form>
+</app-modal>
+}

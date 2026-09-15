@@ -2,14 +2,21 @@ import axios from "axios";
 import { backendRoute } from "../constants/global";
 import { showError } from "../scripts/error";
 import { ToastService } from "../ui/toast/toast.service";
+import { ProductDTO } from "../dto/product.dto";
 
-export async function GetProducts(toast: ToastService) {
+export async function GetProducts(toast: ToastService, category?: string): Promise<ProductDTO[] | []> {
     try {
-        const user = JSON.parse(localStorage.getItem('minishop_session') || '');
-        if (!user) throw new Error("El usuario no tiene una session activa o valida");
+        const res = await axios.get(`${backendRoute}/product`, { withCredentials: true })
+        return res.data;
+    } catch (e) {
+        showError(e, toast);
+        return [];
+    }
+}
 
-        console.log(`${backendRoute}/product/${user.shopUuid}`);
-        const res = await axios.get(`${backendRoute}/product?shop${user.shopUuid}`, { withCredentials: true })
+export async function GetProdById(id: string, toast: ToastService) {
+    try {
+        const res = await axios.get(`${backendRoute}/product/${id}`, { withCredentials: true });
         return res.data;
     } catch (e) {
         showError(e, toast);
@@ -17,12 +24,42 @@ export async function GetProducts(toast: ToastService) {
     }
 }
 
-export async function GetProductDetails(id: string, toast: ToastService) {
+export async function GetProdByCode(code: string, toast: ToastService): Promise<ProductDTO | null> {
     try {
-        const res = await axios.get(`${backendRoute}/product/${id}`,{withCredentials:true});
+        const res = await axios.get(`${backendRoute}/product/bycode/${code}`, { withCredentials: true });
         return res.data;
     } catch (e) {
         showError(e, toast);
         return null;
+    }
+}
+
+export interface CreateProductPayload {
+    shopUuid: string;
+    categoryId: string | null;
+    name: string;
+    code: string;
+    price: number;
+    quantity: number;
+    image: string | null;
+}
+
+export async function CreateProduct(dto: CreateProductPayload, toast: ToastService) {
+    try {
+        const res = await axios.post(`${backendRoute}/product`, dto, { withCredentials: true });
+        return res.data;
+    } catch (e) {
+        showError(e, toast);
+        return null;
+    }
+}
+
+export async function updateQuantity(dto: { id: string, quantity: string }[], toast: ToastService) {
+    try {
+        const res = await axios.patch(`${backendRoute}/product/quantity`, dto, { withCredentials: true });
+        return res.data ? true : false;
+    } catch (e) {
+        showError(e, toast);
+        return false
     }
 }
