@@ -1,20 +1,21 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { placeholderImage } from '../product-card/product-card';
 import { ModalComponent } from '../../../ui/modal/modal';
 import { ButtonComponent } from '../../../ui/button/button';
 import { InputComponent } from '../../../ui/input/input';
-import { GetProdByCode, UpdateProduct, updateQuantity } from '../../../api/products';
+import { DeleteProduct, GetProdByCode, UpdateProduct, updateQuantity } from '../../../api/products';
 import { ToastService } from '../../../ui/toast/toast.service';
 import { ProductDTO, UpdateProductDTO } from '../../../dto/product.dto';
 
 @Component({
   selector: 'app-product-details',
-  imports: [ButtonComponent, InputComponent, ModalComponent, RouterLink],
+  imports: [ButtonComponent, InputComponent, ModalComponent],
   templateUrl: './product-details.html'
 })
 export class ProductDetailsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  protected router = inject(Router);
   protected toast = inject(ToastService);
 
   protected readonly product = signal<ProductDTO | null>(null)
@@ -27,6 +28,9 @@ export class ProductDetailsComponent implements OnInit {
 
   protected readonly editQuantity = signal(false);
   protected readonly newQuantity = signal(0);
+
+  protected readonly deleteProd = signal(false);
+  protected readonly confirmDel = signal(false);
 
   async ngOnInit() {
     const code = this.route.snapshot.paramMap.get('code') ?? '';
@@ -103,6 +107,25 @@ export class ProductDetailsComponent implements OnInit {
       this.toast.success(`Producto actualizado con exito`, "Exito");
       this.editOpen.set(false);
       setTimeout(() => { window.location.reload() }, 2000)
+    }
+  }
+
+  protected toggleDelProd(state: boolean) {
+    this.deleteProd.set(state);
+  }
+
+  protected async confirmDeleteProduct(state: boolean) {
+    if (!state) {
+      this.toggleDelProd(false);
+      return;
+    }
+
+    const res = await DeleteProduct(this.product()!.id, this.toast);
+    if (res) {
+      this.toast.success(`El producto ${this.product()!.name} fue eliminado`, 'Exito');
+      this.toggleDelProd(false);
+      this.router.navigate(['/products'])
+      return;
     }
   }
 }

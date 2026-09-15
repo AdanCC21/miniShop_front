@@ -42,7 +42,7 @@
     </div>
   </div>
   <div class="flex justify-end gap-2">
-    <app-button text="Eliminar" variant="danger" />
+    <app-button text="Eliminar" variant="danger" (clicked)="toggleDelProd(true)" />
     <app-button text="Editar" variant="secondary" (clicked)="openEdit()" />
     <app-button text="Actualizar cantidad" variant="secondary" (clicked)="toggleUpdateQuantity(true)" />
   </div>
@@ -84,6 +84,18 @@
     <div class="flex justify-end gap-3">
       <app-button variant="outline" text="Cancelar" (clicked)="toggleUpdateQuantity(false)" />
       <app-button text="Guardar" (clicked)="saveQuantity()" />
+    </div>
+  </form>
+</app-modal>
+}
+
+@if (this.product() && this.deleteProd()) {
+<app-modal title="Confirmar eliminacion" size="md" (close)="toggleDelProd(false)">
+  <form class="flex flex-col gap-4">
+    <span class="text-lg font-medium">Seguro de <strong class="text-red-500">ELIMINAR</strong> este producto</span>
+    <div class="flex justify-end gap-3">
+      <app-button variant="outline" text="Cancelar" (clicked)="confirmDeleteProduct(false)" />
+      <app-button text="Eliminar" (clicked)="confirmDeleteProduct(true)" />
     </div>
   </form>
 </app-modal>

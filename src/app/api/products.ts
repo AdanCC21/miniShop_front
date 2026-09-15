@@ -75,3 +75,13 @@ export async function updateQuantity(dto: { id: string, quantity: string }[], to
         return false
     }
 }
+
+export async function DeleteProduct(id:string, toast:ToastService) {
+    try {
+        const res = await axios.delete(`${backendRoute}/product/${id}`, { withCredentials: true });
+        return res.data ? true : false;
+    } catch (e) {
+        showError(e, toast);
+        return false
+    }
+}
