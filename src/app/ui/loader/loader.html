@@ -1,0 +1,17 @@
+@if (shown()) {
+  <div class="pointer-events-none fixed top-4 left-1/2 z-200 -translate-x-1/2">
+    <div
+      [class.ms-loader-in]="!leaving()"
+      [class.ms-loader-out]="leaving()"
+      class="flex items-center gap-3 rounded-lg border border-gray-200 bg-(--card) px-4 py-3 shadow-lg"
+      role="status"
+      aria-label="Cargando"
+    >
+      <span
+        class="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-(--primary) border-t-transparent"
+        aria-hidden="true"
+      ></span>
+      <p class="text-sm font-medium text-(--text)">{{ message() ?? 'Cargando...' }}</p>
+    </div>
+  </div>
+}

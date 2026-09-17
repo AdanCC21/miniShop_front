@@ -7,6 +7,7 @@ import { ButtonComponent } from '../../ui/button/button';
 import { InputComponent } from '../../ui/input/input';
 import { ThemeToggleComponent } from '../../ui/theme-toggle/theme-toggle';
 import { ToastService } from '../../ui/toast/toast.service';
+import { LoaderService } from '../../ui/loader/loader.service';
 import { Login, Register } from '../../api/auth';
 import { RegisterDTO, RegShopDTO, RegUserDto } from '../../dto/auth';
 import { Role } from '../../entities/Role';
@@ -20,6 +21,7 @@ export class AuthPageComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   protected readonly toast = inject(ToastService);
+  private readonly loader = inject(LoaderService);
 
   protected readonly mode = signal<AuthMode>('login');
   protected readonly role = signal<'encargado' | 'empleado'>('encargado');
@@ -34,12 +36,6 @@ export class AuthPageComponent {
   protected readonly storeUid = signal('');
   protected readonly storeName = signal('');
   protected readonly storeAddress = signal('');
-
-  constructor() {
-    if (this.auth.isLoggedIn) {
-      // this.redirectAfterAuth(this.auth.role);
-    }
-  }
 
   protected switchMode(mode: AuthMode): void {
     this.mode.set(mode);
@@ -68,12 +64,15 @@ export class AuthPageComponent {
       this.toast.error(error, 'Formulario incompleto');
       return;
     }
-    
+
+    this.loader.show('Iniciando sesión...');
+
     const data = await Login({ email: this.loginEmail(), password: this.loginPassword(), }, this.toast);
     if (data) {
       this.auth.setSessionFromBackend(data.user);
       this.redirectAfterAuth(data.user.role);
     }
+    this.loader.hide();
   }
 
   protected async submitRegister() {
@@ -82,6 +81,8 @@ export class AuthPageComponent {
       this.toast.error(error, 'Formulario incompleto');
       return;
     }
+
+    this.loader.show('Creando tu cuenta...');
 
     const dto: RegisterDTO = {
       user: {
@@ -97,6 +98,7 @@ export class AuthPageComponent {
     }
 
     const res = await Register(dto, this.toast);
+    this.loader.hide();
     if (res) {
       this.toast.info("Su usuario fue creado de manera exitosa, porfavor inicia sesion para ingresar.")
       setTimeout(() => {

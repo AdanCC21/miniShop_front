@@ -147,6 +147,17 @@ body {
     }
 }
 
+@keyframes ms-loader-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .ms-fade-in-up {
     animation: ms-fade-in-up 0.4s ease-out backwards;
 }
@@ -172,13 +183,23 @@ body {
     animation: ms-toast-in 0.25s ease-out backwards;
 }
 
+.ms-loader-in {
+    animation: ms-loader-in 0.2s ease-out backwards;
+}
+
+.ms-loader-out {
+    animation: ms-fade-out 0.2s ease-in forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .ms-fade-in-up,
     .ms-card-in,
     .ms-modal-backdrop,
     .ms-modal-panel,
     .ms-fade-out,
-    .ms-toast-in {
+    .ms-toast-in,
+    .ms-loader-in,
+    .ms-loader-out {
         animation: none;
     }
 
