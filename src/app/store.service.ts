@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 
 import { Order, ORDERS } from './views/orders/orders.data';
 import { SaleRecord } from './views/cajero/cajero.data';
-import { FIADOS, FiadoPerson } from './views/fiados/fiados.data';
+
 
 export interface DailyClosure {
   date: string;
@@ -21,7 +21,7 @@ export class StoreService {
   readonly openDays = signal<number[]>([1, 2, 3, 4, 5]);
   readonly orders = signal<Order[]>(ORDERS);
   readonly closures = signal<DailyClosure[]>(this.loadClosures());
-  readonly fiados = signal<FiadoPerson[]>(this.loadFiados());
+  // readonly fiados = signal<FiadoPerson[]>(this.loadFiados());
 
   addClosure(closure: DailyClosure): void {
     this.closures.update((list) => {
@@ -31,35 +31,35 @@ export class StoreService {
     localStorage.setItem(CLOSURES_KEY, JSON.stringify(this.closures()));
   }
 
-  addFiado(personName: string, amount: number, date: string): void {
-    this.fiados.update((list) => {
-      const existing = list.find(
-        (person) => person.name.toLowerCase() === personName.trim().toLowerCase()
-      );
-      if (existing) {
-        return list.map((person) =>
-          person === existing ? { ...person, fiados: [...person.fiados, { date, amount }] } : person
-        );
-      }
-      return [...list, { name: personName.trim(), fiados: [{ date, amount }] }];
-    });
-    localStorage.setItem(FIADOS_KEY, JSON.stringify(this.fiados()));
-  }
+  // addFiado(personName: string, amount: number, date: string): void {
+  //   this.fiados.update((list) => {
+  //     const existing = list.find(
+  //       (person) => person.name.toLowerCase() === personName.trim().toLowerCase()
+  //     );
+  //     if (existing) {
+  //       return list.map((person) =>
+  //         person === existing ? { ...person, fiados: [...person.fiados, { date, amount }] } : person
+  //       );
+  //     }
+  //     return [...list, { name: personName.trim(), fiados: [{ date, amount }] }];
+  //   });
+  //   localStorage.setItem(FIADOS_KEY, JSON.stringify(this.fiados()));
+  // }
 
-  addPerson(personName: string): void {
-    const name = personName.trim();
-    if (name === '') {
-      return;
-    }
-    const exists = this.fiados().some(
-      (person) => person.name.toLowerCase() === name.toLowerCase()
-    );
-    if (exists) {
-      return;
-    }
-    this.fiados.update((list) => [...list, { name, fiados: [] }]);
-    localStorage.setItem(FIADOS_KEY, JSON.stringify(this.fiados()));
-  }
+  // addPerson(personName: string): void {
+  //   const name = personName.trim();
+  //   if (name === '') {
+  //     return;
+  //   }
+  //   const exists = this.fiados().some(
+  //     (person) => person.name.toLowerCase() === name.toLowerCase()
+  //   );
+  //   if (exists) {
+  //     return;
+  //   }
+  //   this.fiados.update((list) => [...list, { name, fiados: [] }]);
+  //   localStorage.setItem(FIADOS_KEY, JSON.stringify(this.fiados()));
+  // }
 
   closuresForMonth(month: string): DailyClosure[] {
     return this.closures().filter((closure) => closure.date.startsWith(month));
@@ -89,15 +89,15 @@ export class StoreService {
     }
   }
 
-  private loadFiados(): FiadoPerson[] {
-    const raw = localStorage.getItem(FIADOS_KEY);
-    if (!raw) {
-      return FIADOS;
-    }
-    try {
-      return JSON.parse(raw) as FiadoPerson[];
-    } catch {
-      return FIADOS;
-    }
-  }
+  // private loadFiados(): FiadoPerson[] {
+  //   const raw = localStorage.getItem(FIADOS_KEY);
+  //   if (!raw) {
+  //     return FIADOS;
+  //   }
+  //   try {
+  //     return JSON.parse(raw) as FiadoPerson[];
+  //   } catch {
+  //     return FIADOS;
+  //   }
+  // }
 }

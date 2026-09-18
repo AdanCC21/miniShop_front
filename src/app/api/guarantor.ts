@@ -2,7 +2,7 @@ import axios from "axios";
 import { backendRoute } from "../constants/global";
 import { ToastService } from "../ui/toast/toast.service";
 import { showError } from "../scripts/error";
-import { GuarantorDTO } from "../dto/guarantor";
+import { GuarantorDTO } from "../dto/guarantor.dto";
 
 export async function GetGuarantors(toast: ToastService): Promise<GuarantorDTO[]> {
     try {

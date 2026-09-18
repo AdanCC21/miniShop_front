@@ -21,7 +21,7 @@ import { saleProductCount } from './scripts/sales';
 import { PaymentMethod } from '../../entities/PaymentMethod';
 import { CreateSaleDetailDTO, CreateSaleDTO, SaleDetail, SaleDTO } from '../../dto/sale.dto';
 import { PostSales } from '../../api/sales';
-import { GuarantorDTO } from '../../dto/guarantor';
+import { GuarantorDTO } from '../../dto/guarantor.dto';
 import { GetGuarantors } from '../../api/guarantor';
 
 @Component({
@@ -206,7 +206,7 @@ export class CajeroComponent implements OnInit {
       this.toast.error('Nombre vacío', 'Escribe el nombre de la persona.');
       return;
     }
-    this.store.addPerson(name);
+    // this.store.addPerson(name);
     this.selectFiadoPerson(name);
     this.addFiadoPersonOpen.set(false);
     this.toast.success('Persona agregada', `${name} fue registrada.`);
@@ -422,8 +422,9 @@ export class CajeroComponent implements OnInit {
     const posted = await PostSales({ sale, details: saleDetails }, this.toast);
     if (!posted) return;
 
+    // Agregar fiado
     if (method === PaymentMethod.CREDIT && fiadoName && fiadoAmount !== undefined) {
-      this.store.addFiado(fiadoName, fiadoAmount, todayISO());
+      // this.store.addFiado(fiadoName, fiadoAmount, todayISO());
     }
     // this.salesHistory.update((list) => [...list, sale]);
     this.salesTotal.update((sum) => sum + total);

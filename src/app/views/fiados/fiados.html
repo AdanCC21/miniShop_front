@@ -2,29 +2,39 @@
   <div class="flex flex-wrap items-start justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-black">Fiados</h1>
-      <p class="text-sm text-gray-500">{{ people().length }} personas con fiado</p>
+      <p class="text-sm text-gray-500">{{ guarantors().length }} personas con fiado</p>
     </div>
 
-    <app-button text="Agregar persona" (clicked)="openAddPerson()" />
+    <app-button text="Agregar persona" (clicked)="toggleAddPerson(true)" />
   </div>
 
   @if(this.guarantors().length){
   <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-    @for (person of guarantors(); track person.id) {
+    @for (person of guarantors(); track person.createdAt) {
     <article class="flex flex-col justify-between gap-4 rounded-lg border border-gray-200 bg-(--card) p-5">
+      @if(person.credits && person.credits.length > 0){
       <div class="flex items-start justify-between gap-3">
         <div>
           <h3 class="font-semibold text-gray-900">{{ person.name }}</h3>
           <p class="mt-1 text-xs text-gray-500">
-            <!-- Último fiado: {{ formatDate(lastDate(person)) }} -->
+            Último fiado: {{ lastCreditDate(person) }}
           </p>
         </div>
         <div class="rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-red-600">
-          <!-- ${{ formatPrice(total(person)) }} -->
+          {{totalAmount(person)}}
         </div>
       </div>
-
-      <!-- <app-button text="Ver detalles" variant="outline" (clicked)="openDetails(person)" /> -->
+      <div class="flex gap-2 justify-end">
+        <app-button text="Ajustar cuenta" variant="secondary" (clicked)="toggleAdjustCredit(person)" />
+        <app-button text="Ver detalles" variant="outline" (clicked)="toggleDetails(person)" />
+      </div>
+      }
+      @else {
+      <div class="flex flex-col gap-2">
+        <span class="text-lg">{{person.name}}</span>
+        <span class="text-sm text-gray-400">Esta persona no tiene credito registrado</span>
+      </div>
+      }
     </article>
     }
   </section>
@@ -38,48 +48,70 @@
 
 </div>
 
-@if (selectedPerson(); as person) {
-<app-modal title="Fiados de {{ person.name }}" size="xl" (close)="closeDetails()">
-  <div class="space-y-4">
+@if (detailsOpen() && selectedPerson(); as person ) {
+<app-modal title="Fiados de {{ person.name }}" size="xl" (close)="toggleDetails(null)">
+  <div class="flex flex-col gap-2">
+    <h2 class="text-xl font-bold">{{person.name}}</h2>
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <p class="text-sm text-gray-500">Último fiado: {{ formatDate(lastDate(person)) }}</p>
-        <p class="text-sm text-gray-500">{{ person.fiados.length }} fiados registrados</p>
-      </div>
-      <p class="text-lg font-bold text-red-600">${{ formatPrice(total(person)) }}</p>
+      <span>Total pagado <strong class="font-medium text-green-600">{{totalPaid(person)}}</strong></span>
+      <span>Total que debe <strong class="font-medium text-red-600">{{totalAmount(person)}}</strong></span>
     </div>
 
-    <div class="overflow-hidden rounded-lg border border-gray-200">
-      <table class="w-full text-left text-sm">
-        <thead>
-          <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-            <th class="px-4 py-3 font-semibold">Fecha</th>
-            <th class="px-4 py-3 font-semibold">Monto</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (fiado of person.fiados; track fiado.date) {
-          <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
-            <td class="px-4 py-3 text-gray-700">{{ formatDate(fiado.date) }}</td>
-            <td class="px-4 py-3 font-medium text-gray-900">${{ formatPrice(fiado.amount) }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
+    <div class="flex flex-col">
+      <h5 class="text-sm mb-2 text-white/40">Mas detalles</h5>
+      <div class="overflow-hidden rounded-lg border border-gray-200">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+              <th class="px-4 py-3 font-semibold">Fecha</th>
+              <th class="px-4 py-3 font-semibold">Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (credit of person.credits; track credit.id) {
+            <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
+              <td class="px-4 py-3 text-gray-700">{{ credit.createdAt }}</td>
+              <td class="px-4 py-3 font-medium text-gray-900">${{ credit.totalAmount }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </app-modal>
 }
 
 @if (addOpen()) {
-<app-modal title="Agregar persona" size="md" (close)="closeAddPerson()">
+<app-modal title="Agregar persona" size="md" (close)="toggleAddPerson(false)">
   <div class="flex flex-col gap-4">
     <app-input label="Nombre de la persona" placeholder="Escribe el nombre" id="new-person-name"
       [value]="newPersonName()" (valueChange)="onNewPersonNameChange($event)" />
     <div class="flex justify-end gap-2">
-      <app-button text="Cancelar" variant="outline" (clicked)="closeAddPerson()" />
+      <app-button text="Cancelar" variant="outline" (clicked)="toggleAddPerson(false)" />
       <app-button text="Agregar" (clicked)="submitGuarantor()" />
     </div>
   </div>
 </app-modal>
 }
+
+@if(openAdjust() && selectedPerson(); as person){
+<app-modal title="Cuenta de {{person.name}}" size="2xl" (close)="toggleAdjustCredit(null)">
+  <div class="flex flex-col gap-4">
+    <h2 class="text-lg">Ajustar cuenta de {{person.name}}</h2>
+    <app-input label="Cantidad" (valueChange)="onAdjustCredit($event)" [value]="this.adjustCredit()" />
+    <div class="flex flex-wrap gap-2 mt-2 justify-end">
+      <app-button variant="outline" text="Cancelar" (clicked)="toggleAdjustCredit(null)" />
+      <app-button variant="secondary" text="Restar deuda" (clicked)="requestAdjust('reduce')" />
+      <app-button variant="secondary" text="Incrementar deuda" (clicked)="requestAdjust('increment')" />
+      <app-button variant="danger" text="Pagar deuda" (clicked)="requestAdjust('pay')" />
+    </div>
+  </div>
+</app-modal>
+}
+
+@if (pendingAdjust(); as action) {
+<app-confirm-modal [title]="adjustConfirmTitle(action)" [message]="adjustConfirmMessage(action)"
+  confirmText="Confirmar" cancelText="Cancelar" (confirm)="confirmAdjust()" (cancel)="cancelAdjust()" />
+}
+
