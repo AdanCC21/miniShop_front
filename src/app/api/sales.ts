@@ -2,9 +2,9 @@ import axios from "axios";
 import { backendRoute } from "../constants/global";
 import { showError } from "../scripts/error";
 import { ToastService } from "../ui/toast/toast.service";
-import { CreateSaleDetailDTO, CreateSaleDTO } from "../dto/sale.dto";
+import { CreateSaleDetailDTO, CreateSaleDTO, SaleDTO } from "../dto/sale.dto";
 
-export async function GetSales(today: boolean = false, toast: ToastService) {
+export async function GetSales(today: boolean = false, toast: ToastService):Promise<SaleDTO[] | null> {
     try {
         const res = await axios.get(`${backendRoute}/sale/myshop?today=${today}`, { withCredentials: true })
         return res.data;

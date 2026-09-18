@@ -8,25 +8,34 @@
     <app-button text="Agregar persona" (clicked)="openAddPerson()" />
   </div>
 
+  @if(this.guarantors().length){
   <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-    @for (person of people(); track person.name) {
+    @for (person of guarantors(); track person.id) {
     <article class="flex flex-col justify-between gap-4 rounded-lg border border-gray-200 bg-(--card) p-5">
       <div class="flex items-start justify-between gap-3">
         <div>
           <h3 class="font-semibold text-gray-900">{{ person.name }}</h3>
           <p class="mt-1 text-xs text-gray-500">
-            Último fiado: {{ formatDate(lastDate(person)) }}
+            <!-- Último fiado: {{ formatDate(lastDate(person)) }} -->
           </p>
         </div>
         <div class="rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-red-600">
-          ${{ formatPrice(total(person)) }}
+          <!-- ${{ formatPrice(total(person)) }} -->
         </div>
       </div>
 
-      <app-button text="Ver detalles" variant="outline" (clicked)="openDetails(person)" />
+      <!-- <app-button text="Ver detalles" variant="outline" (clicked)="openDetails(person)" /> -->
     </article>
     }
   </section>
+  }
+  @else {
+  <section class="flex flex-col gap-2 text-center w-full">
+    <span class="text-lg font-semibold">No hay fiadores registrados.</span>
+    <span class="text-base">De momento no hay nadie registrado que le deba</span>
+  </section>
+  }
+
 </div>
 
 @if (selectedPerson(); as person) {
@@ -64,12 +73,12 @@
 
 @if (addOpen()) {
 <app-modal title="Agregar persona" size="md" (close)="closeAddPerson()">
-  <div class="space-y-4">
+  <div class="flex flex-col gap-4">
     <app-input label="Nombre de la persona" placeholder="Escribe el nombre" id="new-person-name"
       [value]="newPersonName()" (valueChange)="onNewPersonNameChange($event)" />
     <div class="flex justify-end gap-2">
       <app-button text="Cancelar" variant="outline" (clicked)="closeAddPerson()" />
-      <app-button text="Agregar" (clicked)="confirmAddPerson()" />
+      <app-button text="Agregar" (clicked)="submitGuarantor()" />
     </div>
   </div>
 </app-modal>

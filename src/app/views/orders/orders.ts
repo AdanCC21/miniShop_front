@@ -40,6 +40,8 @@ export class OrdersComponent {
   protected readonly deliveryTarget = signal<Order | null>(null);
   protected readonly receivedSaveConfirm = signal(false);
 
+  protected readonly upcoming = signal(true);
+
   protected readonly tabs: { id: OrdersTab; label: string }[] = [
     { id: 'waiting', label: 'En espera' },
     { id: 'unconfirmed', label: 'Pedidos no confirmados' },

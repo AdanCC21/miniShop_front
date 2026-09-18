@@ -14,271 +14,315 @@
   </div>
 
   @if(this.products().length === 0){
-    <span class="text-lg">No tiene productos registrados en su inventario, porfavor registre productos antes de continuar</span>
+  <span class="text-lg">No tiene productos registrados en su inventario, porfavor registre productos antes de
+    continuar</span>
   }@else {
-    <div class="flex md:flex-row flex-col-reverse gap-4 w-full">
-      <div class="flex flex-col flex-2 gap-4 w-full">
-        <section class="flex flex-col gap-4">
-          @if(this.regManual()){
-          <section class="rounded-lg border border-gray-200 bg-(--card) p-5">
-            <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">Registrar producto</h2>
-  
-            <div class="flex flex-col gap-4">
-              <app-search-suggestions label="Producto (nombre o código)" placeholder="Escribe o escanea..."
-                [query]="productQuery()" [items]="matches()" [emptyMessage]="productEmptyMessage()"
-                [itemTemplate]="productTpl" (queryChange)="onQueryChange($event)" (selected)="selectProduct($event)" />
-              <ng-template #productTpl let-product>
-                <span class="font-medium text-gray-800">{{ product.name }}</span>
-                <span class="ml-auto text-xs text-gray-500">
-                  {{ product.code }} · ${{ formatPrice(product.price) }}
-                </span>
-              </ng-template>
-  
-              <div class="flex flex-wrap items-end gap-3">
-                <label for="quantity" class="flex-1 text-sm font-medium text-gray-700">
-                  Cantidad
-                  <span class="text-xs font-normal text-gray-400">({{ byWeight() ? 'kg' : 'unidades' }})</span>
-                  <input id="quantity" type="number" min="0" [step]="byWeight() ? '0.01' : '1'" [value]="quantity()"
-                    (input)="onQuantityChange($event)"
-                    class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
-                </label>
-  
-                <button type="button" (click)="toggleByWeight()"
-                  class="rounded-lg px-4 py-2 text-sm font-medium transition cursor-pointer"
-                  [class]="byWeight() ? 'bg-(--primary) text-(--primary-foreground)' : 'border border-gray-300 bg-(--card) text-gray-700 hover:bg-gray-100'">
-                  Kg
+  <div class="flex md:flex-row flex-col-reverse gap-4 w-full">
+    <div class="flex flex-col flex-3 gap-4 w-full">
+      <section class="flex flex-col gap-4">
+        @if(this.regManual()){
+        <section class="rounded-lg border border-gray-200 bg-(--card) p-5">
+          <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">Registrar producto</h2>
+
+          <div class="flex flex-col gap-4">
+            <app-search-suggestions label="Producto (nombre o código)" placeholder="Escribe o escanea..."
+              [query]="productQuery()" [items]="matches()" [emptyMessage]="productEmptyMessage()"
+              [itemTemplate]="productTpl" (queryChange)="onQueryChange($event)" (selected)="selectProduct($event)" />
+            <ng-template #productTpl let-product>
+              <span class="font-medium text-gray-800">{{ product.name }}</span>
+              <span class="ml-auto text-xs text-gray-500">
+                {{ product.code }} · ${{ formatPrice(product.price) }}
+              </span>
+            </ng-template>
+
+            <div class="flex flex-wrap items-end gap-3">
+              <label for="quantity" class="flex-1 text-sm font-medium text-gray-700">
+                Cantidad
+                <span class="text-xs font-normal text-gray-400">({{ byWeight() ? 'kg' : 'unidades' }})</span>
+                <input id="quantity" type="number" min="0" [step]="byWeight() ? '0.01' : '1'" [value]="quantity()"
+                  (input)="onQuantityChange($event)"
+                  class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
+              </label>
+
+              <button type="button" (click)="toggleByWeight()"
+                class="rounded-lg px-4 py-2 text-sm font-medium transition cursor-pointer"
+                [class]="byWeight() ? 'bg-(--primary) text-(--primary-foreground)' : 'border border-gray-300 bg-(--card) text-gray-700 hover:bg-gray-100'">
+                Kg
+              </button>
+
+              <app-button text="Agregar" (clicked)="addToCart()" />
+            </div>
+          </div>
+        </section>
+        }@else {
+        <section class="flex flex-col gap-4 border border-gray-200 bg-(--card) p-5 rounded-lg">
+          <h2 class="text-xl">Registrando productos</h2>
+          <input id="scan-prod" class="bg-(--card) px-4 py-2 border border-gray-200 rounded-lg" placeholder="Codigo" />
+
+          <div>
+            <span class="text-lg">Producto :</span>
+            <h5>Nombre</h5>
+            <h5>$255</h5>
+          </div>
+        </section>
+        }
+      </section>
+
+      <section class="overflow-x-auto rounded-lg border border-gray-200 bg-(--card)">
+        <h2 class="border-b border-gray-200 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-gray-500">
+          Productos a cobrar
+        </h2>
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+              <th class="px-4 py-3 font-semibold">ID</th>
+              <th class="px-4 py-3 font-semibold">Nombre</th>
+              <th class="px-4 py-3 font-semibold">Precio</th>
+              <th class="px-4 py-3 font-semibold">Cantidad</th>
+              <th class="px-4 py-3 font-semibold">Subtotal</th>
+              <th class="px-4 py-3 font-semibold"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of cart(); track line.code) {
+            <tr class="border-b border-gray-100 transition last:border-b-0 hover:bg-gray-50">
+              <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ line.code }}</td>
+              <td class="px-4 py-3 text-gray-700">{{ line.name }}</td>
+              <td class="px-4 py-3 text-gray-900">${{ formatPrice(line.price) }}</td>
+              <td class="px-4 py-3 text-gray-900">
+                {{ line.quantity }} {{ line.byWeight ? 'kg' : '' }}
+              </td>
+              <td class="px-4 py-3 font-medium text-gray-900">${{ formatPrice(line.price * line.quantity) }}</td>
+              <td class="px-4 py-3 text-right">
+                <button type="button" (click)="removeLine(line.code)"
+                  class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50">
+                  Eliminar
                 </button>
-  
-                <app-button text="Agregar" (clicked)="addToCart()" />
-              </div>
-            </div>
-          </section>
-          }@else {
-          <section class="flex flex-col gap-4 border border-gray-200 bg-(--card) p-5 rounded-lg">
-            <h2 class="text-xl">Registrando productos</h2>
-            <input id="scan-prod" class="bg-(--card) px-4 py-2 border border-gray-200 rounded-lg" placeholder="Codigo" />
-  
-            <div>
-              <span class="text-lg">Producto :</span>
-              <h5>Nombre</h5>
-              <h5>$255</h5>
-            </div>
-          </section>
-          }
-        </section>
-  
-        <section class="overflow-x-auto rounded-lg border border-gray-200 bg-(--card)">
-          <h2 class="border-b border-gray-200 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-gray-500">
-            Productos a cobrar
-          </h2>
-          <table class="w-full text-left text-sm">
-            <thead>
-              <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-                <th class="px-4 py-3 font-semibold">ID</th>
-                <th class="px-4 py-3 font-semibold">Nombre</th>
-                <th class="px-4 py-3 font-semibold">Precio</th>
-                <th class="px-4 py-3 font-semibold">Cantidad</th>
-                <th class="px-4 py-3 font-semibold">Subtotal</th>
-                <th class="px-4 py-3 font-semibold"></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (line of cart(); track line.code) {
-              <tr class="border-b border-gray-100 transition last:border-b-0 hover:bg-gray-50">
-                <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ line.code }}</td>
-                <td class="px-4 py-3 text-gray-700">{{ line.name }}</td>
-                <td class="px-4 py-3 text-gray-900">${{ formatPrice(line.price) }}</td>
-                <td class="px-4 py-3 text-gray-900">
-                  {{ line.quantity }} {{ line.byWeight ? 'kg' : '' }}
-                </td>
-                <td class="px-4 py-3 font-medium text-gray-900">${{ formatPrice(line.price * line.quantity) }}</td>
-                <td class="px-4 py-3 text-right">
-                  <button type="button" (click)="removeLine(line.code)"
-                    class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50">
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-              } @empty {
-              <tr>
-                <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500">
-                  No hay productos en la venta
-                </td>
-              </tr>
-              }
-            </tbody>
-          </table>
-        </section>
-      </div>
-  
-      @if (closeOpen()) {
-      <app-confirm-modal title="Cerrar caja" [danger]="true"
-        [message]="'¿Registrar el cierre de caja de hoy? Se reiniciarán el fondo inicial y las ventas de la caja.'"
-        confirmText="Cerrar caja" cancelText="Cancelar" (confirm)="confirmClose()" (cancel)="cancelClose()" />
-      }
-  
-      <aside class="flex flex-col flex-1 gap-2">
-        <section class="flex flex-col flex-1 h-fit gap-4 rounded-lg border border-gray-200 bg-(--card) p-5">
-          <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500">Venta actual</h2>
-  
-          <div class="flex flex-col gap-2">
-            <p class="text-sm text-gray-500">Productos: {{ totalQuantity() }}</p>
-            <p class="text-sm text-gray-500">Artículos: {{ cart().length }}</p>
+              </td>
+            </tr>
+            } @empty {
+            <tr>
+              <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500">
+                No hay productos en la venta
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    @if (closeOpen()) {
+    <app-confirm-modal title="Cerrar caja" [danger]="true"
+      [message]="'¿Registrar el cierre de caja de hoy? Se reiniciarán el fondo inicial y las ventas de la caja.'"
+      confirmText="Cerrar caja" cancelText="Cancelar" (confirm)="confirmClose()" (cancel)="cancelClose()" />
+    }
+
+    <aside class="flex flex-col flex-1 gap-2">
+      <section class="flex flex-col flex-1 h-fit gap-4 rounded-lg border border-gray-200 bg-(--card) p-5">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500">Venta actual</h2>
+
+        <div class="flex flex-col gap-2">
+          <p class="text-sm text-gray-500">Productos: {{ totalQuantity() }}</p>
+          <p class="text-sm text-gray-500">Artículos: {{ cart().length }}</p>
+        </div>
+
+        <p class="text-xs uppercase tracking-wider text-gray-400">Total a cobrar</p>
+        <p class="mt-1 text-3xl font-bold text-(--primary-bright)">${{ formatPrice(total()) }}</p>
+      </section>
+
+      <section
+        class="flex flex-col flex-1 h-fit justify-between rounded-lg border border-gray-200 bg-(--card) p-5 gap-4">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500">Cobrar</h2>
+
+        <div class="flex flex-col gap-2">
+          <span class="text-xs uppercase tracking-wider text-gray-400">Método de pago</span>
+          <div class="flex rounded-lg bg-gray-100 p-1">
+            <button type="button" (click)="selectPaymentMethod(PaymentMethod.CASH)"
+              class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
+              [class]="paymentMethod() === PaymentMethod.CASH ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
+              Efectivo
+            </button>
+            <button type="button" (click)="selectPaymentMethod(PaymentMethod.CARD)"
+              class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
+              [class]="paymentMethod() === PaymentMethod.CARD ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
+              Tarjeta
+            </button>
+            <button type="button" (click)="selectPaymentMethod(PaymentMethod.MIXED)"
+              class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
+              [class]="paymentMethod() === PaymentMethod.MIXED ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
+              Múltiple
+            </button>
+            <button type="button" (click)="selectPaymentMethod(PaymentMethod.CREDIT)"
+              class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
+              [class]="paymentMethod() === PaymentMethod.CREDIT ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
+              Fiar
+            </button>
           </div>
-  
-          <p class="text-xs uppercase tracking-wider text-gray-400">Total a cobrar</p>
-          <p class="mt-1 text-3xl font-bold text-(--primary-bright)">${{ formatPrice(total()) }}</p>
-        </section>
-  
-        <section
-          class="flex flex-col flex-1 h-fit justify-between rounded-lg border border-gray-200 bg-(--card) p-5 gap-4">
-          <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500">Cobrar</h2>
-  
+        </div>
+
+        @switch (paymentMethod()) {
+        @case (PaymentMethod.CARD) {
+        <p class="text-base text-gray-500">Se cobrará el total de la venta a la tarjeta, sin cambio.</p>
+        }
+        @case (PaymentMethod.MIXED) {
+        <div class="flex flex-col gap-4">
+          <label for="received-card" class="font-medium text-gray-700">
+            Recibido con tarjeta
+            <input id="received-card" type="number" min="0" step="0.01" placeholder="0.00"
+              [value]="receivedCard() || ''" (input)="onReceivedCardChange($event)"
+              class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
+          </label>
+
+          <div class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+            <span class="text-base text-gray-700">Restante a pagar con efectivo</span>
+            <span class="font-semibold text-gray-900">${{ formatPrice(cardRemaining()) }}</span>
+          </div>
+
+          <label for="received-cash" class="font-medium text-gray-700">
+            Recibido con efectivo
+            <input id="received-cash" type="number" min="0" step="0.01" placeholder="0.00"
+              [value]="receivedCash() || ''" (input)="onReceivedCashChange($event)"
+              class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
+          </label>
+
+          <div class="flex items-center justify-between">
+            <span class="text-base">Cambio en efectivo</span>
+            @if (paymentOk() && cashChange() > 0) {
+            <span class="font-semibold text-emerald-600">${{ formatPrice(cashChange()) }}</span>
+            } @else {
+            <span class="text-gray-400">$0.00</span>
+            }
+          </div>
+        </div>
+
+        @if (receivedCash() > 0 && total() > 0 && !paymentOk()) {
+        <p class="text-base text-red-600">El efectivo no cubre el restante de la venta.</p>
+        }
+        }
+        @case (PaymentMethod.CREDIT) {
+        <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
-            <span class="text-xs uppercase tracking-wider text-gray-400">Método de pago</span>
+            <span class="text-xs uppercase tracking-wider text-gray-400">Método de pago del fiado</span>
             <div class="flex rounded-lg bg-gray-100 p-1">
-              <button type="button" (click)="selectPaymentMethod(PaymentMethod.CASH)"
+              @for (option of fiadoMethodOptions; track option.id) {
+              <button type="button" (click)="selectFiadoMethod(option.id)"
                 class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-                [class]="paymentMethod() === PaymentMethod.CASH ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
-                Efectivo
+                [class]="fiadoMethod() === option.id ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
+                {{ option.label }}
               </button>
-              <button type="button" (click)="selectPaymentMethod(PaymentMethod.CARD)"
-                class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-                [class]="paymentMethod() === PaymentMethod.CARD ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
-                Tarjeta
-              </button>
-              <button type="button" (click)="selectPaymentMethod(PaymentMethod.MIXED)"
-                class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-                [class]="paymentMethod() === PaymentMethod.MIXED ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
-                Múltiple
-              </button>
-              <button type="button" (click)="selectPaymentMethod(PaymentMethod.CREDIT)"
-                class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-                [class]="paymentMethod() === PaymentMethod.CREDIT ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
-                Fiar
-              </button>
-            </div>
-          </div>
-  
-          @switch (paymentMethod()) {
-          @case (PaymentMethod.CARD) {
-          <p class="text-base text-gray-500">Se cobrará el total de la venta a la tarjeta, sin cambio.</p>
-          }
-          @case (PaymentMethod.MIXED) {
-          <div class="flex flex-col gap-4">
-            <label for="received-card" class="font-medium text-gray-700">
-              Recibido con tarjeta
-              <input id="received-card" type="number" min="0" step="0.01" placeholder="0.00"
-                [value]="receivedCard() || ''" (input)="onReceivedCardChange($event)"
-                class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
-            </label>
-  
-            <div class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-              <span class="text-base text-gray-700">Restante a pagar con efectivo</span>
-              <span class="font-semibold text-gray-900">${{ formatPrice(cardRemaining()) }}</span>
-            </div>
-  
-            <label for="received-cash" class="font-medium text-gray-700">
-              Recibido con efectivo
-              <input id="received-cash" type="number" min="0" step="0.01" placeholder="0.00"
-                [value]="receivedCash() || ''" (input)="onReceivedCashChange($event)"
-                class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
-            </label>
-  
-            <div class="flex items-center justify-between">
-              <span class="text-base">Cambio en efectivo</span>
-              @if (paymentOk() && cashChange() > 0) {
-              <span class="font-semibold text-emerald-600">${{ formatPrice(cashChange()) }}</span>
-              } @else {
-              <span class="text-gray-400">$0.00</span>
               }
             </div>
-          </div>
-  
-          @if (receivedCash() > 0 && total() > 0 && !paymentOk()) {
-          <p class="text-base text-red-600">El efectivo no cubre el restante de la venta.</p>
-          }
-          }
-          @case (PaymentMethod.CREDIT) {
-          <div class="flex flex-col gap-4">
+
+            @switch (fiadoMethod()) {
+            @case ('tarjeta') {
+            <p class="mt-1 text-sm text-gray-500">El fiado se registrará con tarjeta.</p>
             <label for="received-fiar" class="font-medium text-gray-700">
               Recibido
               <input id="received-fiar" type="number" min="0" step="0.01" placeholder="0.00"
-                [value]="receivedPayment() || ''" (input)="onReceivedPaymentChange($event)"
+                [value]="receivedCard() || ''" (input)="onReceivedCardChange($event)"
                 class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
             </label>
-  
-            <div class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-              <span class="text-base text-gray-700">Restante a fiar</span>
-              <span class="font-semibold text-red-600">${{ formatPrice(fiadoRemaining()) }}</span>
+            }
+            @case ('mixto') {
+            <p class="mt-1 text-sm text-gray-500">El fiado se repartirá entre efectivo y tarjeta.</p>
+            <div class="mt-2 flex flex-col gap-4">
+              <label for="fiado-card" class="font-medium text-gray-700">
+                Recibido con tarjeta
+                <input id="fiado-card" type="number" min="0" step="0.01" placeholder="0.00"
+                  [value]="receivedCard() || ''" (input)="onReceivedCardChange($event)"
+                  class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
+              </label>
+              <label for="fiado-cash" class="font-medium text-gray-700">
+                Recibido con efectivo
+                <input id="fiado-cash" type="number" min="0" step="0.01" placeholder="0.00"
+                  [value]="receivedCash() || ''" (input)="onReceivedCashChange($event)"
+                  class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
+              </label>
             </div>
-  
-            <app-search-suggestions label="Persona a la que se fía" placeholder="Escribe o selecciona..."
-              [query]="fiadoQuery()" [items]="fiadoMatches()"
-              [emptyMessage]="'Sin personas registradas para \'' + fiadoQuery() + '\''"
-              [itemTemplate]="fiadoTpl" (queryChange)="onFiadoQueryChange($event)"
-              (selected)="selectFiadoPerson($event.name)" />
-            <ng-template #fiadoTpl let-person>
-              <span class="font-medium text-gray-800">{{ person.name }}</span>
-            </ng-template>
-  
-            <button type="button" (click)="openAddFiadoPerson()"
-              class="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              Agregar persona
-            </button>
-  
-            @if (selectedFiadoPerson() !== '' && paymentOk()) {
-            <p class="text-sm text-gray-500">
-              Se fiarán <span class="font-semibold text-red-600">${{ formatPrice(fiadoRemaining()) }}</span> a
-              {{ selectedFiadoPerson() }}.
-            </p>
             }
-  
-            @if (receivedPayment() >= total() && total() > 0) {
-            <p class="text-base text-red-600">El pago cubre el total, no hay resto para fiar.</p>
-            }
-          </div>
-          }
-          @default {
-          <div class="flex flex-col gap-4">
-            <label for="received-payment" class="font-medium text-gray-700">
+            @default {
+            <p class="mt-1 text-sm text-gray-500">El fiado se registrará en efectivo.</p>
+            <label for="received-fiar" class="font-medium text-gray-700">
               Recibido
-              <input id="received-payment" type="number" min="0" step="0.01" placeholder="0.00"
-                [value]="receivedPayment() || ''" (input)="onReceivedPaymentChange($event)"
+              <input id="received-fiar" type="number" min="0" step="0.01" placeholder="0.00"
+                [value]="receivedCash() || ''" (input)="onReceivedCashChange($event)"
                 class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
             </label>
-  
-            <div class="flex flex-col">
-              <span class="text-base">Cambio</span>
-              @if (paymentOk() && change() > 0) {
-              <span class="font-semibold text-emerald-600">${{ formatPrice(change()) }}</span>
-              } @else {
-              <span class="text-gray-400">$0.00</span>
-              }
-            </div>
+            }
+            }
           </div>
-  
-          @if (receivedPayment() > 0 && total() > 0 && !paymentOk()) {
-          <p class="text-base text-red-600">El pago es menor al total de la venta.</p>
-          }
-          }
-          }
-  
-          <div class="flex gap-2 w-full">
-            <app-button text="Limpiar" (clicked)="clearCart()" variant="outline" extraClass=" w-full " class="w-full" />
-            <app-button text="Cobrar" (clicked)="charge()" variant="primary" extraClass=" w-full " class="w-full" />
-          </div>
-</section>
 
-        <div class="mt-4 border-t border-gray-200 pt-4">
-          <app-button text="Cerrar caja" (clicked)="askClose()" variant="outline" extraClass=" w-full " class="w-full" />
+          <div class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+            <span class="text-base text-gray-700">Restante a fiar</span>
+            <span class="font-semibold text-red-600">${{ formatPrice(fiadoRemaining()) }}</span>
+          </div>
+
+          <app-search-suggestions label="Persona a la que se fía" placeholder="Escribe o selecciona..."
+            [query]="fiadoQuery()" [items]="fiadoMatches()"
+            [emptyMessage]="'Sin personas registradas para \'' + fiadoQuery() + '\''" [itemTemplate]="fiadoTpl"
+            (queryChange)="onFiadoQueryChange($event)" (selected)="selectFiadoPerson($event.name)" />
+          <ng-template #fiadoTpl let-person>
+            <span class="font-medium text-gray-800">{{ person.name }}</span>
+          </ng-template>
+
+          <button type="button" (click)="openAddFiadoPerson()"
+            class="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Agregar persona
+          </button>
+
+          @if (selectedFiadoPerson() !== '' && paymentOk()) {
+          <p class="text-sm text-gray-500">
+            Se fiarán <span class="font-semibold text-red-600">${{ formatPrice(fiadoRemaining()) }}</span> a
+            {{ selectedFiadoPerson() }}.
+          </p>
+          }
+
+          @if (receivedPayment() >= total() && total() > 0) {
+          <p class="text-base text-red-600">El pago cubre el total, no hay resto para fiar.</p>
+          }
         </div>
-      </aside>
-    </div>
+        }
+        @default {
+        <div class="flex flex-col gap-4">
+          <label for="received-payment" class="font-medium text-gray-700">
+            Recibido
+            <input id="received-payment" type="number" min="0" step="0.01" placeholder="0.00"
+              [value]="receivedPayment() || ''" (input)="onReceivedPaymentChange($event)"
+              class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
+          </label>
+
+          <div class="flex flex-col">
+            <span class="text-base">Cambio</span>
+            @if (paymentOk() && change() > 0) {
+            <span class="font-semibold text-emerald-600">${{ formatPrice(change()) }}</span>
+            } @else {
+            <span class="text-gray-400">$0.00</span>
+            }
+          </div>
+        </div>
+
+        @if (receivedPayment() > 0 && total() > 0 && !paymentOk()) {
+        <p class="text-base text-red-600">El pago es menor al total de la venta.</p>
+        }
+        }
+        }
+
+        <div class="flex gap-2 w-full">
+          <app-button text="Limpiar" (clicked)="clearCart()" variant="outline" extraClass=" w-full " class="w-full" />
+          <app-button text="Cobrar" (clicked)="charge()" variant="primary" extraClass=" w-full " class="w-full" />
+        </div>
+      </section>
+
+      <div class="mt-4 border-t border-gray-200 pt-4">
+        <app-button text="Cerrar caja" (clicked)="askClose()" variant="outline" extraClass=" w-full " class="w-full" />
+      </div>
+    </aside>
+  </div>
   }
 
   @if (selectedSale(); as sale) {
@@ -377,8 +421,7 @@
               <td class="px-3 py-2 text-gray-700">{{ sale.time }}</td>
               <td class="px-3 py-2 text-gray-700">{{ saleProducts(sale) }}</td>
               <td class="px-3 py-2 text-gray-700">
-                <span class="rounded-full px-2 py-0.5 text-xs font-medium"
-                  [class]="sale.paymentMethod === PaymentMethod.CARD
+                <span class="rounded-full px-2 py-0.5 text-xs font-medium" [class]="sale.paymentMethod === PaymentMethod.CARD
                     ? 'bg-(--secondary) text-(--secondary-foreground)'
                     : sale.paymentMethod === PaymentMethod.MIXED
                       ? 'bg-purple-50 text-purple-700'

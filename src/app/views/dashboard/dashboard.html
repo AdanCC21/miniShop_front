@@ -13,14 +13,21 @@
   @else {
   <section>
     <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Resumen del día</h2>
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      @for (card of summaryCards; track card.label; let i = $index) {
-      <div class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in" [style.--index]="i">
-        <p class="text-sm font-medium text-gray-500">{{ card.label }}</p>
-        <p class="mt-2 text-2xl font-bold text-black sm:text-3xl">{{ card.value }}</p>
-      </div>
-      }
-    </div>
+    <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <li class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in" >
+        <p class="text-sm font-medium text-gray-500">Total de ventas hoy</p>
+        <p class="mt-2 text-2xl font-bold text-black sm:text-3xl">{{this.salesToday().length}}</p>
+      </li>
+      <li class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in" >
+        <p class="text-sm font-medium text-gray-500">Total vendido</p>
+        <p class="mt-2 text-2xl font-bold text-black sm:text-3xl">{{this.getTotalSaled()}}</p>
+      </li>
+      <li class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in" >
+        <p class="text-sm font-medium text-gray-500">Ultima venta</p>
+        <p class="mt-2 text-2xl font-bold text-black sm:text-3xl">{{this.getLastSale()}}</p>
+      </li>
+      
+    </ul>
   </section>
 
   <section>
@@ -32,8 +39,8 @@
         <thead>
           <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
             <th class="px-4 py-3 font-semibold">ID</th>
-            <th class="px-4 py-3 font-semibold">Nombre</th>
-            <th class="px-4 py-3 font-semibold">Precio</th>
+            <th class="px-4 py-3 font-semibold">No. Products</th>
+            <th class="px-4 py-3 font-semibold">Total vendido</th>
             <th class="px-4 py-3 font-semibold">Hora de venta</th>
           </tr>
         </thead>
@@ -41,9 +48,9 @@
           @for(sale of this.salesToday(); track sale.id){
           <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
             <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ sale.id }}</td>
-            <td class="px-4 py-3 text-gray-700">{{ sale.name }}</td>
-            <td class="px-4 py-3 font-medium text-gray-900">${{ sale.price }}</td>
-            <td class="px-4 py-3 text-gray-500">{{ sale.time }}</td>
+            <td class="px-4 py-3 text-gray-700">{{ this.getTotalQuantity(sale) }}</td>
+            <td class="px-4 py-3 font-medium text-gray-900">${{ sale.total }}</td>
+            <td class="px-4 py-3 text-gray-500">{{ sale.date }}</td>
           </tr>
           }
         </tbody>
@@ -52,3 +59,4 @@
   </section>
   }
 </div>
+

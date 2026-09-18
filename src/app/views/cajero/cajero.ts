@@ -21,6 +21,8 @@ import { saleProductCount } from './scripts/sales';
 import { PaymentMethod } from '../../entities/PaymentMethod';
 import { CreateSaleDetailDTO, CreateSaleDTO, SaleDetail, SaleDTO } from '../../dto/sale.dto';
 import { PostSales } from '../../api/sales';
+import { GuarantorDTO } from '../../dto/guarantor';
+import { GetGuarantors } from '../../api/guarantor';
 
 @Component({
   selector: 'app-cajero',
@@ -33,7 +35,14 @@ export class CajeroComponent implements OnInit {
 
   protected readonly PaymentMethod = PaymentMethod;
 
+  protected readonly fiadoMethodOptions: { id: FiadoMethod; label: string }[] = [
+    { id: 'efectivo', label: 'Efectivo' },
+    { id: 'tarjeta', label: 'Tarjeta' },
+    { id: 'mixto', label: 'Mixto' }
+  ];
+
   protected readonly products = signal<ProductDTO[]>([]);
+  protected readonly guarantors = signal<GuarantorDTO[]>([]);
 
   protected readonly selectedProduct = signal<ProductDTO | null>(null);
   protected readonly productQuery = signal('');
@@ -48,6 +57,9 @@ export class CajeroComponent implements OnInit {
   protected readonly paymentMethod = signal<PaymentMethod>(PaymentMethod.CASH);
   protected readonly fiadoQuery = signal('');
   protected readonly selectedFiadoPerson = signal<string>('');
+  protected readonly fiadoMethod = signal<FiadoMethod>('efectivo');
+  protected readonly fiadoCard = signal(0);
+  protected readonly fiadoCash = signal(0);
   protected readonly initialCash = signal<number | null>(loadNumber(CAJA_INITIAL_KEY));
   protected readonly initialDraft = signal(this.initialCash() !== null ? String(this.initialCash()) : '');
   protected readonly editingInitial = signal(this.initialCash() === null);
@@ -64,6 +76,9 @@ export class CajeroComponent implements OnInit {
   async ngOnInit() {
     const products = await GetProducts(this.toast);
     this.products.set(products);
+
+    const guarantors = await GetGuarantors(this.toast);
+    this.guarantors.set(guarantors);
   }
 
   protected getEarnings(): number {
@@ -104,14 +119,13 @@ export class CajeroComponent implements OnInit {
 
   protected readonly fiadoMatches = computed(() => {
     const query = this.fiadoQuery().trim().toLowerCase();
-    return this.store
-      .fiados()
-      .filter((person) => person.name.toLowerCase().includes(query))
+    return this.guarantors().filter((person) => person.name.toLowerCase().includes(query))
       .sort((a, b) => a.name.localeCompare(b.name));
+
   });
 
   protected readonly fiadoRemaining = computed(() =>
-    Math.max(0, this.total() - this.receivedPayment())
+    Math.max(0, this.total() - (this.receivedCard() + this.receivedCash()))
   );
 
   protected readonly paymentOk = computed(() => {
@@ -277,7 +291,6 @@ export class CajeroComponent implements OnInit {
       this.toast.error('No se actualizo el inventario correctamente');
       return;
     }
-    // window.location.reload();
   }
 
   protected removeLine(code: string): void {
@@ -295,6 +308,18 @@ export class CajeroComponent implements OnInit {
 
   protected selectPaymentMethod(method: PaymentMethod): void {
     this.paymentMethod.set(method);
+  }
+
+  protected selectFiadoMethod(method: FiadoMethod): void {
+    this.fiadoMethod.set(method);
+  }
+
+  protected onFiadoCardChange(event: Event): void {
+    this.fiadoCard.set(Number((event.target as HTMLInputElement).value) || 0);
+  }
+
+  protected onFiadoCashChange(event: Event): void {
+    this.fiadoCash.set(Number((event.target as HTMLInputElement).value) || 0);
   }
 
   protected paymentLines(sale: SaleRecord) {
@@ -316,47 +341,64 @@ export class CajeroComponent implements OnInit {
 
     const method = this.paymentMethod();
 
-    let received = 0;
     let change = 0;
     let receivedCard = 0;
     let receivedCash = 0;
     let fiadoName: string | undefined;
     let fiadoAmount: number | undefined;
+    let guarantorId: string | undefined;
 
-    if (method === PaymentMethod.CARD) {
-      received = total;
-      receivedCard = total;
-    } else if (method === PaymentMethod.MIXED) {
-      const remaining = this.cardRemaining();
-      if (this.receivedCash() < remaining) {
-        this.toast.error('Efectivo insuficiente', 'El efectivo no cubre el restante de la venta.');
+    // Tarjeta
+
+    switch (method) {
+      case PaymentMethod.CARD:
+        receivedCard = total;
+        break;
+      case PaymentMethod.CASH:
+        if (this.receivedPayment() < total) {
+          this.toast.error('Pago insuficiente', 'El cliente pagó menos del total.');
+          return;
+        }
+        receivedCash = this.receivedPayment();
+        change = this.receivedPayment() - total;
+        break;
+      case PaymentMethod.MIXED:
+        const remaining = this.cardRemaining();
+        if (this.receivedCash() < remaining) {
+          this.toast.error('Efectivo insuficiente', 'El efectivo no cubre el restante de la venta.');
+          return;
+        }
+        receivedCard = this.receivedCard();
+        receivedCash = this.receivedCash();
+        change = this.cashChange();
+        break;
+      case PaymentMethod.CREDIT:
+        // Credito
+        const name = this.selectedFiadoPerson().trim();
+        if (name === '') {
+          this.toast.error('Falta la persona', 'Selecciona a quién se le fía.');
+          return;
+        }
+        const guar = this.guarantors().find(cur => cur.name === name);
+        console.log(guar);
+        if (!guar) {
+          this.toast.error(`El fiador ${name} no fue encontrado entre los fiadores registrados. Id del fiador ${guarantorId}`)
+          return;
+        }
+
+        if (this.receivedPayment() >= total || (this.receivedCard() + this.receivedCash()) >= total) {
+          this.toast.error('Pago completo', 'El pago cubre el total, no hay resto para fiar.');
+          return;
+        }
+
+        fiadoName = name;
+        receivedCard = this.receivedCard()
+        receivedCash = this.receivedCash();
+        guarantorId = guar.id;
+        break;
+      default:
+        this.toast.error("El metodo no es valido");
         return;
-      }
-      receivedCard = this.receivedCard();
-      receivedCash = this.receivedCash();
-      received = receivedCard + receivedCash;
-      change = this.cashChange();
-    } else if (method === PaymentMethod.CREDIT) {
-      const name = this.selectedFiadoPerson().trim();
-      if (name === '') {
-        this.toast.error('Falta la persona', 'Selecciona a quién se le fía.');
-        return;
-      }
-      if (this.receivedPayment() >= total) {
-        this.toast.error('Pago completo', 'El pago cubre el total, no hay resto para fiar.');
-        return;
-      }
-      received = this.receivedPayment();
-      fiadoName = name;
-      fiadoAmount = total - received;
-    } else {
-      if (this.receivedPayment() < total) {
-        this.toast.error('Pago insuficiente', 'El cliente pagó menos del total.');
-        return;
-      }
-      received = this.receivedPayment();
-      receivedCash = this.receivedPayment();
-      change = received - total;
     }
 
     const products = this.cart().reduce((sum, line) => sum + line.quantity, 0);
@@ -365,6 +407,7 @@ export class CajeroComponent implements OnInit {
       paidCash: receivedCash,
       paidCard: receivedCard,
       method,
+      guarantorId
     };
 
     const saleDetails: CreateSaleDetailDTO[] = [];
@@ -375,9 +418,9 @@ export class CajeroComponent implements OnInit {
         unitPrice: cur.price
       } as CreateSaleDetailDTO)
     })
-    
+
     const posted = await PostSales({ sale, details: saleDetails }, this.toast);
-    if(!posted) return;
+    if (!posted) return;
 
     if (method === PaymentMethod.CREDIT && fiadoName && fiadoAmount !== undefined) {
       this.store.addFiado(fiadoName, fiadoAmount, todayISO());
@@ -484,3 +527,5 @@ export class CajeroComponent implements OnInit {
     return formatPriceFn(value);
   }
 }
+
+export type FiadoMethod = 'efectivo' | 'tarjeta' | 'mixto';
