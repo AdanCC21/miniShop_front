@@ -1,17 +1,19 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { StoreService } from '../../store.service';
 import { ButtonComponent } from '../../ui/button/button';
 import { ConfirmModalComponent } from '../../ui/confirm-modal/confirm-modal';
 import { InputComponent } from '../../ui/input/input';
 import { ModalComponent } from '../../ui/modal/modal';
 import { ToastService } from '../../ui/toast/toast.service';
-import { AddCreditToGuarantor, CreateGuarantor, GetGuarantors, ReduceCreditToGuarantor } from '../../api/guarantor';
+import { CreateGuarantor, GetGuarantors } from '../../api/guarantor';
+import { AdjustCredit } from '../../api/credit';
 import { GuarantorDTO } from '../../dto/guarantor.dto';
 import { LoaderService } from '../../ui/loader/loader.service';
 import { getAllAmountAndPaid } from '../../scripts/guarantor';
 import { getDate } from '../../scripts/date';
+import { CreditDTO } from '../../dto/credit.dto';
 
-type AdjustAction = 'increment' | 'reduce' | 'pay';
+type AdjustAction = 'update' | 'pay';
 
 @Component({
   selector: 'app-fiados',
@@ -30,9 +32,11 @@ export class FiadosComponent implements OnInit {
   protected readonly addOpen = signal(false);
   protected readonly newPersonName = signal('');
 
-  protected readonly openAdjust = signal(false);
+  protected readonly selectedCredit = signal<CreditDTO | null>(null);
   protected readonly adjustCredit = signal(0);
   protected readonly pendingAdjust = signal<AdjustAction | null>(null);
+
+  protected readonly getDate = getDate;
 
   async ngOnInit() {
     this.loader.show("Cargando fiadores");
@@ -88,13 +92,14 @@ export class FiadosComponent implements OnInit {
     this.addOpen.set(state);
   }
 
-  protected toggleAdjustCredit(person: GuarantorDTO | null) {
-    if (!person) {
-      this.pendingAdjust.set(null);
+  protected toggleAdjustCredit(credit: CreditDTO | null) {
+    if (!credit) {
+      this.selectedCredit.set(null);
+    } else {
+      this.selectedCredit.set(credit);
     }
     this.adjustCredit.set(0);
-    this.selectedPerson.set(person)
-    this.openAdjust.set(person ? true : false);
+    this.pendingAdjust.set(null);
   }
 
   protected onAdjustCredit(value: string) {
@@ -103,18 +108,19 @@ export class FiadosComponent implements OnInit {
 
   protected requestAdjust(action: AdjustAction): void {
     const person = this.selectedPerson();
-    const amount = this.adjustCredit();
-
-    if (action !== 'pay' && amount <= 0) {
-      this.toast.error('Cantidad inválida', 'Ingresa una cantidad mayor a cero.');
-      return;
-    }
     if (!person) return;
-    if (action === 'reduce' && amount > this.totalAmount(person)) {
-      this.toast.error('Monto excede la deuda', `${person.name} solo debe $${this.totalAmount(person)}.`);
-      return;
-    }
-    if (action === 'pay' && this.totalAmount(person) <= 0) {
+
+    if (action === 'update') {
+      const amount = this.adjustCredit();
+      if (amount === 0 || Number.isNaN(amount)) {
+        this.toast.error('Cantidad inválida', 'Ingresa una cantidad mayor a cero.');
+        return;
+      }
+      if (amount > (Number(this.selectedCredit()?.totalAmount || 0) - Number(this.selectedCredit()?.paidAmount || 0))) {
+        this.toast.error('Monto excede la deuda', `${person.name} solo debe $${this.totalAmount(person)}.`);
+        return;
+      }
+    } else if (this.totalAmount(person) <= 0) {
       this.toast.info('Sin deuda', `${person.name} no tiene deuda pendiente.`);
       return;
     }
@@ -131,35 +137,36 @@ export class FiadosComponent implements OnInit {
     const action = this.pendingAdjust();
     if (!person || !action) return;
 
+    const amount = action === 'pay' ? this.totalAmount(person) : this.adjustCredit();
+
     this.loader.show('Aplicando cambios a la cuenta');
-    let saved = false;
-    if (action === 'increment') {
-      saved = (await AddCreditToGuarantor(person.id, this.adjustCredit(), this.toast)) === true;
-    } else {
-      const amount = action === 'pay' ? this.totalAmount(person) : this.adjustCredit();
-      saved = (await ReduceCreditToGuarantor(person.id, amount, this.toast)) === true;
+    await AdjustCredit(amount, this.selectedCredit()!.id, this.toast);
+
+    const guarantors = await GetGuarantors(this.toast);
+    if (guarantors) {
+      this.guarantors.set(guarantors);
     }
 
-    if (saved) {
-      const guarantors = await GetGuarantors(this.toast);
-      if (guarantors) {
-        this.guarantors.set(guarantors);
-      }
-      this.toast.success(
-        action === 'increment' ? 'Deuda incrementada' : action === 'reduce' ? 'Deuda reducida' : 'Deuda pagada',
-        `${person.name} fue actualizado.`
-      );
-      this.toggleAdjustCredit(null);
-    }
+    this.toast.success(
+      action === 'pay'
+        ? 'Deuda pagada'
+        : amount < 0
+          ? 'Deuda reducida'
+          : 'Deuda incrementada',
+      `${person.name} fue actualizado.`
+    );
+
+    this.toggleAdjustCredit(null);
+    this.selectedCredit.set(null);
+    this.selectedPerson.set(null);
+    this.detailsOpen.set(false);
     this.loader.hide();
   }
 
   protected adjustConfirmTitle(action: AdjustAction): string {
     switch (action) {
-      case 'increment':
-        return 'Incrementar deuda';
-      case 'reduce':
-        return 'Restar deuda';
+      case 'update':
+        return this.adjustCredit() < 0 ? 'Restar deuda' : 'Incrementar deuda';
       case 'pay':
         return 'Pagar deuda';
     }
@@ -168,15 +175,14 @@ export class FiadosComponent implements OnInit {
   protected adjustConfirmMessage(action: AdjustAction): string {
     const person = this.selectedPerson();
     if (!person) return '';
-    const amount = action === 'pay' ? this.totalAmount(person) : this.adjustCredit();
-    switch (action) {
-      case 'increment':
-        return `¿Incrementar la deuda de ${person.name} en $${amount}?`;
-      case 'reduce':
-        return `¿Restar $${amount} de la deuda de ${person.name}?`;
-      case 'pay':
-        return `¿Registrar el pago total de $${amount} de ${person.name}?`;
+    if (action === 'pay') {
+      const amount = this.totalAmount(person);
+      return `¿Registrar el pago total de $${amount} de ${person.name}?`;
     }
+    const amount = this.adjustCredit();
+    return amount < 0
+      ? `¿Restar $${Math.abs(amount)} de la deuda de ${person.name}?`
+      : `¿Incrementar la deuda de ${person.name} en $${amount}?`;
   }
 
   protected onNewPersonNameChange(value: string): void {

@@ -1,15 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 
-import {
-  findSupplierByName,
-  formatDate,
-  Order,
-  OrderProduct,
-  RecurrenceType,
-  Supplier,
-  SupplierProduct,
-  SUPPLIERS
-} from './orders.data';
+import { findSupplierByName, formatDate, Order, OrderProduct, RecurrenceType, Supplier, SupplierProduct, SUPPLIERS } from './orders.data';
 import { dayOfMonth, nextOccurrence, recurrenceLabel as getRecurrenceLabel, weekdayName } from './recurrence';
 import { ModalComponent } from '../../ui/modal/modal';
 import { ButtonComponent } from '../../ui/button/button';
@@ -298,10 +289,10 @@ export class OrdersComponent {
       list.map((item) =>
         item.id === order.id
           ? {
-              ...item,
-              expectedDate: next,
-              products: item.products.map(({ received: _received, ...rest }) => rest)
-            }
+            ...item,
+            expectedDate: next,
+            products: item.products.map(({ received: _received, ...rest }) => rest)
+          }
           : item
       )
     );
@@ -543,13 +534,13 @@ export class OrdersComponent {
         list.map((order) =>
           order.id === editingId
             ? {
-                ...order,
-                company: provider,
-                companyColor: supplier?.color ?? '#6b7280',
-                products: this.cart(),
-                expectedDate: this.expectedDate(),
-                recurrence: recurrenceData
-              }
+              ...order,
+              company: provider,
+              companyColor: supplier?.color ?? '#6b7280',
+              products: this.cart(),
+              expectedDate: this.expectedDate(),
+              recurrence: recurrenceData
+            }
             : order
         )
       );

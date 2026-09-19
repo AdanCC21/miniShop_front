@@ -25,7 +25,6 @@
         </div>
       </div>
       <div class="flex gap-2 justify-end">
-        <app-button text="Ajustar cuenta" variant="secondary" (clicked)="toggleAdjustCredit(person)" />
         <app-button text="Ver detalles" variant="outline" (clicked)="toggleDetails(person)" />
       </div>
       }
@@ -49,7 +48,7 @@
 </div>
 
 @if (detailsOpen() && selectedPerson(); as person ) {
-<app-modal title="Fiados de {{ person.name }}" size="xl" (close)="toggleDetails(null)">
+<app-modal title="Fiados de {{ person.name }}" size="4xl" (close)="toggleDetails(null)">
   <div class="flex flex-col gap-2">
     <h2 class="text-xl font-bold">{{person.name}}</h2>
     <div class="flex flex-wrap items-center justify-between gap-3">
@@ -65,13 +64,19 @@
             <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
               <th class="px-4 py-3 font-semibold">Fecha</th>
               <th class="px-4 py-3 font-semibold">Monto</th>
+              <th class="px-4 py-3 font-semibold">Pagado</th>
+              <th class="px-4 py-3 font-semibold text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
             @for (credit of person.credits; track credit.id) {
             <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
-              <td class="px-4 py-3 text-gray-700">{{ credit.createdAt }}</td>
+              <td class="px-4 py-3 text-gray-700">{{ getDate(credit.createdAt) }}</td>
               <td class="px-4 py-3 font-medium text-gray-900">${{ credit.totalAmount }}</td>
+              <td class="px-4 py-3 font-medium text-green-600">${{ credit.paidAmount }}</td>
+              <td class="px-4 py-3 flex gap-4 justify-end">
+                <app-button (clicked)="toggleAdjustCredit(credit)" variant="outline" text="Abonar"/>
+              </td>
             </tr>
             }
           </tbody>
@@ -95,16 +100,15 @@
 </app-modal>
 }
 
-@if(openAdjust() && selectedPerson(); as person){
-<app-modal title="Cuenta de {{person.name}}" size="2xl" (close)="toggleAdjustCredit(null)">
+@if(selectedCredit(); as credit;){
+<app-modal title="Modificar credito" size="2xl" (close)="toggleAdjustCredit(null)">
   <div class="flex flex-col gap-4">
-    <h2 class="text-lg">Ajustar cuenta de {{person.name}}</h2>
-    <app-input label="Cantidad" (valueChange)="onAdjustCredit($event)" [value]="this.adjustCredit()" />
+    <h2 class="text-lg">Ajustar credito</h2>
+    <app-input label="Cantidad" type="number" (valueChange)="onAdjustCredit($event)" [value]="this.adjustCredit()" />
+    <p class="-mt-2 text-xs text-gray-500">Usa un valor positivo para aumentar la deuda o negativo para abonar.</p>
     <div class="flex flex-wrap gap-2 mt-2 justify-end">
       <app-button variant="outline" text="Cancelar" (clicked)="toggleAdjustCredit(null)" />
-      <app-button variant="secondary" text="Restar deuda" (clicked)="requestAdjust('reduce')" />
-      <app-button variant="secondary" text="Incrementar deuda" (clicked)="requestAdjust('increment')" />
-      <app-button variant="danger" text="Pagar deuda" (clicked)="requestAdjust('pay')" />
+      <app-button text="Actualizar" (clicked)="requestAdjust('update')" />
     </div>
   </div>
 </app-modal>
@@ -112,6 +116,7 @@
 
 @if (pendingAdjust(); as action) {
 <app-confirm-modal [title]="adjustConfirmTitle(action)" [message]="adjustConfirmMessage(action)"
-  confirmText="Confirmar" cancelText="Cancelar" (confirm)="confirmAdjust()" (cancel)="cancelAdjust()" />
+  confirmText="Confirmar" cancelText="Cancelar" [danger]="action === 'update' && adjustCredit() < 0"
+  (confirm)="confirmAdjust()" (cancel)="cancelAdjust()" />
 }
 
