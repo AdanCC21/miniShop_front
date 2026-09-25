@@ -1,0 +1,30 @@
+<article class="flex flex-col justify-between gap-4 rounded-lg border border-gray-200 bg-(--card) p-5">
+  @if (person().credits?.length) {
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h3 class="font-semibold text-gray-900">{{ person().name }}</h3>
+        <p class="mt-1 text-xs text-gray-500">
+          Último fiado: {{ lastCreditDate() }}
+        </p>
+        @if (totalAmount() <= 0) {
+          <p class="text-sm text-green-500">Esta persona ya pago su deuda</p>
+        }
+      </div>
+      <div
+        class="rounded-full bg-red-50 px-3 py-1 text-sm font-bold"
+        [class]="totalAmount() <= 0 ? 'text-green-500' : 'text-red-500'"
+      >
+        {{ totalAmount() }}
+      </div>
+    </div>
+
+    <div class="flex gap-2 justify-end">
+      <app-button text="Ver detalles" variant="outline" (clicked)="handleViewDetails()" />
+    </div>
+  } @else {
+    <div class="flex flex-col gap-2">
+      <span class="text-lg">{{ person().name }}</span>
+      <span class="text-sm text-gray-400">Esta persona no tiene credito registrado</span>
+    </div>
+  }
+</article>

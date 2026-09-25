@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { StoreService } from '../../store.service';
 import { ButtonComponent } from '../../ui/button/button';
 import { ConfirmModalComponent } from '../../ui/confirm-modal/confirm-modal';
+import { GuarantorCardComponent } from '../../ui/guarantor-card/guarantor-card';
 import { InputComponent } from '../../ui/input/input';
 import { ModalComponent } from '../../ui/modal/modal';
 import { ToastService } from '../../ui/toast/toast.service';
@@ -17,11 +18,10 @@ type AdjustAction = 'update' | 'pay';
 
 @Component({
   selector: 'app-fiados',
-  imports: [ButtonComponent, ConfirmModalComponent, InputComponent, ModalComponent],
+  imports: [ButtonComponent, ConfirmModalComponent, GuarantorCardComponent, InputComponent, ModalComponent],
   templateUrl: './fiados.html'
 })
 export class FiadosComponent implements OnInit {
-  private readonly store = inject(StoreService);
   private readonly toast = inject(ToastService);
   private readonly loader = inject(LoaderService);
 
@@ -39,13 +39,25 @@ export class FiadosComponent implements OnInit {
   protected readonly getDate = getDate;
 
   async ngOnInit() {
-    this.loader.show("Cargando fiadores");
+    this.loadGuarantors();
+  }
+
+  async loadGuarantors(showLoader: boolean = true) {
+    if (showLoader) this.loader.show("Cargando fiadores");
 
     const guarantors = await GetGuarantors(this.toast);
     if (!guarantors) return;
 
     this.guarantors.set(guarantors);
-    this.loader.hide();
+    if (showLoader) this.loader.hide();
+  }
+
+  protected guarantorsNotPaid() {
+    return this.guarantors().filter(gur => gur.credits && gur.credits.length > 0 && this.totalAmount(gur) > 0) || []
+  }
+
+  protected guarantorsPaid() {
+    return this.guarantors().filter(gur => !gur.credits || (gur.credits.length > 0 && this.totalAmount(gur) <= 0)) || []
   }
 
   async submitGuarantor() {
@@ -58,6 +70,7 @@ export class FiadosComponent implements OnInit {
     const result = await CreateGuarantor(this.newPersonName(), this.toast);
     if (result) {
       this.toast.success('Persona agregada', `${name} fue registrada.`);
+      this.loadGuarantors(false);
     };
 
     this.newPersonName.set("");
@@ -142,10 +155,7 @@ export class FiadosComponent implements OnInit {
     this.loader.show('Aplicando cambios a la cuenta');
     await AdjustCredit(amount, this.selectedCredit()!.id, this.toast);
 
-    const guarantors = await GetGuarantors(this.toast);
-    if (guarantors) {
-      this.guarantors.set(guarantors);
-    }
+    this.loadGuarantors(false);
 
     this.toast.success(
       action === 'pay'

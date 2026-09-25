@@ -2,14 +2,10 @@
   <div class="flex justify-between w-full">
     <div class="flex flex-col gap-4">
       <h1 class="text-2xl font-bold text-black">Cajero</h1>
-      <p class="text-sm text-gray-500">Registra los productos de la venta actual</p>
+      <p class="text-sm text-gray-500">Registra los productos de la venta actual <br/>Procure no abandonar esta pagina con articulos registrados. Cobre o limpe la venta.</p>
     </div>
     <div class="flex flex-col items-end gap-3">
-      <div class="flex gap-2">
-        <app-button text="Ventas" variant="outline" (clicked)="openVentas()" />
-        <app-button text="Caja actual" variant="outline" (clicked)="openCaja()" />
-      </div>
-      <span class="text-sm">Procure no abandonar esta pagina con articulos registrados. Cobre o limpe la venta.</span>
+      <app-button text="Caja actual" variant="outline" (clicked)="openCaja()" />
     </div>
   </div>
 
@@ -18,7 +14,7 @@
     continuar</span>
   }@else {
   <div class="flex md:flex-row flex-col-reverse gap-4 w-full">
-    <div class="flex flex-col flex-3 gap-4 w-full">
+    <div class="flex flex-col flex-2 gap-4 w-full">
       <section class="flex flex-col gap-4">
         @if(this.regManual()){
         <section class="rounded-lg border border-gray-200 bg-(--card) p-5">

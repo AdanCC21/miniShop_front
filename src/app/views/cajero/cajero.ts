@@ -22,7 +22,8 @@ import { PaymentMethod } from '../../entities/PaymentMethod';
 import { CreateSaleDetailDTO, CreateSaleDTO, SaleDetail, SaleDTO } from '../../dto/sale.dto';
 import { PostSales } from '../../api/sales';
 import { GuarantorDTO } from '../../dto/guarantor.dto';
-import { GetGuarantors } from '../../api/guarantor';
+import { CreateGuarantor, GetGuarantors } from '../../api/guarantor';
+import { LoaderService } from '../../ui/loader/loader.service';
 
 @Component({
   selector: 'app-cajero',
@@ -32,6 +33,7 @@ import { GetGuarantors } from '../../api/guarantor';
 export class CajeroComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly store = inject(StoreService);
+  protected readonly loader = inject(LoaderService);
 
   protected readonly PaymentMethod = PaymentMethod;
 
@@ -74,9 +76,20 @@ export class CajeroComponent implements OnInit {
   protected readonly cajaOpen = signal(false);
 
   async ngOnInit() {
+    this.loader.show('Cargando productos...');
+    await Promise.all([
+      this.loadProducts(),
+      this.loadGuarantors()
+    ])
+    this.loader.hide();
+  }
+
+  async loadProducts() {
     const products = await GetProducts(this.toast);
     this.products.set(products);
+  }
 
+  async loadGuarantors() {
     const guarantors = await GetGuarantors(this.toast);
     this.guarantors.set(guarantors);
   }
@@ -200,16 +213,26 @@ export class CajeroComponent implements OnInit {
     this.addFiadoPersonOpen.set(false);
   }
 
-  protected confirmAddFiadoPerson(): void {
+  protected async confirmAddFiadoPerson() {
     const name = this.fiadoQuery().trim();
     if (name === '') {
       this.toast.error('Nombre vacío', 'Escribe el nombre de la persona.');
       return;
     }
-    // this.store.addPerson(name);
+
+    this.loader.show('Publicando fiador');
+    const result = await CreateGuarantor(name, this.toast);
+    if (result) {
+      this.toast.success('Persona agregada', `${name} fue registrada.`);
+    };
+
+    await this.loadGuarantors();
+    this.loader.hide();
+
     this.selectFiadoPerson(name);
     this.addFiadoPersonOpen.set(false);
     this.toast.success('Persona agregada', `${name} fue registrada.`);
+
   }
 
   protected onInitialDraftChange(event: Event): void {
@@ -375,11 +398,13 @@ export class CajeroComponent implements OnInit {
       case PaymentMethod.CREDIT:
         // Credito
         const name = this.selectedFiadoPerson().trim();
+        console.log(name);
         if (name === '') {
           this.toast.error('Falta la persona', 'Selecciona a quién se le fía.');
           return;
         }
         const guar = this.guarantors().find(cur => cur.name === name);
+        console.log(this.guarantors());
         console.log(guar);
         if (!guar) {
           this.toast.error(`El fiador ${name} no fue encontrado entre los fiadores registrados. Id del fiador ${guarantorId}`)

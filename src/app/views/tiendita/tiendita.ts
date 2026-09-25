@@ -1,21 +1,48 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
-import { MONTHLY_SALES } from './tiendita.data';
-import { StoreService, DailyClosure } from '../../store.service';
-import { CartLine, SaleRecord, saleCashPortion, salePaymentLines } from '../cajero/cajero.data';
+import { StoreService } from '../../store.service';
 import { PaymentMethod } from '../../entities/PaymentMethod';
 import { formatDate, Order } from '../orders/orders.data';
 import { ButtonComponent } from '../../ui/button/button';
 import { InputComponent } from '../../ui/input/input';
 import { ModalComponent } from '../../ui/modal/modal';
 import { ToastService } from '../../ui/toast/toast.service';
+import { GetSales } from '../../api/sales';
+import { SaleDTO } from '../../dto/sale.dto';
+
+interface DailySummary {
+  date: string;
+  sales: number;
+  productsSold: number;
+  total: number;
+}
+
+interface MonthlySummary {
+  month: string;
+  sales: number;
+  productsSold: number;
+  total: number;
+}
+
+interface TodayProductLine {
+  id: string;
+  code: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface PaymentLine {
+  label: string;
+  amount: number;
+}
 
 @Component({
   selector: 'app-tiendita',
   imports: [ButtonComponent, InputComponent, ModalComponent],
   templateUrl: './tiendita.html'
 })
-export class TienditaComponent {
+export class TienditaComponent implements OnInit {
   private readonly store = inject(StoreService);
   protected readonly toast = inject(ToastService);
 
@@ -45,20 +72,38 @@ export class TienditaComponent {
   protected readonly closuresPage = signal(0);
   protected readonly closuresPageSize = 5;
 
-  protected readonly currentMonthClosures = computed(() => {
+  protected readonly sales = signal<SaleDTO[]>([]);
+
+  protected readonly loading = signal(true);
+
+  async ngOnInit() {
+    const sales = await GetSales(false, this.toast);
+    if (sales) {
+      this.sales.set(sales);
+    }
+    this.loading.set(false);
+  }
+
+  protected readonly currentMonthClosures = computed<DailySummary[]>(() => {
     const [year, month] = this.currentMonth().split('-').map(Number);
     const daysInMonth = new Date(year, month, 0).getDate();
-    const closures = this.store.closuresForMonth(this.currentMonth());
+    const byDay = new Map<string, { sales: number; productsSold: number; total: number }>();
+    for (const sale of this.sales()) {
+      const day = this.saleDayISO(sale);
+      if (!day.startsWith(this.currentMonth())) {
+        continue;
+      }
+      const entry = byDay.get(day) ?? { sales: 0, productsSold: 0, total: 0 };
+      entry.sales += 1;
+      entry.productsSold += this.saleQuantity(sale);
+      entry.total += Number(sale.total);
+      byDay.set(day, entry);
+    }
     return Array.from({ length: daysInMonth }, (_, index) => {
       const day = index + 1;
       const date = `${this.currentMonth()}-${String(day).padStart(2, '0')}`;
-      const closure = closures.find((item) => item.date === date);
-      return {
-        date,
-        sales: closure?.sales ?? 0,
-        productsSold: closure?.productsSold ?? 0,
-        total: closure?.total ?? 0
-      };
+      const { sales, productsSold, total } = byDay.get(date) ?? { sales: 0, productsSold: 0, total: 0 };
+      return { date, sales, productsSold, total };
     });
   });
 
@@ -86,39 +131,50 @@ export class TienditaComponent {
     this.closuresPage.update((page) => Math.min(this.closuresPages() - 1, page + 1));
   }
 
-  protected readonly todayClosure = computed<DailyClosure | null>(() => {
+  protected readonly todayClosure = computed(() => {
     const today = this.todayISO();
-    return this.store.closures().find((closure) => closure.date === today) ?? null;
+    const history = this.sales().filter((sale) => this.saleDayISO(sale) === today);
+    return {
+      date: today,
+      initial: 0,
+      sales: history.length,
+      productsSold: history.reduce((sum, sale) => sum + this.saleQuantity(sale), 0),
+      total: history.reduce((sum, sale) => sum + Number(sale.total), 0),
+      history
+    };
   });
 
-  protected readonly todayProducts = computed<CartLine[]>(() => {
-    const history = this.todayClosure()?.history ?? [];
-    const byCode = new Map<string, CartLine>();
-    for (const sale of history) {
-      for (const line of sale.products) {
-        const existing = byCode.get(line.code);
+  protected readonly todayProducts = computed<TodayProductLine[]>(() => {
+    const byId = new Map<string, TodayProductLine>();
+    for (const sale of this.todayClosure()?.history ?? []) {
+      for (const detail of sale.details ?? []) {
+        const existing = byId.get(detail.productId);
         if (existing) {
-          byCode.set(line.code, { ...existing, quantity: existing.quantity + line.quantity });
+          existing.quantity += detail.quantity;
         } else {
-          byCode.set(line.code, { ...line });
+          byId.set(detail.productId, {
+            id: detail.productId,
+            code: detail.product?.code ?? '-',
+            name: detail.product?.name ?? 'Producto',
+            price: detail.unitPrice,
+            quantity: detail.quantity
+          });
         }
       }
     }
-    return [...byCode.values()];
+    return [...byId.values()];
   });
 
-  protected readonly todaySales = computed(() => {
-    const history = this.todayClosure()?.history ?? [];
-    return history.reduce((sum, sale) => sum + sale.total, 0);
-  });
+  protected readonly todaySales = computed(() =>
+    (this.todayClosure()?.history ?? []).reduce((sum, sale) => sum + Number(sale.total), 0)
+  );
 
   protected readonly todayCashSales = computed(() => {
-    const closure = this.todayClosure();
-    const history = closure?.history ?? [];
+    const history = this.todayClosure()?.history ?? [];
     if (history.length === 0) {
-      return closure?.total ?? 0;
+      return this.todayClosure()?.total ?? 0;
     }
-    return history.reduce((sum, sale) => sum + saleCashPortion(sale), 0);
+    return history.reduce((sum, sale) => sum + this.saleCashPortion(sale), 0);
   });
 
   protected readonly todayTotalProducts = computed(() =>
@@ -129,8 +185,8 @@ export class TienditaComponent {
     const history = this.todayClosure()?.history ?? [];
     return history.reduce(
       (acc, sale) => {
-        const method = sale.paymentMethod ?? PaymentMethod.CASH;
-        acc[method] += sale.total;
+        const method = sale.method ?? PaymentMethod.CASH;
+        acc[method] += Number(sale.total);
         return acc;
       },
       {
@@ -146,7 +202,7 @@ export class TienditaComponent {
     const history = this.todayClosure()?.history ?? [];
     return history.reduce(
       (acc, sale) => {
-        const method = sale.paymentMethod ?? PaymentMethod.CASH;
+        const method = sale.method ?? PaymentMethod.CASH;
         acc[method] += 1;
         return acc;
       },
@@ -161,16 +217,51 @@ export class TienditaComponent {
 
   protected readonly todayFiadoTotal = computed(() => {
     const history = this.todayClosure()?.history ?? [];
-    return history.reduce((sum, sale) => sum + (sale.fiadoAmount ?? 0), 0);
+    return history.reduce(
+      (sum, sale) =>
+        sum +
+        (sale.method === PaymentMethod.CREDIT
+          ? Number(sale.total) - Number(sale.paidCard) - Number(sale.paidCash)
+          : 0),
+      0
+    );
   });
 
   protected readonly todayFiadoCount = computed(() => {
     const history = this.todayClosure()?.history ?? [];
-    return history.filter((sale) => (sale.paymentMethod ?? PaymentMethod.CASH) === PaymentMethod.CREDIT).length;
+    return history.filter((sale) => (sale.method ?? PaymentMethod.CASH) === PaymentMethod.CREDIT).length;
   });
 
-  protected paymentLines(sale: SaleRecord) {
-    return salePaymentLines(sale);
+  protected paymentLines(sale: SaleDTO): PaymentLine[] {
+    const method = sale.method ?? PaymentMethod.CASH;
+    if (method === PaymentMethod.MIXED) {
+      return [
+        { label: 'Tarjeta', amount: Number(sale.paidCard) },
+        { label: 'Efectivo', amount: Number(sale.total) - Number(sale.paidCard) }
+      ];
+    }
+    if (method === PaymentMethod.CREDIT) {
+      const paid = Number(sale.paidCard) + Number(sale.paidCash);
+      return [
+        { label: 'Cobrado', amount: paid },
+        { label: 'Fiado', amount: Number(sale.total) - paid }
+      ];
+    }
+    return [];
+  }
+
+  private saleCashPortion(sale: SaleDTO): number {
+    const method = sale.method ?? PaymentMethod.CASH;
+    if (method === PaymentMethod.CARD) {
+      return 0;
+    }
+    if (method === PaymentMethod.CREDIT) {
+      return Number(sale.paidCard) + Number(sale.paidCash);
+    }
+    if (method === PaymentMethod.MIXED) {
+      return Number(sale.total) - Number(sale.paidCard);
+    }
+    return Number(sale.total);
   }
 
   protected paymentMethodLabel(method: PaymentMethod | undefined): string {
@@ -186,8 +277,16 @@ export class TienditaComponent {
     return 'Efectivo';
   }
 
-  protected saleProducts(sale: SaleRecord): number {
-    return sale.products.reduce((sum, line) => sum + line.quantity, 0);
+  protected saleProducts(sale: SaleDTO): number {
+    return (sale.details ?? []).reduce((sum, line) => sum + line.quantity, 0);
+  }
+
+  protected saleTime(sale: SaleDTO): string {
+    const date = this.saleDate(sale);
+    return new Intl.DateTimeFormat('es-MX', {
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
   }
 
   protected readonly todayDetailsOpen = signal(false);
@@ -200,17 +299,47 @@ export class TienditaComponent {
     this.todayDetailsOpen.set(false);
   }
 
-  protected readonly currentSales = computed(() =>
-    MONTHLY_SALES.find((item) => item.month === this.currentMonth())
-  );
+  protected readonly currentSales = computed<MonthlySummary>(() => {
+    let sales = 0;
+    let productsSold = 0;
+    let total = 0;
+    for (const sale of this.sales()) {
+      if (!this.saleDayISO(sale).startsWith(this.currentMonth())) {
+        continue;
+      }
+      sales += 1;
+      productsSold += this.saleQuantity(sale);
+      total += Number(sale.total);
+    }
+    return { month: this.currentMonth(), sales, productsSold, total };
+  });
 
-  protected readonly lastMonths = computed(() =>
-    [...MONTHLY_SALES].sort((a, b) => b.month.localeCompare(a.month)).slice(0, 3)
-  );
+  protected readonly lastMonths = computed<MonthlySummary[]>(() => {
+    const today = new Date();
+    const months: string[] = [];
+    for (let index = 0; index < 3; index += 1) {
+      const date = new Date(today.getFullYear(), today.getMonth() - index, 1);
+      months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+    }
+    return months.map((month) => {
+      let sales = 0;
+      let productsSold = 0;
+      let total = 0;
+      for (const sale of this.sales()) {
+        if (!this.saleDayISO(sale).startsWith(month)) {
+          continue;
+        }
+        sales += 1;
+        productsSold += this.saleQuantity(sale);
+        total += Number(sale.total);
+      }
+      return { month, sales, productsSold, total };
+    });
+  });
 
   protected readonly averageTicket = computed(() => {
-    const sales = this.currentSales();
-    return sales && sales.sales > 0 ? sales.total / sales.sales : 0;
+    const summary = this.currentSales();
+    return summary.sales > 0 ? summary.total / summary.sales : 0;
   });
 
   protected readonly conflicts = computed<Order[]>(() => {
@@ -315,6 +444,22 @@ export class TienditaComponent {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private saleDate(sale: SaleDTO): Date {
+    return sale.date instanceof Date ? sale.date : new Date(sale.date);
+  }
+
+  private saleDayISO(sale: SaleDTO): string {
+    const date = this.saleDate(sale);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private saleQuantity(sale: SaleDTO): number {
+    return (sale.details ?? []).reduce((sum, line) => sum + line.quantity, 0);
   }
 
   protected deliveryDay(order: Order): string {

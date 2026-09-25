@@ -9,32 +9,19 @@
   </div>
 
   @if(this.guarantors().length){
+  <h3 class="text-lg">Fiadores con cuenta pendiente</h3>
   <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-    @for (person of guarantors(); track person.createdAt) {
-    <article class="flex flex-col justify-between gap-4 rounded-lg border border-gray-200 bg-(--card) p-5">
-      @if(person.credits && person.credits.length > 0){
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <h3 class="font-semibold text-gray-900">{{ person.name }}</h3>
-          <p class="mt-1 text-xs text-gray-500">
-            Último fiado: {{ lastCreditDate(person) }}
-          </p>
-        </div>
-        <div class="rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-red-600">
-          {{totalAmount(person)}}
-        </div>
-      </div>
-      <div class="flex gap-2 justify-end">
-        <app-button text="Ver detalles" variant="outline" (clicked)="toggleDetails(person)" />
-      </div>
-      }
-      @else {
-      <div class="flex flex-col gap-2">
-        <span class="text-lg">{{person.name}}</span>
-        <span class="text-sm text-gray-400">Esta persona no tiene credito registrado</span>
-      </div>
-      }
-    </article>
+    @for (person of this.guarantorsNotPaid(); track person.createdAt) {
+    <app-guarantor-card [person]="person" [totalAmount]="totalAmount(person)" [lastCreditDate]="lastCreditDate(person)"
+      (viewDetails)="toggleDetails($event)" />
+    }
+  </section>
+
+  <h3 class="text-lg">Fiadores con cuenta saldada</h3>
+  <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    @for (person of this.guarantorsPaid(); track person.createdAt) {
+    <app-guarantor-card [person]="person" [totalAmount]="totalAmount(person)" [lastCreditDate]="lastCreditDate(person)"
+      (viewDetails)="toggleDetails($event)" />
     }
   </section>
   }
@@ -75,7 +62,7 @@
               <td class="px-4 py-3 font-medium text-gray-900">${{ credit.totalAmount }}</td>
               <td class="px-4 py-3 font-medium text-green-600">${{ credit.paidAmount }}</td>
               <td class="px-4 py-3 flex gap-4 justify-end">
-                <app-button (clicked)="toggleAdjustCredit(credit)" variant="outline" text="Abonar"/>
+                <app-button (clicked)="toggleAdjustCredit(credit)" variant="outline" text="Abonar" />
               </td>
             </tr>
             }
@@ -115,8 +102,7 @@
 }
 
 @if (pendingAdjust(); as action) {
-<app-confirm-modal [title]="adjustConfirmTitle(action)" [message]="adjustConfirmMessage(action)"
-  confirmText="Confirmar" cancelText="Cancelar" [danger]="action === 'update' && adjustCredit() < 0"
-  (confirm)="confirmAdjust()" (cancel)="cancelAdjust()" />
+<app-confirm-modal [title]="adjustConfirmTitle(action)" [message]="adjustConfirmMessage(action)" confirmText="Confirmar"
+  cancelText="Cancelar" [danger]="action === 'update' && adjustCredit() < 0" (confirm)="confirmAdjust()"
+  (cancel)="cancelAdjust()" />
 }
-

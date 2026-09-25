@@ -13,20 +13,24 @@
   @else {
   <section>
     <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Resumen del día</h2>
-    <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <li class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in" >
+    <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <li class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in">
         <p class="text-sm font-medium text-gray-500">Total de ventas hoy</p>
         <p class="mt-2 text-2xl font-bold text-black sm:text-3xl">{{this.salesToday().length}}</p>
       </li>
-      <li class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in" >
-        <p class="text-sm font-medium text-gray-500">Total vendido</p>
+      <li class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in">
+        <p class="text-sm font-medium text-gray-500">Total de ganancia</p>
         <p class="mt-2 text-2xl font-bold text-black sm:text-3xl">{{this.getTotalSaled()}}</p>
       </li>
-      <li class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in" >
+      <li class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in">
+        <p class="text-sm font-medium text-gray-500">Total fiado</p>
+        <p class="mt-2 text-2xl font-bold text-black sm:text-3xl">{{this.getTotalCredit()}}</p>
+      </li>
+      <li class="rounded-lg border border-gray-200 bg-(--card) p-5" animate.enter="ms-card-in">
         <p class="text-sm font-medium text-gray-500">Ultima venta</p>
         <p class="mt-2 text-2xl font-bold text-black sm:text-3xl">{{this.getLastSale()}}</p>
       </li>
-      
+
     </ul>
   </section>
 
@@ -46,7 +50,8 @@
         </thead>
         <tbody>
           @for(sale of this.salesToday(); track sale.id){
-          <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
+          <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50"
+            (click)="this.selectSale(sale.id)">
             <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ sale.id }}</td>
             <td class="px-4 py-3 text-gray-700">{{ this.getTotalQuantity(sale) }}</td>
             <td class="px-4 py-3 font-medium text-gray-900">${{ sale.total }}</td>
@@ -60,3 +65,49 @@
   }
 </div>
 
+@if(this.saleDetails(); as sale){
+<app-modal title="Detalles de venta" size="4xl" (close)="unSelectSale()">
+  <div class="flex flex-col gap-4">
+    <h5 class="text-xs text-gray-500">{{sale.id}}</h5>
+    <ul class="flex justify-between gap-4">
+      <app-sale-detail-item title="Metodo de pago" [value]="getMethodUsed(sale.method)" />
+      @if(isCash(sale.method)){
+      <app-sale-detail-item title="Pago con efectivo" [value]="sale.paidCash.toString()" />
+      }
+      @if(isCard(sale.method)){
+      <app-sale-detail-item title="Pago con tarjeta" [value]="sale.paidCard.toString()" />
+      }
+      @if(isCredit(sale.method)){
+      <app-sale-detail-item title="Fiado" [value]="(sale.total - (sale.paidCard + sale.paidCash)).toString()" />
+      <app-sale-detail-item title="Ganancia real" [value]="getRealWin(sale).toString()" />
+      }
+      <app-sale-detail-item title="Total de venta" [value]="sale.total.toString()" />
+    </ul>
+  </div>
+
+  <h3 class="text-lg font-medium mt-4 mb-2">Productos</h3>
+  <div class="overflow-x-auto rounded-lg border border-gray-200 bg-(--card)">
+    @if(sale.details && sale.details.length > 0){
+      <table class="w-full text-left text-sm">
+        <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+            <th class="px-4 py-3 font-semibold">Producto</th>
+            <th class="px-4 py-3 font-semibold">Cantidad</th>
+            <th class="px-4 py-3 font-semibold">Precio por unidad</th>
+            <th class="px-4 py-3 font-semibold">Total</th>
+          </tr>
+
+          <tbody>
+          @for(detail of sale.details; track detail.id){
+          <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
+            <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ detail.product!.name }}</td>
+            <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ detail.quantity }}</td>
+            <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ detail.unitPrice }}</td>
+            <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ detail.unitPrice * detail.quantity }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</app-modal>
+}

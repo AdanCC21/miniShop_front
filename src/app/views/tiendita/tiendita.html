@@ -43,12 +43,12 @@
           <p class="mt-1 text-sm font-semibold text-gray-900">{{ closure.productsSold }}</p>
         </div>
         <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Total ganado (sin fondo)</p>
+          <p class="text-xs uppercase tracking-wider text-gray-400">Total vendido</p>
           <p class="mt-1 text-sm font-semibold text-(--primary-bright)">${{ formatPrice(closure.total) }}</p>
         </div>
         <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Total ganado (con fondo)</p>
-          <p class="mt-1 text-sm font-semibold text-(--primary-bright)">${{ formatPrice((closure.initial ?? 0) + closure.total) }}</p>
+          <p class="text-xs uppercase tracking-wider text-gray-400">Total cobrado (efectivo + tarjeta)</p>
+          <p class="mt-1 text-sm font-semibold text-(--primary-bright)">${{ formatPrice(todayCashSales()) }}</p>
         </div>
       </div>
       <app-button text="Ver más detalles" variant="outline" (clicked)="openTodayDetails()" />
@@ -216,13 +216,13 @@
         <p class="mt-1 text-sm font-semibold text-gray-900">{{ todayTotalProducts() }}</p>
       </div>
       <div>
-        <p class="text-xs uppercase tracking-wider text-gray-400">Total ganado (sin fondo)</p>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Total vendido</p>
         <p class="mt-1 text-sm font-semibold text-(--primary-bright)">${{ formatPrice(todaySales()) }}</p>
       </div>
       <div>
-        <p class="text-xs uppercase tracking-wider text-gray-400">Total ganado (con fondo)</p>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Total cobrado</p>
         <p class="mt-1 text-sm font-semibold text-(--primary-bright)">
-          ${{ formatPrice((closure.initial ?? 0) + todayCashSales()) }}
+          ${{ formatPrice(todayCashSales()) }}
         </p>
       </div>
     </div>
@@ -263,18 +263,18 @@
         <tbody>
           @for (sale of closure.history ?? []; track sale.id) {
           <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
-            <td class="px-4 py-3 text-gray-700">{{ sale.time }}</td>
+            <td class="px-4 py-3 text-gray-700">{{ saleTime(sale) }}</td>
             <td class="px-4 py-3 text-gray-700">{{ saleProducts(sale) }}</td>
             <td class="px-4 py-3 text-gray-700">
               <span class="rounded-full px-2 py-0.5 text-xs font-medium"
-                [class]="sale.paymentMethod === PaymentMethod.CARD
+                [class]="sale.method === PaymentMethod.CARD
                   ? 'bg-(--secondary) text-(--secondary-foreground)'
-                  : sale.paymentMethod === PaymentMethod.MIXED
+                  : sale.method === PaymentMethod.MIXED
                     ? 'bg-purple-50 text-purple-700'
-                    : sale.paymentMethod === PaymentMethod.CREDIT
+                    : sale.method === PaymentMethod.CREDIT
                       ? 'bg-red-50 text-red-700'
                       : 'bg-emerald-50 text-emerald-700'">
-                {{ paymentMethodLabel(sale.paymentMethod) }}
+                {{ paymentMethodLabel(sale.method) }}
               </span>
               @if (paymentLines(sale).length > 0) {
               <div class="mt-1 space-y-0.5">
@@ -309,12 +309,12 @@
           </tr>
         </thead>
         <tbody>
-          @for (line of todayProducts(); track line.code) {
+          @for (line of todayProducts(); track line.id) {
           <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
             <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ line.code }}</td>
             <td class="px-4 py-3 text-gray-700">{{ line.name }}</td>
             <td class="px-4 py-3 text-gray-900">${{ formatPrice(line.price) }}</td>
-            <td class="px-4 py-3 text-gray-900">{{ line.quantity }} {{ line.byWeight ? 'kg' : '' }}</td>
+            <td class="px-4 py-3 text-gray-900">{{ line.quantity }}</td>
             <td class="px-4 py-3 font-medium text-gray-900">${{ formatPrice(line.price * line.quantity) }}</td>
           </tr>
           } @empty {

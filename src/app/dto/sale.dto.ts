@@ -1,4 +1,5 @@
 import { PaymentMethod } from "../entities/PaymentMethod";
+import { ProductDTO } from "./product.dto";
 
 export interface SaleDTO {
     id: string;
@@ -19,6 +20,7 @@ export interface SaleDetail {
     id: string
     saleId: string
     productId: string
+    product?:ProductDTO
     quantity: number
     unitPrice: number
 }
