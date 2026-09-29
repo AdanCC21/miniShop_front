@@ -17,7 +17,6 @@ export async function GetSales(today: boolean = false, toast: ToastService):Prom
 export async function PostSales(dto: { sale: CreateSaleDTO, details: CreateSaleDetailDTO[] }, toast: ToastService) {
     try {
         const res = await axios.post(`${backendRoute}/sale`, dto, { withCredentials: true })
-        console.log(res);
         return true;
     } catch (e) {
         showError(e, toast);

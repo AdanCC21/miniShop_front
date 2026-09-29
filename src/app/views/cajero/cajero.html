@@ -1,18 +1,21 @@
-<div class="space-y-6" animate.enter="ms-fade-in-up">
+<div class="flex flex-col size-full gap-y-6" animate.enter="ms-fade-in-up">
+  @if(this.curShopReg() && this.curShopReg()?.isOpen){
   <div class="flex justify-between w-full">
     <div class="flex flex-col gap-4">
       <h1 class="text-2xl font-bold text-black">Cajero</h1>
-      <p class="text-sm text-gray-500">Registra los productos de la venta actual <br/>Procure no abandonar esta pagina con articulos registrados. Cobre o limpe la venta.</p>
+      <p class="text-sm text-gray-500">Registra los productos de la venta actual <br />Procure no abandonar esta pagina
+        con articulos registrados. Cobre o limpe la venta.</p>
     </div>
     <div class="flex flex-col items-end gap-3">
-      <app-button text="Caja actual" variant="outline" (clicked)="openCaja()" />
+      <app-button text="Caja actual" variant="outline" (clicked)="togglePreviewShop(true)" />
     </div>
   </div>
 
   @if(this.products().length === 0){
   <span class="text-lg">No tiene productos registrados en su inventario, porfavor registre productos antes de
     continuar</span>
-  }@else {
+  }
+  @else{
   <div class="flex md:flex-row flex-col-reverse gap-4 w-full">
     <div class="flex flex-col flex-2 gap-4 w-full">
       <section class="flex flex-col gap-4">
@@ -107,12 +110,6 @@
         </table>
       </section>
     </div>
-
-    @if (closeOpen()) {
-    <app-confirm-modal title="Cerrar caja" [danger]="true"
-      [message]="'¿Registrar el cierre de caja de hoy? Se reiniciarán el fondo inicial y las ventas de la caja.'"
-      confirmText="Cerrar caja" cancelText="Cancelar" (confirm)="confirmClose()" (cancel)="cancelClose()" />
-    }
 
     <aside class="flex flex-col flex-1 gap-2">
       <section class="flex flex-col flex-1 h-fit gap-4 rounded-lg border border-gray-200 bg-(--card) p-5">
@@ -321,173 +318,54 @@
   </div>
   }
 
-  @if (selectedSale(); as sale) {
-  <app-modal title="Detalles de la venta" size="lg" (close)="closeSaleDetails()">
-    <div class="space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <p class="text-sm text-gray-500">Venta a las {{ sale.time }} · {{ saleProducts(sale) }} productos</p>
-        <p class="text-lg font-bold text-(--primary-bright)">${{ formatPrice(sale.total) }}</p>
-      </div>
-
-      <div class="grid grid-cols-3 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-        @if (sale.paymentMethod === PaymentMethod.MIXED) {
-        <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Recibido con tarjeta</p>
-          <p class="mt-1 text-sm font-medium text-gray-900">${{ formatPrice(sale.receivedCard ?? 0) }}</p>
-        </div>
-        <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Recibido con efectivo</p>
-          <p class="mt-1 text-sm font-medium text-gray-900">${{ formatPrice(sale.receivedCash ?? 0) }}</p>
-        </div>
-        } @else if (sale.paymentMethod === PaymentMethod.CREDIT) {
-        <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Total cobrado</p>
-          <p class="mt-1 text-sm font-medium text-gray-900">${{ formatPrice(sale.received) }}</p>
-        </div>
-        <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Restante (fiado)</p>
-          <p class="mt-1 text-sm font-medium text-red-600">${{ formatPrice(sale.fiadoAmount ?? 0) }}</p>
-        </div>
-        } @else {
-        <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Recibido</p>
-          <p class="mt-1 text-sm font-medium text-gray-900">${{ formatPrice(sale.received) }}</p>
-        </div>
-        }
-        <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Cambio</p>
-          <p class="mt-1 text-sm font-medium text-emerald-600">${{ formatPrice(sale.change) }}</p>
-        </div>
-        <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Total</p>
-          <p class="mt-1 text-sm font-medium text-gray-900">${{ formatPrice(sale.total) }}</p>
-        </div>
-        <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Método de pago</p>
-          <p class="mt-1 text-sm font-medium text-gray-900">{{ paymentMethodLabel(sale.paymentMethod) }}</p>
-        </div>
-      </div>
-
-      <div class="overflow-hidden rounded-lg border border-gray-200">
-        <table class="w-full text-left text-sm">
-          <thead>
-            <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-              <th class="px-4 py-3 font-semibold">Producto</th>
-              <th class="px-4 py-3 font-semibold">Precio</th>
-              <th class="px-4 py-3 font-semibold">Cantidad</th>
-              <th class="px-4 py-3 font-semibold">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (line of sale.products; track line.code) {
-            <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
-              <td class="px-4 py-3 text-gray-700">
-                <span class="font-medium text-(--primary-bright)">{{ line.code }}</span> · {{ line.name }}
-              </td>
-              <td class="px-4 py-3 text-gray-900">${{ formatPrice(line.price) }}</td>
-              <td class="px-4 py-3 text-gray-900">{{ line.quantity }} {{ line.byWeight ? 'kg' : '' }}</td>
-              <td class="px-4 py-3 font-medium text-gray-900">${{ formatPrice(line.price * line.quantity) }}</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+  }@else {
+  <div class="flex flex-col gap-2 size-full items-center justify-center">
+    <div class="flex flex-col gap-1 mb-4 text-center">
+      <p class="text-lg font-medium">La caja actualmente se encuentra</p>
+      <span class="text-lg text-red-300">{{this.curShopReg() ? 'cerrada'
+        :'error al cargar la caja. intentelo de nuevo mastarde'}}</span>
     </div>
+    <app-button text="Abrir Caja" (clicked)="toggleShopRegister(true)" />
+  </div>
+  }
+
+  <!-- MODALES -->
+  @if (closeOpen()) {
+  <app-confirm-modal title="Cerrar caja" [danger]="true"
+    [message]="'¿Registrar el cierre de caja de hoy? Se reiniciarán el fondo inicial y las ventas de la caja.'"
+    confirmText="Cerrar caja" cancelText="Cancelar" (confirm)="confirmClose()" (cancel)="cancelClose()" />
+  }
+
+  <!-- Apertura de caja -->
+  @if (previewShopReg()) {
+  <app-modal title="Caja actual" size="lg" (close)="togglePreviewShop(false)">
+    <ul class="grid grid-cols-3 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+      <li>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Dinero en caja</p>
+        <p class="mt-1 text-lg font-bold text-(--primary-bright)">${{ formatPrice(this.curShopReg()?.currentCash || 0)
+          }}</p>
+      </li>
+
+      <li>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Ganancia</p>
+        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(this.curShopReg()?.totalSales || 0) }}</p>
+      </li>
+
+      <li>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Fondo inicial</p>
+        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(this.curShopReg()?.openingCash || 0) }}</p>
+      </li>
+    </ul>
   </app-modal>
   }
 
-  @if (ventasOpen()) {
-  <app-modal title="Historial de ventas" size="lg" (close)="closeVentas()">
-    <div class="space-y-4">
-      @if (salesHistory().length > 0) {
-      <div class="overflow-x-auto rounded-lg border border-gray-200">
-        <table class="w-full text-left text-sm">
-          <thead>
-            <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-              <th class="px-3 py-2 font-semibold">Hora</th>
-              <th class="px-3 py-2 font-semibold">Productos</th>
-              <th class="px-3 py-2 font-semibold">Método</th>
-              <th class="px-3 py-2 font-semibold">Total</th>
-              <th class="px-3 py-2 font-semibold"></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (sale of salesHistory(); track sale.id) {
-            <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
-              <td class="px-3 py-2 text-gray-700">{{ sale.time }}</td>
-              <td class="px-3 py-2 text-gray-700">{{ saleProducts(sale) }}</td>
-              <td class="px-3 py-2 text-gray-700">
-                <span class="rounded-full px-2 py-0.5 text-xs font-medium" [class]="sale.paymentMethod === PaymentMethod.CARD
-                    ? 'bg-(--secondary) text-(--secondary-foreground)'
-                    : sale.paymentMethod === PaymentMethod.MIXED
-                      ? 'bg-purple-50 text-purple-700'
-                      : sale.paymentMethod === PaymentMethod.CREDIT
-                        ? 'bg-red-50 text-red-700'
-                        : 'bg-emerald-50 text-emerald-700'">
-                  {{ paymentMethodLabel(sale.paymentMethod) }}
-                </span>
-                @if (paymentLines(sale).length > 0) {
-                <div class="mt-1 space-y-0.5">
-                  @for (line of paymentLines(sale); track line.label) {
-                  <p class="text-xs text-gray-500">{{ line.label }}: ${{ formatPrice(line.amount) }}</p>
-                  }
-                </div>
-                }
-              </td>
-              <td class="px-3 py-2 font-medium text-gray-900">${{ formatPrice(sale.total) }}</td>
-              <td class="px-3 py-2 text-right">
-                <button type="button" (click)="openSaleDetails(sale)"
-                  class="rounded-md px-2 py-1 text-xs font-medium text-(--primary-bright) transition hover:bg-gray-100">
-                  Ver más
-                </button>
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      } @else {
-      <p class="text-sm text-gray-400">Aún no hay ventas registradas.</p>
-      }
-    </div>
-  </app-modal>
-  }
-
-  @if (cajaOpen()) {
-  <app-modal title="Caja actual" size="lg" (close)="closeCaja()">
-    <div class="space-y-4">
-      <div class="grid grid-cols-3 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Dinero en caja</p>
-          <p class="mt-1 text-lg font-bold text-(--primary-bright)">${{ formatPrice(expectedCash()) }}</p>
-        </div>
-        <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Ganancia</p>
-          <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(getEarnings()) }}</p>
-        </div>
-        <div>
-          <p class="text-xs uppercase tracking-wider text-gray-400">Fondo inicial</p>
-          <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(initialCash() ?? 0) }}</p>
-        </div>
-      </div>
-
-      @if (editingInitial()) {
-      <div class="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <label for="initial-cash" class="text-sm font-medium text-gray-700">
-          Monto inicial con el que abrió la caja
-        </label>
-        <input id="initial-cash" type="number" min="0" step="0.01" placeholder="0.00" [value]="initialDraft()"
-          (input)="onInitialDraftChange($event)"
-          class="w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
-        <div class="flex justify-end gap-2">
-          <app-button text="Guardar fondo" (clicked)="saveInitial()" />
-        </div>
-      </div>
-      } @else {
-      <div class="flex justify-end">
-        <app-button text="Editar fondo inicial" variant="outline" (clicked)="startEditInitial()" />
-      </div>
-      }
+  @if(openingShopReg().modalOpen){
+  <app-modal title="Abrir caja" size="lg" (close)="toggleShopRegister(false)">
+    <app-input label="Fondo inicial" type="number" [value]="this.openingShopReg().amount"
+      (valueChange)="handleShopRegister($event)" />
+    <div class="flex gap-2 justify-end mt-4">
+      <app-button text="Cancelar" variant="secondary" (clicked)="toggleShopRegister(false)" />
+      <app-button text="Abir caja" (clicked)="openShopReg()" />
     </div>
   </app-modal>
   }

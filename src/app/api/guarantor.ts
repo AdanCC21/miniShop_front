@@ -7,7 +7,6 @@ import { GuarantorDTO } from "../dto/guarantor.dto";
 export async function GetGuarantors(toast: ToastService): Promise<GuarantorDTO[]> {
     try {
         const res = await axios.get(`${backendRoute}/guarantor/myshop`, { withCredentials: true });
-        console.log(res.data);
         return res.data;
     } catch (e) {
         showError(e, toast);

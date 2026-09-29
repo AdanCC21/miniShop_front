@@ -17,7 +17,6 @@ export async function GetCategory(id:string, toast: ToastService): Promise<Categ
 export async function GetCategories(toast: ToastService): Promise<CategoryDTO[]> {
     try {
         const res = await axios.get(`${backendRoute}/category`, { withCredentials: true });
-        console.log(res.data);
         return res.data;
     } catch (e) {
         showError(e, toast);
@@ -28,7 +27,6 @@ export async function GetCategories(toast: ToastService): Promise<CategoryDTO[]>
 export async function CreateCategory(dto: CreateCategoryDTO, toast: ToastService) {
     try {
         const res = await axios.post(`${backendRoute}/category`, dto, { withCredentials: true });
-        console.log(res.data);
         return res.data;
     } catch (e) {
         showError(e, toast);

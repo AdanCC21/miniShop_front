@@ -24,6 +24,8 @@ import { PostSales } from '../../api/sales';
 import { GuarantorDTO } from '../../dto/guarantor.dto';
 import { CreateGuarantor, GetGuarantors } from '../../api/guarantor';
 import { LoaderService } from '../../ui/loader/loader.service';
+import { GetCurShopReg, SetOpneningCash } from '../../api/shopRegister';
+import { ShopRegisterDTO } from '../../dto/shopRegister.dto';
 
 @Component({
   selector: 'app-cajero',
@@ -65,25 +67,32 @@ export class CajeroComponent implements OnInit {
   protected readonly initialCash = signal<number | null>(loadNumber(CAJA_INITIAL_KEY));
   protected readonly initialDraft = signal(this.initialCash() !== null ? String(this.initialCash()) : '');
   protected readonly editingInitial = signal(this.initialCash() === null);
-  protected readonly salesTotal = signal(loadNumber(CAJA_SALES_KEY) ?? 0);
-  protected readonly salesCount = signal(loadNumber(CAJA_COUNT_KEY) ?? 0);
+  
   protected readonly productsSold = signal(loadNumber(CAJA_PRODUCTS_KEY) ?? 0);
   protected readonly salesHistory = signal<SaleRecord[]>(loadHistory());
   protected readonly selectedSale = signal<SaleRecord | null>(null);
   protected readonly closeOpen = signal(false);
   protected readonly addFiadoPersonOpen = signal(false);
   protected readonly ventasOpen = signal(false);
-  protected readonly cajaOpen = signal(false);
+  
+  // -- Preview de caja -- //
+  protected readonly previewShopReg = signal(false);
+
+  // -- Caja Registradora -- //
+  protected readonly curShopReg = signal<ShopRegisterDTO | null>(null)
+  protected readonly openingShopReg = signal<{ modalOpen: boolean, amount: number }>({ modalOpen: false, amount: 0 });
 
   async ngOnInit() {
     this.loader.show('Cargando productos...');
     await Promise.all([
       this.loadProducts(),
-      this.loadGuarantors()
+      this.loadGuarantors(),
+      this.loadShopRegister()
     ])
     this.loader.hide();
   }
 
+  // -- Loaders -- //
   async loadProducts() {
     const products = await GetProducts(this.toast);
     this.products.set(products);
@@ -94,10 +103,29 @@ export class CajeroComponent implements OnInit {
     this.guarantors.set(guarantors);
   }
 
-  protected getEarnings(): number {
-    return this.salesTotal();
+  async loadShopRegister() {
+    const shopReg = await GetCurShopReg(this.toast);
+    this.curShopReg.set(shopReg);
   }
 
+  // -- ShopRegister -- //
+  toggleShopRegister(state: boolean) {
+    const openShop = this.openingShopReg();
+    this.openingShopReg.set({ ...openShop, modalOpen: state })
+  }
+
+  handleShopRegister(value: string) {
+    const openShop = this.openingShopReg();
+    this.openingShopReg.set({ ...openShop, amount: Number(value) })
+  }
+
+  async openShopReg() {
+    await SetOpneningCash(this.openingShopReg().amount, this.toast);
+    this.toggleShopRegister(false);
+    this.loadShopRegister()
+  }
+
+  // -- . -- //
   protected readonly matches = computed(() => {
     const query = this.productQuery().trim().toLowerCase();
     if (!query) return [];
@@ -308,12 +336,13 @@ export class CajeroComponent implements OnInit {
     this.quantity.set(1);
   }
 
-  private async updateStock(): Promise<void> {
+  private async updateStock(): Promise<boolean> {
     const ok = await updateQuantity(buildStockUpdates(this.cart(), this.products()), this.toast);
     if (!ok) {
       this.toast.error('No se actualizo el inventario correctamente');
-      return;
+      return false;
     }
+    return true
   }
 
   protected removeLine(code: string): void {
@@ -372,7 +401,6 @@ export class CajeroComponent implements OnInit {
     let guarantorId: string | undefined;
 
     // Tarjeta
-
     switch (method) {
       case PaymentMethod.CARD:
         receivedCard = total;
@@ -398,14 +426,11 @@ export class CajeroComponent implements OnInit {
       case PaymentMethod.CREDIT:
         // Credito
         const name = this.selectedFiadoPerson().trim();
-        console.log(name);
         if (name === '') {
           this.toast.error('Falta la persona', 'Selecciona a quién se le fía.');
           return;
         }
         const guar = this.guarantors().find(cur => cur.name === name);
-        console.log(this.guarantors());
-        console.log(guar);
         if (!guar) {
           this.toast.error(`El fiador ${name} no fue encontrado entre los fiadores registrados. Id del fiador ${guarantorId}`)
           return;
@@ -426,7 +451,6 @@ export class CajeroComponent implements OnInit {
         return;
     }
 
-    const products = this.cart().reduce((sum, line) => sum + line.quantity, 0);
     const sale: CreateSaleDTO = {
       total,
       paidCash: receivedCash,
@@ -447,25 +471,24 @@ export class CajeroComponent implements OnInit {
     const posted = await PostSales({ sale, details: saleDetails }, this.toast);
     if (!posted) return;
 
-    // Agregar fiado
-    if (method === PaymentMethod.CREDIT && fiadoName && fiadoAmount !== undefined) {
-      // this.store.addFiado(fiadoName, fiadoAmount, todayISO());
-    }
-    // this.salesHistory.update((list) => [...list, sale]);
-    this.salesTotal.update((sum) => sum + total);
-    this.salesCount.update((count) => count + 1);
-    this.productsSold.update((sum) => sum + products);
-    this.updateStock();
-    localStorage.setItem(CAJA_SALES_KEY, String(this.salesTotal()));
-    localStorage.setItem(CAJA_COUNT_KEY, String(this.salesCount()));
-    localStorage.setItem(CAJA_PRODUCTS_KEY, String(this.productsSold()));
-    localStorage.setItem(CAJA_HISTORY_KEY, JSON.stringify(this.salesHistory()));
+    // actualizar datos
+    await this.loadShopRegister();
+    await this.loadProducts();
+    await this.updateStock();
+
+    // -- Reiniciar datos -- //
+    
     this.cart.set([]);
     this.receivedPayment.set(0);
     this.receivedCard.set(0);
     this.receivedCash.set(0);
     this.fiadoQuery.set('');
     this.selectedFiadoPerson.set('');
+
+    
+    localStorage.setItem(CAJA_PRODUCTS_KEY, String(this.productsSold()));
+    localStorage.setItem(CAJA_HISTORY_KEY, JSON.stringify(this.salesHistory()));
+
     if (method === PaymentMethod.CREDIT && fiadoName && fiadoAmount !== undefined) {
       this.toast.success(
         'Venta fiada',
@@ -479,28 +502,8 @@ export class CajeroComponent implements OnInit {
     }
   }
 
-  protected openSaleDetails(sale: SaleRecord): void {
-    this.selectedSale.set(sale);
-  }
-
-  protected closeSaleDetails(): void {
-    this.selectedSale.set(null);
-  }
-
-  protected openVentas(): void {
-    this.ventasOpen.set(true);
-  }
-
-  protected closeVentas(): void {
-    this.ventasOpen.set(false);
-  }
-
-  protected openCaja(): void {
-    this.cajaOpen.set(true);
-  }
-
-  protected closeCaja(): void {
-    this.cajaOpen.set(false);
+  protected togglePreviewShop(state:boolean){
+    this.previewShopReg.set(state);
   }
 
   protected saleProducts(sale: SaleRecord): number {
@@ -520,28 +523,7 @@ export class CajeroComponent implements OnInit {
   }
 
   protected confirmClose(): void {
-    this.store.addClosure({
-      date: todayISO(),
-      sales: this.salesCount(),
-      productsSold: this.productsSold(),
-      total: this.salesTotal(),
-      initial: this.initialCash() ?? 0,
-      history: this.salesHistory()
-    });
-    this.initialCash.set(null);
-    this.salesTotal.set(0);
-    this.salesCount.set(0);
-    this.productsSold.set(0);
-    this.salesHistory.set([]);
-    this.selectedSale.set(null);
-
-    this.editingInitial.set(true);
-    this.initialDraft.set('');
-    this.cart.set([]);
-    this.receivedPayment.set(0);
-    this.closeOpen.set(false);
-    closeLocalStorage();
-
+    
     this.toast.success('Cierre de caja', 'La caja se cerró y quedó registrada.');
   }
 

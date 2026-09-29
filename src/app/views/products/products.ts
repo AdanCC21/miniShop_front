@@ -41,7 +41,6 @@ export class ProductsComponent implements OnInit {
   async ngOnInit() {
     const products = await GetProducts(this.toast);
     if (products) this.products.set(products);
-    console.log(products);
   }
 
   protected readonly categories = computed(() => {
