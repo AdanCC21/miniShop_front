@@ -6,7 +6,8 @@
       <p class="text-sm text-gray-500">Registra los productos de la venta actual <br />Procure no abandonar esta pagina
         con articulos registrados. Cobre o limpe la venta.</p>
     </div>
-    <div class="flex flex-col items-end gap-3">
+    <div class="flex flex-wrap items-end justify-end gap-3">
+      <app-button text="Ventas recientes" variant="outline" (clicked)="openRecentSales()" />
       <app-button text="Caja actual" variant="outline" (clicked)="togglePreviewShop(true)" />
     </div>
   </div>
@@ -356,6 +357,113 @@
         <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(this.curShopReg()?.openingCash || 0) }}</p>
       </li>
     </ul>
+  </app-modal>
+  }
+
+  @if (ventasOpen()) {
+  <app-modal [title]="selectedSale() ? 'Detalle de venta' : 'Ventas recientes'" size="4xl"
+    (close)="closeRecentSales()">
+    @if (selectedSale(); as sale) {
+    <div class="flex flex-col gap-5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p class="text-xs text-gray-500">ID de venta</p>
+          <p class="font-medium text-(--primary-bright)">{{ sale.id }}</p>
+        </div>
+        <app-button text="Volver a ventas" variant="outline" (clicked)="showRecentSalesList()" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div>
+          <p class="text-xs text-gray-500">Método de pago</p>
+          <p class="font-medium">{{ paymentMethodLabel(sale.method) }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Total vendido</p>
+          <p class="font-medium">${{ formatPrice(sale.total) }}</p>
+        </div>
+        @if (sale.method === PaymentMethod.CASH) {
+        <div>
+          <p class="text-xs text-gray-500">Efectivo recibido</p>
+          <p class="font-medium">${{ formatPrice(sale.paidCash) }}</p>
+        </div>
+        } @else {
+        @if (sale.paidCash > 0) {
+        <div>
+          <p class="text-xs text-gray-500">Pagado en efectivo</p>
+          <p class="font-medium">${{ formatPrice(sale.paidCash) }}</p>
+        </div>
+        }
+        @if (sale.paidCard > 0) {
+        <div>
+          <p class="text-xs text-gray-500">Pagado con tarjeta</p>
+          <p class="font-medium">${{ formatPrice(sale.paidCard) }}</p>
+        </div>
+        }
+        }
+        @if (recentSaleCashChange(sale) > 0) {
+        <div>
+          <p class="text-xs text-gray-500">Cambio entregado</p>
+          <p class="font-medium text-emerald-600">${{ formatPrice(recentSaleCashChange(sale)) }}</p>
+        </div>
+        }
+      </div>
+
+      <div>
+        <h3 class="mb-2 text-lg font-medium">Artículos</h3>
+        <div class="overflow-x-auto rounded-lg border border-gray-200">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                <th class="px-4 py-3 font-semibold">Producto</th>
+                <th class="px-4 py-3 font-semibold">Cantidad</th>
+                <th class="px-4 py-3 font-semibold">Precio por unidad</th>
+                <th class="px-4 py-3 font-semibold">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (detail of sale.details ?? []; track detail.id) {
+              <tr class="border-b border-gray-100 last:border-b-0">
+                <td class="px-4 py-3">{{ detail.product?.name ?? detail.productId }}</td>
+                <td class="px-4 py-3">{{ detail.quantity }}</td>
+                <td class="px-4 py-3">${{ formatPrice(detail.unitPrice) }}</td>
+                <td class="px-4 py-3 font-medium">${{ formatPrice(detail.unitPrice * detail.quantity) }}</td>
+              </tr>
+              } @empty {
+              <tr><td colspan="4" class="px-4 py-6 text-center text-gray-500">La venta no tiene artículos.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    } @else {
+    <div class="overflow-x-auto rounded-lg border border-gray-200">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+            <th class="px-4 py-3 font-semibold">ID</th>
+            <th class="px-4 py-3 font-semibold">No. artículos</th>
+            <th class="px-4 py-3 font-semibold">Total vendido</th>
+            <th class="px-4 py-3 font-semibold">Hora de venta</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (sale of recentSales(); track sale.id) {
+          <tr class="cursor-pointer border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50"
+            (click)="selectRecentSale(sale)">
+            <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ sale.id }}</td>
+            <td class="px-4 py-3 text-gray-700">{{ recentSaleItemCount(sale) }}</td>
+            <td class="px-4 py-3 font-medium text-gray-900">${{ formatPrice(sale.total) }}</td>
+            <td class="px-4 py-3 text-gray-500">{{ recentSaleTime(sale) }}</td>
+          </tr>
+          } @empty {
+          <tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">No hay ventas recientes.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
   </app-modal>
   }
 

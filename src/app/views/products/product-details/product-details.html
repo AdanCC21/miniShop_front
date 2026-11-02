@@ -83,14 +83,48 @@
 }
 
 @if (this.product() && this.editQuantity()) {
-<app-modal title="Actualizar cantidad" size="md" (close)="toggleUpdateQuantity(false)">
+<app-modal title="Actualizar cantidad" size="xl" (close)="toggleUpdateQuantity(false)">
   <form class="flex flex-col gap-4">
-    <app-input id="edit-quantity" label="Cantidad" type="number" placeholder="0.00" [value]="newQuantity()"
+    <p class="text-sm text-gray-500">
+      Agrega unidades a la cantidad actual del inventario o establece una nueva cantidad total disponible.
+    </p>
+
+    <div class="grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1">
+      <button type="button" class="rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
+        [class]="quantityMode() === 'add' ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'"
+        (click)="changeQuantityMode('add')">
+        Agregar al inventario
+      </button>
+      <button type="button" class="rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
+        [class]="quantityMode() === 'set' ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'"
+        (click)="changeQuantityMode('set')">
+        Establecer total
+      </button>
+    </div>
+
+    @if (quantityMode() === 'add') {
+    <app-input id="edit-quantity-add" label="Cantidad que se agregará" type="number" placeholder="0" [value]="quantityToAdd()"
       (valueChange)="handleQuantity($event)" />
-    <label class="text-sm text-white/40">Cantidad actual : {{this.product()?.quantity}}</label>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm">
+      <div class="flex justify-between text-gray-600">
+        <span>Cantidad actual</span><span>{{ product()?.quantity }}</span>
+      </div>
+      <div class="mt-1 flex justify-between text-gray-600">
+        <span>Unidades por agregar</span><span>+{{ quantityToAdd() }}</span>
+      </div>
+      <div class="mt-3 flex justify-between border-t border-gray-200 pt-3 font-semibold text-gray-900">
+        <span>Total al finalizar</span><span>{{ resultingQuantity() }}</span>
+      </div>
+    </div>
+    } @else {
+    <app-input id="edit-quantity-set" label="Nueva cantidad total" type="number" placeholder="0" [value]="newQuantity()"
+      (valueChange)="handleQuantity($event)" />
+    <p class="text-sm text-gray-500">La cantidad actual es de {{ product()?.quantity }} unidades.</p>
+    }
+
     <div class="flex justify-end gap-3">
       <app-button variant="outline" text="Cancelar" (clicked)="toggleUpdateQuantity(false)" />
-      <app-button text="Guardar" (clicked)="saveQuantity()" />
+      <app-button [text]="quantityMode() === 'add' ? 'Agregar cantidad' : 'Actualizar inventario'" (clicked)="saveQuantity()" />
     </div>
   </form>
 </app-modal>

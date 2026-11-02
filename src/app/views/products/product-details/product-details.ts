@@ -30,6 +30,8 @@ export class ProductDetailsComponent implements OnInit {
   protected readonly editIcon = signal('general');
 
   protected readonly editQuantity = signal(false);
+  protected readonly quantityMode = signal<'add' | 'set'>('add');
+  protected readonly quantityToAdd = signal(0);
   protected readonly newQuantity = signal(0);
 
   protected readonly deleteProd = signal(false);
@@ -42,24 +44,54 @@ export class ProductDetailsComponent implements OnInit {
   }
 
   protected toggleUpdateQuantity(newState: boolean) {
-    newState ? this.newQuantity.set(this.product()?.quantity || 0) : 0
+    if (newState) {
+      this.quantityMode.set('add');
+      this.quantityToAdd.set(0);
+      this.newQuantity.set(this.product()?.quantity || 0);
+    }
     this.editQuantity.set(newState);
   }
 
   protected handleQuantity(value: string) {
-    this.newQuantity.set(Number(value));
+    if (this.quantityMode() === 'add') {
+      this.quantityToAdd.set(value === '' ? 0 : Number(value));
+    } else {
+      this.newQuantity.set(value === '' ? 0 : Number(value));
+    }
+  }
+
+  protected changeQuantityMode(mode: 'add' | 'set'): void {
+    this.quantityMode.set(mode);
+  }
+
+  protected resultingQuantity(): number {
+    const current = Number(this.product()?.quantity ?? 0);
+    return this.quantityMode() === 'add' ? current + this.quantityToAdd() : this.newQuantity();
   }
 
   protected async saveQuantity() {
-    if (this.newQuantity() < 0) {
-      this.toast.error("La cantidad no puede ser menor a 0");
+    const targetQuantity = this.resultingQuantity();
+    if (!Number.isInteger(targetQuantity) || targetQuantity < 0) {
+      this.toast.error('La cantidad debe ser un número entero igual o mayor a 0.');
+      return;
+    }
+    if (this.quantityMode() === 'add' && this.quantityToAdd() <= 0) {
+      this.toast.error('Ingresa una cantidad mayor a 0 para agregar al inventario.');
       return;
     }
 
-    const res = await updateQuantity([{ id: this.product()!.id, quantity: `${this.newQuantity()}` }], this.toast);
+    const product = this.product();
+    if (!product) return;
+
+    const res = await updateQuantity([{ id: product.id, quantity: `${targetQuantity}` }], this.toast);
     if (res) {
-      this.toast.success(`La cantidad de ${this.product()?.name} a sido actualizada a ${this.newQuantity()}`, "Exito")
-      setTimeout(() => { window.location.reload() }, 2000)
+      this.product.set({ ...product, quantity: targetQuantity });
+      this.toast.success(
+        this.quantityMode() === 'add'
+          ? `Se agregaron ${this.quantityToAdd()} unidades. El inventario de ${product.name} ahora es de ${targetQuantity}.`
+          : `El inventario de ${product.name} se actualizó a ${targetQuantity} unidades.`,
+        'Éxito'
+      );
       this.toggleUpdateQuantity(false)
     }
   }

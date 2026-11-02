@@ -19,8 +19,8 @@ import { cartTotal, cartTotalQuantity } from './scripts/cart';
 import { buildStockUpdates } from './scripts/inventory';
 import { saleProductCount } from './scripts/sales';
 import { PaymentMethod } from '../../entities/PaymentMethod';
-import { CreateSaleDetailDTO, CreateSaleDTO, SaleDetail, SaleDTO } from '../../dto/sale.dto';
-import { PostSales } from '../../api/sales';
+import { CreateSaleDetailDTO, CreateSaleDTO, SaleDTO } from '../../dto/sale.dto';
+import { GetSales, PostSales } from '../../api/sales';
 import { GuarantorDTO } from '../../dto/guarantor.dto';
 import { CreateGuarantor, GetGuarantors } from '../../api/guarantor';
 import { LoaderService } from '../../ui/loader/loader.service';
@@ -70,7 +70,8 @@ export class CajeroComponent implements OnInit {
   
   protected readonly productsSold = signal(loadNumber(CAJA_PRODUCTS_KEY) ?? 0);
   protected readonly salesHistory = signal<SaleRecord[]>(loadHistory());
-  protected readonly selectedSale = signal<SaleRecord | null>(null);
+  protected readonly recentSales = signal<SaleDTO[]>([]);
+  protected readonly selectedSale = signal<SaleDTO | null>(null);
   protected readonly closeOpen = signal(false);
   protected readonly addFiadoPersonOpen = signal(false);
   protected readonly ventasOpen = signal(false);
@@ -306,10 +307,11 @@ export class CajeroComponent implements OnInit {
     }
     const quantity = this.byWeight() ? this.quantity() : Math.round(this.quantity());
     const stock = Number(product.quantity);
-    if (exceedsStock(quantity, stock)) {
+    const alreadyInCart = this.cart().find((line) => line.code === product.code)?.quantity ?? 0;
+    if (exceedsStock(alreadyInCart + quantity, stock)) {
       this.toast.error(
         'Stock insuficiente',
-        `${product.name} solo tiene ${stock} en inventario.`
+        `${product.name} tiene ${stock} en inventario, ya agregaste ${alreadyInCart} y no puedes agregar ${quantity} más.`
       );
       return;
     }
@@ -474,7 +476,7 @@ export class CajeroComponent implements OnInit {
     // actualizar datos
     await this.loadShopRegister();
     await this.loadProducts();
-    await this.updateStock();
+    // await this.updateStock();
 
     // -- Reiniciar datos -- //
     
@@ -504,6 +506,48 @@ export class CajeroComponent implements OnInit {
 
   protected togglePreviewShop(state:boolean){
     this.previewShopReg.set(state);
+  }
+
+  protected async openRecentSales(): Promise<void> {
+    this.loader.show('Cargando ventas recientes...');
+    const sales = await GetSales(true, this.toast);
+    if (sales) {
+      this.recentSales.set([...sales].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      ));
+    }
+    this.selectedSale.set(null);
+    this.ventasOpen.set(true);
+    this.loader.hide();
+  }
+
+  protected closeRecentSales(): void {
+    this.ventasOpen.set(false);
+    this.selectedSale.set(null);
+  }
+
+  protected selectRecentSale(sale: SaleDTO): void {
+    this.selectedSale.set(sale);
+  }
+
+  protected showRecentSalesList(): void {
+    this.selectedSale.set(null);
+  }
+
+  protected recentSaleItemCount(sale: SaleDTO): number {
+    return sale.details?.reduce((total, detail) => total + Number(detail.quantity), 0) ?? 0;
+  }
+
+  protected recentSaleTime(sale: SaleDTO): string {
+    return new Date(sale.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  protected recentSaleCashChange(sale: SaleDTO): number {
+    if (sale.method !== PaymentMethod.CASH && sale.method !== PaymentMethod.MIXED) return 0;
+    const cashDue = sale.method === PaymentMethod.MIXED
+      ? Math.max(0, Number(sale.total) - Number(sale.paidCard))
+      : Number(sale.total);
+    return Math.max(0, Number(sale.paidCash) - cashDue);
   }
 
   protected saleProducts(sale: SaleRecord): number {
