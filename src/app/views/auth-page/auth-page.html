@@ -20,7 +20,7 @@
       <app-auth-tabs [mode]="mode()" (switchMode)="switchMode($event)" />
 
       @if (mode() === 'login') {
-      <form class="flex flex-col gap-y-4">
+      <form class="flex flex-col gap-y-4" (keydown.enter)="onLoginEnter($event)">
         <h2 class="text-xl font-semibold text-black">Bienvenido de nuevo</h2>
 
         <app-input id="login-email" label="Correo" type="email" placeholder="tucorreo@ejemplo.com"
@@ -32,7 +32,7 @@
       </form>
       } @else {
       @if (step() === 1) {
-      <form class="flex flex-col gap-y-4">
+      <form class="flex flex-col gap-y-4" (keydown.enter)="onRegisterBasicsEnter($event)">
         <h2 class="text-lg font-semibold text-black">Crea tu cuenta</h2>
         <p class="text-sm text-gray-500">Selecciona tu rol para continuar.</p>
 
@@ -71,13 +71,13 @@
         }
       </form>
       } @else {
-      <form class="flex flex-col gap-y-4">
+      <form class="flex flex-col gap-y-4" (keydown.enter)="onStoreDetailsEnter($event)">
         <h2 class="text-lg font-semibold text-black">Datos de la tienda</h2>
         <p class="text-sm text-gray-500">Ahora completa la información de tu tiendita.</p>
         <app-input id="register-store-name" label="Nombre de la tienda" type="text" placeholder="Nombre de la tienda"
           [value]="storeName()" (valueChange)="storeName.set($event)" />
         <app-input id="register-store-address" label="Dirección de la tienda" type="text"
-          placeholder="Dirección de la tienda" [value]="storeAddress()" (valueChange)="storeAddress.set($event)" />
+          placeholder="Colonia - Calle - #numero de casa" [value]="storeAddress()" (valueChange)="storeAddress.set($event)" />
 
         <div class="flex w-full gap-x-4 justify-between">
           <app-button extraClass="w-full" variant="outline" text="Regresar" (clicked)="prevStep()" />

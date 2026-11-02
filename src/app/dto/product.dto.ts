@@ -3,7 +3,7 @@ import { CategoryDTO } from "./category.dto"
 export interface ProductDTO {
     id: string
     name: string
-    image: string
+    image: string | null
     code: string
 
     price: number

@@ -15,8 +15,12 @@
   </div>
 
   <div class="grid gap-6 lg:grid-cols-[280px_1fr]">
-    <img [src]="product.image ?? fallbackImage" [alt]="product.name"
+    @if (isIcon(product.image)) {
+    <app-product-icon [icon]="product.image || 'general'" size="detail" />
+    } @else {
+    <img [src]="product.image!" [alt]="product.name"
       class="h-56 w-full rounded-lg border border-gray-200 object-cover" />
+    }
 
     <div class="space-y-4 rounded-lg border border-gray-200 bg-(--card) p-6">
       <div>
@@ -59,14 +63,17 @@
 }
 
 @if (this.product() && editOpen()) {
-<app-modal title="Editar producto" size="md" (close)="closeEdit()">
+<app-modal title="Editar producto" size="4xl" (close)="closeEdit()">
   <form class="flex flex-col gap-4">
+    <app-product-icon-picker [value]="editIcon()" (valueChange)="editIcon.set($event)" />
+
     <app-input id="edit-name" label="Nombre" type="text" placeholder="Nombre del producto" [value]="editName()"
       (valueChange)="onNameChange($event)" />
     <app-input id="edit-price" label="Precio" type="number" placeholder="0.00" [value]="editPrice()"
       (valueChange)="onPriceChange($event)" />
     <app-input id="edit-code" label="Codigo" type="text" placeholder=".." [value]="editCode()"
-      (valueChange)="onPriceChange($event)" />
+      (valueChange)="onCodeChange($event)" />
+
     <div class="flex justify-end gap-3">
       <app-button variant="outline" text="Cancelar" (clicked)="closeEdit()" />
       <app-button text="Guardar" (clicked)="saveEdit()" />

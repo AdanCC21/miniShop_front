@@ -58,6 +58,35 @@ export class AuthPageComponent {
     this.step.set(1);
   }
 
+  protected onLoginEnter(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (!this.isInputEnter(keyboardEvent)) return;
+    keyboardEvent.preventDefault();
+    void this.submitLogin();
+  }
+
+  protected onRegisterBasicsEnter(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (!this.isInputEnter(keyboardEvent)) return;
+    keyboardEvent.preventDefault();
+    if (this.role() === 'encargado') {
+      this.nextStep();
+    } else {
+      void this.submitRegister();
+    }
+  }
+
+  protected onStoreDetailsEnter(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (!this.isInputEnter(keyboardEvent)) return;
+    keyboardEvent.preventDefault();
+    void this.submitRegister();
+  }
+
+  private isInputEnter(event: KeyboardEvent): boolean {
+    return event.target instanceof HTMLInputElement;
+  }
+
   protected async submitLogin() {
     const error = this.validateLogin();
     if (error) {

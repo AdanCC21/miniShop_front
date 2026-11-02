@@ -1,0 +1,33 @@
+<div class="flex items-center justify-center" [style.backgroundColor]="option(icon()).background"
+  [class.h-16]="size() === 'picker'" [class.w-16]="size() === 'picker'"
+  [class.h-44]="size() === 'card'" [class.w-full]="size() === 'card'"
+  [class.h-56]="size() === 'detail'" [class.w-full]="size() === 'detail'"
+  [class.rounded-lg]="size() !== 'picker'" [class.rounded-xl]="size() === 'picker'">
+  <svg viewBox="0 0 64 64" fill="none" class="h-10 w-10" [style.color]="option(icon()).color"
+    stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    @switch (normalizedIcon()) {
+      @case ('beverage') { <path d="M21 13h22l-2 38H23l-2-38Z"/><path d="M23 22h18M26 8h12M38 8l8 11"/><path d="M29 31h6"/> }
+      @case ('medicine') { <rect x="15" y="20" width="34" height="30" rx="5"/><path d="M23 20v-5a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v5M32 27v16m-8-8h16"/> }
+      @case ('food') { <path d="M12 39h40l-5 12H17l-5-12Z"/><path d="M15 34c3-10 9-15 17-15s14 5 17 15H15Z"/><path d="M19 39h26M22 29h2m8-4h2m8 4h2"/> }
+      @case ('candy') { <path d="m25 25 14 14M22 22l5-5 6 2 3 6-5 5-6-2-3-6Zm9 9 5-5 6 2 3 6-5 5-6-2-3-6Z"/><path d="m20 20-5-5m34 34-5-5"/> }
+      @case ('fruit') { <path d="M32 20c-12-9-21 2-17 16 3 11 10 16 17 13 7 3 14-2 17-13 4-14-5-25-17-16Z"/><path d="M32 20c0-7 4-11 11-12-1 7-5 11-11 12Zm0 1v10"/> }
+      @case ('dairy') { <path d="m20 17 7-7h14l5 7v35H20V17Z"/><path d="M20 17h26M27 10l4 7v35M31 31h9"/> }
+      @case ('snack') { <path d="m19 12 26 3-3 36H22l-3-39Z"/><path d="m20 20 25 2M25 31l6-5 8 6-7 7-7-8Z"/> }
+      @case ('can') { <path d="M19 15c0-4 26-4 26 0v34c0 4-26 4-26 0V15Z"/><path d="M19 15c0 4 26 4 26 0m-26 34c0-4 26-4 26 0M28 28h8v10h-8z"/> }
+      @case ('cleaning') { <path d="M25 21h18v31H22V25l3-4Z"/><path d="M29 21v-6h15l5 5M39 15l3-5h8M27 33h11m-11 7h8"/> }
+      @case ('bread') { <path d="M14 33c0-9 8-17 18-17s18 8 18 17v17H14V33Z"/><path d="M25 25c-3 3-4 6-4 10m15-10c3 3 4 6 4 10M14 40h36"/> }
+      @case ('tortilla') { <circle cx="32" cy="32" r="20"/><path d="M21 26c6-4 16-4 22 0M20 35c7 4 17 4 24 0m-16-15 2 5m10 13 2 5"/> }
+      @case ('eggs') { <path d="M15 43h34l-3 8H18l-3-8Z"/><ellipse cx="24" cy="31" rx="7" ry="10"/><ellipse cx="39" cy="31" rx="7" ry="10"/><path d="M19 43c2-3 5-4 9-4m6 4c2-3 5-4 9-4"/> }
+      @case ('grains') { <path d="M20 13h24l-2 38H22l-2-38Z"/><path d="M24 22h16M27 31c4-5 8-5 11 0m-11 7c4-5 8-5 11 0"/><circle cx="28" cy="29" r="1"/><circle cx="37" cy="36" r="1"/> }
+      @case ('pantry') { <path d="M17 18h30v34H17z"/><path d="M22 18v-6h20v6M23 28h18m-18 7h18m-18 7h12"/> }
+      @case ('instant') { <path d="M18 25h28l-3 26H21l-3-26Z"/><path d="M22 20c2-5 5-8 10-8s8 3 10 8m-17 16h18M27 30l-3-3m9 3 3-3"/> }
+      @case ('meat') { <path d="M18 40c-5-5-3-14 4-20 9-8 22-7 27 0 4 6-1 13-7 14-5 1-6 5-10 9-5 5-10 3-14-3Z"/><circle cx="37" cy="27" r="5"/> }
+      @case ('frozen') { <path d="M32 10v44M13 21l38 22M13 43l38-22M25 14l7 7 7-7m-14 36 7-7 7 7m14-22-10 1 3-9m-35 0 10 1-3-9m28 31-10-1 3 9m-28 0 10-1-3 9"/> }
+      @case ('condiments') { <path d="M24 18h16l3 34H21l3-34Z"/><path d="M27 18v-6h10l5 6m-15 11h12m-12 7h12"/><path d="M29 12V8h6v4"/> }
+      @case ('paper') { <path d="M17 15h25l6 6v29H17z"/><path d="M42 15v8h6M23 30h18m-18 7h18m-18 7h12"/> }
+      @case ('hygiene') { <path d="M25 20h18v32H22V24l3-4Z"/><path d="M29 20v-7h12l5 5M29 34h10m-10 7h7"/> }
+      @case ('pet') { <path d="M18 37c0-7 6-12 14-12s14 5 14 12c0 6-5 10-14 10s-14-4-14-10Z"/><ellipse cx="16" cy="21" rx="4" ry="6"/><ellipse cx="27" cy="16" rx="4" ry="6"/><ellipse cx="39" cy="16" rx="4" ry="6"/><ellipse cx="49" cy="22" rx="4" ry="6"/> }
+      @default { <path d="M18 17h28v34H18z"/><path d="M24 25h16m-16 8h16m-16 8h10"/> }
+    }
+  </svg>
+</div>

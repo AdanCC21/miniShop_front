@@ -13,6 +13,7 @@ export class SelectComponent {
   readonly label = input<string>('');
   readonly value = input<string>('');
   readonly options = input.required<SelectOption[]>();
+  readonly autocomplete = input<string | null>(null);
   readonly valueChange = output<string>();
 
   protected onChange(event: Event): void {

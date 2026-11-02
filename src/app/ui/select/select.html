@@ -5,6 +5,7 @@
   <select
     class="rounded-md border border-gray-200 bg-(--card) px-3 py-2 text-sm font-normal text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-(--primary)"
     [value]="value()"
+    [attr.autocomplete]="autocomplete()"
     (change)="onChange($event)"
   >
     @for (option of options(); track option.value) {

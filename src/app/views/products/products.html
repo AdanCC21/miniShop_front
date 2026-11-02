@@ -2,10 +2,14 @@
   <div class="flex flex-wrap items-start justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-black">{{ storeName }}</h1>
-      <p class="text-sm text-gray-500">{{ this.products().length }} productos</p>
+      <p class="text-sm text-gray-500">{{ visibleProducts().length }} de {{ products().length }} productos</p>
     </div>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <div class="flex w-full flex-wrap items-end gap-3 lg:w-auto">
+      <div class="min-w-56 flex-1 lg:w-64 lg:flex-none">
+        <app-input id="product-search" label="Buscar productos" placeholder="Nombre o código"
+          [value]="searchQuery()" (valueChange)="onSearchChange($event)" />
+      </div>
       <app-select label="Categoría" [value]="selectedCategory()" [options]="categoryOptions()"
         (valueChange)="onCategoryChange($event)" />
       <app-select label="Ordenar" [value]="sortBy()" [options]="sortOptions" (valueChange)="onSortChange($event)" />
@@ -14,36 +18,41 @@
   </div>
 
   <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-    @for (product of this.products(); track product.code; let i = $index) {
+    @for (product of visibleProducts(); track product.code; let i = $index) {
     <app-product-card animate.enter="ms-card-in" [style.--index]="i" [name]="product.name"
-      [categories]="product.categories ?? []" [code]="product.code" [price]="product.price" />
+      [categories]="product.category ? [product.category.name] : []" [image]="product.image"
+      [code]="product.code" [price]="product.price" />
+    }
+    @empty {
+    <p class="col-span-full py-10 text-center text-sm text-gray-500">No se encontraron productos.</p>
     }
   </section>
 </div>
 
 @if (addOpen()) {
-<app-modal title="Agregar producto" size="md" (close)="closeAdd()">
-  <form class="flex flex-col gap-4">
-    <app-input id="add-name" label="Nombre" type="text" placeholder="Nombre del producto" [value]="addName()"
+<app-modal title="Agregar producto" size="4xl" (close)="closeAdd()">
+  <form class="flex flex-col gap-4" autocomplete="off">
+    <app-product-icon-picker [value]="selectedIcon()" (valueChange)="selectedIcon.set($event)" />
+    <app-input id="add-name" label="Nombre" type="text" autocomplete="off" placeholder="Nombre del producto" [value]="addName()"
       (valueChange)="onAddNameChange($event)" />
-    <app-input id="add-code" label="Código" type="text" placeholder="Ej. PRD-009" [value]="addCode()"
+    <app-input id="add-code" label="Código" type="text" autocomplete="off" placeholder="Ej. PRD-009" [value]="addCode()"
       (valueChange)="onAddCodeChange($event)" />
 
     <div class="flex flex-col gap-4">
       @if(!this.newCat()){
-      <app-select label="Categoría" [value]="selectedCategoryId()" [options]="categoryOptionsForFetch()"
+      <app-select label="Categoría" autocomplete="off" [value]="selectedCategoryId()" [options]="categoryOptionsForFetch()"
         (valueChange)="onCategoryIdChange($event)" />
       } @else {
-      <app-input id="NewCategoryName" label="Nueva Categoria" type="text" placeholder="Categoria" [value]="newCatName()"
+      <app-input id="NewCategoryName" label="Nueva Categoria" type="text" autocomplete="off" placeholder="Categoria" [value]="newCatName()"
         (valueChange)="onChangeNewCategoryName($event)" />
       }
       <app-button [text]="newCat() ? 'Cancelar' : 'Nueva categoría'" (clicked)="setNewCat()" variant="outline"
         class="ml-auto" />
     </div>
 
-    <app-input id="add-price" label="Precio" type="number" placeholder="0.00" [value]="addPrice()"
+    <app-input id="add-price" label="Precio" type="number" autocomplete="off" placeholder="0.00" [value]="addPrice()"
       (valueChange)="onAddPriceChange($event)" />
-    <app-input id="add-quantity" label="Cantidad" type="number" placeholder="1" [value]="addQuantity()"
+    <app-input id="add-quantity" label="Cantidad" type="number" autocomplete="off" placeholder="1" [value]="addQuantity()"
       (valueChange)="onAddQuantityChange($event)" />
     <div class="flex justify-end gap-3">
       <app-button variant="outline" text="Cancelar" (clicked)="closeAdd()" />

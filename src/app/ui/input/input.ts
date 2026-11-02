@@ -8,6 +8,7 @@ export class InputComponent {
   readonly label = input<string>('');
   readonly type = input<string>('text');
   readonly placeholder = input<string>('');
+  readonly autocomplete = input<string | null>(null);
   readonly id = input<string>('');
   readonly value = input<string | number>('');
   readonly disabled = input(false);

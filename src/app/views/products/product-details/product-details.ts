@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { placeholderImage } from '../product-card/product-card';
+import { isProductIcon, ProductIconComponent, ProductIconPickerComponent, PRODUCT_ICONS } from '../product-icon/product-icon';
 import { ModalComponent } from '../../../ui/modal/modal';
 import { ButtonComponent } from '../../../ui/button/button';
 import { InputComponent } from '../../../ui/input/input';
@@ -10,7 +10,7 @@ import { ProductDTO, UpdateProductDTO } from '../../../dto/product.dto';
 
 @Component({
   selector: 'app-product-details',
-  imports: [ButtonComponent, InputComponent, ModalComponent],
+  imports: [ButtonComponent, InputComponent, ModalComponent, ProductIconComponent, ProductIconPickerComponent],
   templateUrl: './product-details.html'
 })
 export class ProductDetailsComponent implements OnInit {
@@ -19,12 +19,15 @@ export class ProductDetailsComponent implements OnInit {
   protected toast = inject(ToastService);
 
   protected readonly product = signal<ProductDTO | null>(null)
-  protected readonly fallbackImage = placeholderImage;
+  protected isIcon(value: string | null | undefined): boolean {
+    return isProductIcon(value);
+  }
 
   protected readonly editOpen = signal(false);
   protected readonly editName = signal('');
   protected readonly editPrice = signal('');
   protected readonly editCode = signal('');
+  protected readonly editIcon = signal('general');
 
   protected readonly editQuantity = signal(false);
   protected readonly newQuantity = signal(0);
@@ -68,6 +71,9 @@ export class ProductDetailsComponent implements OnInit {
     this.editName.set(this.product()!.name);
     this.editPrice.set(String(this.product()!.price));
     this.editCode.set(this.product()!.code);
+    const currentIcon = this.product()!.image;
+    this.editIcon.set(currentIcon === 'drink' ? 'medicine' :
+      PRODUCT_ICONS.some((option) => option.id === currentIcon) ? currentIcon! : 'general');
     this.editOpen.set(true);
   }
 
@@ -101,6 +107,7 @@ export class ProductDetailsComponent implements OnInit {
       name: this.editName().trim() ?? this.product()!.name,
       price: Number(this.editPrice()) ?? this.product()!.price,
       code: this.editCode() ?? this.product()!.code,
+      image: this.editIcon(),
     }
     const res = await UpdateProduct(dto, this.toast);
     if (res) {

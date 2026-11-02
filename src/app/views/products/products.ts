@@ -10,12 +10,13 @@ import { ToastService } from '../../ui/toast/toast.service';
 import { AuthService } from '../../auth/auth.service';
 import { CreateCategory, GetCategories } from '../../api/category';
 import { CategoryDTO } from '../../dto/category.dto';
+import { ProductIconPickerComponent } from './product-icon/product-icon';
 
 export type SortOption = 'date' | 'price' | 'name';
 
 @Component({
   selector: 'app-products',
-  imports: [ProductCardComponent, SelectComponent, ButtonComponent, InputComponent, ModalComponent],
+  imports: [ProductCardComponent, ProductIconPickerComponent, SelectComponent, ButtonComponent, InputComponent, ModalComponent],
   templateUrl: './products.html'
 })
 export class ProductsComponent implements OnInit {
@@ -24,6 +25,7 @@ export class ProductsComponent implements OnInit {
   protected readonly storeName = 'miniShop';
 
   protected readonly products = signal<any[]>([]);
+  protected readonly searchQuery = signal('');
 
   // New product
   protected readonly addOpen = signal(false);
@@ -31,6 +33,7 @@ export class ProductsComponent implements OnInit {
   protected readonly addCode = signal('');
   protected readonly addPrice = signal('');
   protected readonly addQuantity = signal('1');
+  protected readonly selectedIcon = signal('general');
 
   // Category
   protected readonly categoriesFetch = signal<CategoryDTO[]>([]);
@@ -39,13 +42,17 @@ export class ProductsComponent implements OnInit {
   protected readonly newCatName = signal("");
 
   async ngOnInit() {
-    const products = await GetProducts(this.toast);
-    if (products) this.products.set(products);
+    const [products, categories] = await Promise.all([
+      GetProducts(this.toast),
+      GetCategories(this.toast)
+    ]);
+    this.products.set(products);
+    this.categoriesFetch.set(categories);
   }
 
   protected readonly categories = computed(() => {
-    const all = new Set(this.products().flatMap((product) => product.categories ?? []));
-    return [...all].sort((a, b) => a.localeCompare(b));
+    return [...new Set(this.categoriesFetch().map((category) => category.name))]
+      .sort((a, b) => a.localeCompare(b, 'es'));
   });
 
   protected readonly categoryOptions = computed<SelectOption[]>(() => [
@@ -63,6 +70,31 @@ export class ProductsComponent implements OnInit {
 
   protected readonly sortBy = signal<SortOption>('date');
 
+  protected readonly visibleProducts = computed(() => {
+    const query = this.searchQuery().trim().toLocaleLowerCase('es');
+    const category = this.selectedCategory();
+
+    return this.products()
+      .filter((product) => {
+        const matchesCategory = category === 'all' || product.category?.name === category;
+        const matchesQuery = !query || [product.name, product.code]
+          .some((value) => String(value ?? '').toLocaleLowerCase('es').includes(query));
+        return matchesCategory && matchesQuery;
+      })
+      .sort((a, b) => {
+        switch (this.sortBy()) {
+          case 'price': return Number(a.price) - Number(b.price);
+          case 'name': return String(a.name).localeCompare(String(b.name), 'es');
+          case 'date':
+          default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+      });
+  });
+
+  protected onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+  }
+
   protected onCategoryChange(value: string): void {
     this.selectedCategory.set(value);
   }
@@ -76,6 +108,9 @@ export class ProductsComponent implements OnInit {
     this.addCode.set('');
     this.addPrice.set('');
     this.addQuantity.set('1');
+    this.selectedIcon.set('general');
+    this.selectedCategoryId.set('');
+    this.newCatName.set('');
     this.newCat.set(false);
 
     const cat = await GetCategories(this.toast);
@@ -155,9 +190,10 @@ export class ProductsComponent implements OnInit {
       const category = await CreateCategory({ name: this.newCatName() }, this.toast);
       if (!category) return;
       categoryId = category.id;
+      this.categoriesFetch.update((categories) => [...categories, category]);
     }
 
-    const product = await CreateProduct({ shopUuid, categoryId, name, code, price, quantity: Math.round(quantity), image: null }, this.toast);
+    const product = await CreateProduct({ shopUuid, categoryId, name, code, price, quantity: Math.round(quantity), image: this.selectedIcon() }, this.toast);
     if (!product) return;
 
     this.products.update((list) => [product, ...list]);

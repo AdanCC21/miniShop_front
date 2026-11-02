@@ -2,7 +2,11 @@
   [routerLink]="['/products', code()]"
   class="cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-(--card) transition hover:shadow-md"
 >
-  <img [src]="image()" [alt]="name()" class="h-44 w-full object-cover" />
+  @if (isIcon(image())) {
+    <app-product-icon [icon]="image() || 'general'" />
+  } @else {
+    <img [src]="image()!" [alt]="name()" class="h-44 w-full object-cover" />
+  }
   <div class="p-4">
     <h3 class="text-sm font-semibold text-black">{{ name() }}</h3>
     <div class="mt-2 flex flex-wrap gap-1">
