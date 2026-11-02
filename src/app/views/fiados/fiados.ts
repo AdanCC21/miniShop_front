@@ -133,7 +133,7 @@ export class FiadosComponent implements OnInit {
         this.toast.error('Monto excede la deuda', `${person.name} solo debe $${this.totalAmount(person)}.`);
         return;
       }
-    } else if (this.totalAmount(person) <= 0) {
+    } else if (this.selectedCreditBalance() <= 0) {
       this.toast.info('Sin deuda', `${person.name} no tiene deuda pendiente.`);
       return;
     }
@@ -148,18 +148,24 @@ export class FiadosComponent implements OnInit {
   protected async confirmAdjust(): Promise<void> {
     const person = this.selectedPerson();
     const action = this.pendingAdjust();
-    if (!person || !action) return;
+    const credit = this.selectedCredit();
+    if (!person || !action || !credit) return;
 
-    const amount = action === 'pay' ? this.totalAmount(person) : this.adjustCredit();
+    const amount = action === 'pay' ? this.selectedCreditBalance() : this.adjustCredit();
 
     this.loader.show('Aplicando cambios a la cuenta');
-    await AdjustCredit(amount, this.selectedCredit()!.id, this.toast);
+    const updated = await AdjustCredit(amount, credit.id, this.toast);
+    this.loader.hide();
+    if (!updated) {
+      this.pendingAdjust.set(null);
+      return;
+    }
 
-    this.loadGuarantors(false);
+    await this.loadGuarantors(false);
 
     this.toast.success(
       action === 'pay'
-        ? 'Deuda pagada'
+        ? 'Cuenta saldada'
         : amount < 0
           ? 'Deuda reducida'
           : 'Deuda incrementada',
@@ -170,7 +176,12 @@ export class FiadosComponent implements OnInit {
     this.selectedCredit.set(null);
     this.selectedPerson.set(null);
     this.detailsOpen.set(false);
-    this.loader.hide();
+  }
+
+  protected selectedCreditBalance(): number {
+    const credit = this.selectedCredit();
+    if (!credit) return 0;
+    return Math.max(0, Number(credit.totalAmount) - Number(credit.paidAmount));
   }
 
   protected adjustConfirmTitle(action: AdjustAction): string {
@@ -178,7 +189,7 @@ export class FiadosComponent implements OnInit {
       case 'update':
         return this.adjustCredit() < 0 ? 'Restar deuda' : 'Incrementar deuda';
       case 'pay':
-        return 'Pagar deuda';
+        return 'Saldar cuenta';
     }
   }
 
@@ -186,8 +197,8 @@ export class FiadosComponent implements OnInit {
     const person = this.selectedPerson();
     if (!person) return '';
     if (action === 'pay') {
-      const amount = this.totalAmount(person);
-      return `¿Registrar el pago total de $${amount} de ${person.name}?`;
+      const amount = this.selectedCreditBalance();
+      return `¿Registrar el pago de $${amount} para saldar esta cuenta de ${person.name}?`;
     }
     const amount = this.adjustCredit();
     return amount < 0

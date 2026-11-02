@@ -9,8 +9,8 @@ import { ButtonComponent } from '../button/button';
 })
 export class GuarantorCardComponent {
   readonly person = input.required<GuarantorDTO>();
-  readonly totalAmount = input.required<number>();
-  readonly lastCreditDate = input.required<string>();
+  readonly totalAmount = input<number>();
+  readonly lastCreditDate = input<string>();
 
   readonly viewDetails = output<GuarantorDTO>();
 

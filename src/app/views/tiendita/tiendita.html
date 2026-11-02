@@ -124,14 +124,38 @@
     <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Información de la tiendita</h2>
     <div class="flex flex-col gap-4 rounded-lg border border-gray-200 bg-(--card) p-6">
 
-      <app-input id="store-name" label="Nombre de la tienda" type="text" placeholder="Nombre de la tienda"
-        [value]="storeName()" (valueChange)="onNameChange($event)" />
-
-      <div>
-        <p class="mb-1 text-sm font-medium text-gray-700">UID de la tienda</p>
-        <p class="rounded-lg bg-gray-50 px-3 py-2 text-sm font-mono text-gray-500">{{ storeUid }}</p>
-        <p class="mt-1 text-xs text-gray-400">Los empleados lo usan para solicitar acceso.</p>
+      @if (shopDetailsLoading()) {
+      <p class="text-sm text-gray-500">Cargando datos de la tiendita...</p>
+      } @else if (auth.user()?.role === 'empleado') {
+      <p class="text-sm text-red-600">No tienes permiso para consultar los detalles de la tiendita.</p>
+      } @else if (shopDetails(); as details) {
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <p class="mb-1 text-sm font-medium text-gray-500">Nombre</p>
+          <p class="text-base font-semibold text-black">{{ details.name }}</p>
+        </div>
+        <div>
+          <p class="mb-1 text-sm font-medium text-gray-500">UUID</p>
+          <p class="break-all font-mono text-sm text-gray-700">{{ details.uuid }}</p>
+        </div>
+        <div class="sm:col-span-2">
+          <p class="mb-1 text-sm font-medium text-gray-500">Dirección</p>
+          <p class="text-sm text-gray-700">{{ details.address }}</p>
+        </div>
+        <div>
+          <p class="mb-1 text-sm font-medium text-gray-500">Creada</p>
+          <p class="text-sm text-gray-700">{{ formatShopDate(details.createdAt) }}</p>
+        </div>
+        <div>
+          <p class="mb-1 text-sm font-medium text-gray-500">Última actualización</p>
+          <p class="text-sm text-gray-700">{{ formatShopDate(details.updatedAt) }}</p>
+        </div>
       </div>
+      } @else if (auth.user()?.role === 'admin' && !auth.user()?.shopUuid) {
+      <p class="text-sm text-gray-500">Para ver los detalles, consulta una tiendita por su UUID.</p>
+      } @else {
+      <p class="text-sm text-gray-500">No se pudieron cargar los datos de la tiendita.</p>
+      }
 
       <div>
         <p class="mb-1 text-sm font-medium text-gray-700">Días de apertura</p>

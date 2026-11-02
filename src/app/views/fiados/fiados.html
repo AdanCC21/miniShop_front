@@ -24,6 +24,13 @@
       (viewDetails)="toggleDetails($event)" />
     }
   </section>
+
+  <h3 class="text-lg">Todos los fiadores</h3>
+  <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    @for (person of this.guarantors(); track person.id) {
+    <app-guarantor-card [person]="person" (viewDetails)="toggleDetails($event)" />
+    }
+  </section>
   }
   @else {
   <section class="flex flex-col gap-2 text-center w-full">
@@ -62,7 +69,9 @@
               <td class="px-4 py-3 font-medium text-gray-900">${{ credit.totalAmount }}</td>
               <td class="px-4 py-3 font-medium text-green-600">${{ credit.paidAmount }}</td>
               <td class="px-4 py-3 flex gap-4 justify-end">
-                <app-button (clicked)="toggleAdjustCredit(credit)" variant="outline" text="Abonar" />
+                @if(credit.status !== "PAID"){
+                  <app-button (clicked)="toggleAdjustCredit(credit)" variant="outline" text="Abonar" />
+                }
               </td>
             </tr>
             }
@@ -95,6 +104,7 @@
     <p class="-mt-2 text-xs text-gray-500">Usa un valor positivo para aumentar la deuda o negativo para abonar.</p>
     <div class="flex flex-wrap gap-2 mt-2 justify-end">
       <app-button variant="outline" text="Cancelar" (clicked)="toggleAdjustCredit(null)" />
+      <app-button variant="secondary" text="Saldar cuenta" (clicked)="requestAdjust('pay')" />
       <app-button text="Actualizar" (clicked)="requestAdjust('update')" />
     </div>
   </div>
@@ -102,7 +112,8 @@
 }
 
 @if (pendingAdjust(); as action) {
-<app-confirm-modal [title]="adjustConfirmTitle(action)" [message]="adjustConfirmMessage(action)" confirmText="Confirmar"
+<app-confirm-modal [title]="adjustConfirmTitle(action)" [message]="adjustConfirmMessage(action)"
+  [confirmText]="action === 'pay' ? 'Saldar cuenta' : 'Confirmar'"
   cancelText="Cancelar" [danger]="action === 'update' && adjustCredit() < 0" (confirm)="confirmAdjust()"
   (cancel)="cancelAdjust()" />
 }

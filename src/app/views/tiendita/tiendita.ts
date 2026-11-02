@@ -1,14 +1,16 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
 import { StoreService } from '../../store.service';
+import { AuthService } from '../../auth/auth.service';
 import { PaymentMethod } from '../../entities/PaymentMethod';
 import { formatDate, Order } from '../orders/orders.data';
 import { ButtonComponent } from '../../ui/button/button';
-import { InputComponent } from '../../ui/input/input';
 import { ModalComponent } from '../../ui/modal/modal';
 import { ToastService } from '../../ui/toast/toast.service';
 import { GetSales } from '../../api/sales';
+import { GetShopDetails } from '../../api/shop';
 import { SaleDTO } from '../../dto/sale.dto';
+import { ShopDTO } from '../../dto/shop.dto';
 
 interface DailySummary {
   date: string;
@@ -39,17 +41,18 @@ interface PaymentLine {
 
 @Component({
   selector: 'app-tiendita',
-  imports: [ButtonComponent, InputComponent, ModalComponent],
+  imports: [ButtonComponent, ModalComponent],
   templateUrl: './tiendita.html'
 })
 export class TienditaComponent implements OnInit {
   private readonly store = inject(StoreService);
+  protected readonly auth = inject(AuthService);
   protected readonly toast = inject(ToastService);
 
   protected readonly PaymentMethod = PaymentMethod;
 
-  protected readonly storeUid = 'ST-0001';
-  protected readonly storeName = signal('miniShop');
+  protected readonly shopDetails = signal<ShopDTO | null>(null);
+  protected readonly shopDetailsLoading = signal(true);
   protected readonly saved = signal(false);
 
   protected readonly draftOpenDays = signal<number[]>([...this.store.openDays()]);
@@ -77,10 +80,20 @@ export class TienditaComponent implements OnInit {
   protected readonly loading = signal(true);
 
   async ngOnInit() {
-    const sales = await GetSales(false, this.toast);
+    const user = this.auth.user();
+    const detailsRequest = user?.shopUuid && user.role !== 'empleado'
+      ? GetShopDetails(user.shopUuid, this.toast)
+      : Promise.resolve(null);
+
+    const [sales, details] = await Promise.all([
+      GetSales(false, this.toast),
+      detailsRequest
+    ]);
     if (sales) {
       this.sales.set(sales);
     }
+    this.shopDetails.set(details);
+    this.shopDetailsLoading.set(false);
     this.loading.set(false);
   }
 
@@ -367,11 +380,6 @@ export class TienditaComponent implements OnInit {
     });
   });
 
-  protected onNameChange(value: string): void {
-    this.storeName.set(value);
-    this.saved.set(false);
-  }
-
   protected toggleOpenDay(day: number): void {
     this.saved.set(false);
     this.draftOpenDays.update((days) =>
@@ -404,7 +412,6 @@ export class TienditaComponent implements OnInit {
       return;
     }
     this.store.openDays.set([...this.draftOpenDays()]);
-    this.storeName.set(this.storeName().trim());
     this.saved.set(true);
     this.toast.success('Cambios guardados', 'El horario de tu tiendita se actualizó.');
   }
@@ -422,6 +429,15 @@ export class TienditaComponent implements OnInit {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
+  }
+
+  protected formatShopDate(value: Date | string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return new Intl.DateTimeFormat('es-MX', {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    }).format(date);
   }
 
   protected formatDate(date: string): string {
