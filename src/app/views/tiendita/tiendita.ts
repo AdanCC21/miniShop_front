@@ -8,7 +8,6 @@ import { ButtonComponent } from '../../ui/button/button';
 import { ModalComponent } from '../../ui/modal/modal';
 import { ToastService } from '../../ui/toast/toast.service';
 import { GetSales } from '../../api/sales';
-import { GetShopDetails } from '../../api/shop';
 import { SaleDTO } from '../../dto/sale.dto';
 import { ShopDTO } from '../../dto/shop.dto';
 
@@ -54,8 +53,13 @@ export class TienditaComponent implements OnInit {
   protected readonly shopDetails = signal<ShopDTO | null>(null);
   protected readonly shopDetailsLoading = signal(true);
   protected readonly saved = signal(false);
+  protected readonly shopInfoExpanded = signal(false);
 
   protected readonly draftOpenDays = signal<number[]>([...this.store.openDays()]);
+
+  protected toggleShopInfo(): void {
+    this.shopInfoExpanded.update((expanded) => !expanded);
+  }
 
   protected readonly weekDays: { value: number; label: string }[] = [
     { value: 0, label: 'Dom' },
@@ -80,21 +84,22 @@ export class TienditaComponent implements OnInit {
   protected readonly loading = signal(true);
 
   async ngOnInit() {
-    const user = this.auth.user();
-    const detailsRequest = user?.shopUuid && user.role !== 'empleado'
-      ? GetShopDetails(user.shopUuid, this.toast)
-      : Promise.resolve(null);
+    // const shop = await 
+    // const user = this.auth.user();
+    // // const detailsRequest = user?.shopUuid && user.role !== 'empleado'
+    // //   ? GetShopDetails(user.shopUuid, this.toast)
+    // //   : Promise.resolve(null);
 
-    const [sales, details] = await Promise.all([
-      GetSales(false, this.toast),
-      detailsRequest
-    ]);
-    if (sales) {
-      this.sales.set(sales);
-    }
-    this.shopDetails.set(details);
-    this.shopDetailsLoading.set(false);
-    this.loading.set(false);
+    // const [sales, details] = await Promise.all([
+    //   GetSales(false, this.toast),
+    //   detailsRequest
+    // ]);
+    // if (sales) {
+    //   this.sales.set(sales);
+    // }
+    // this.shopDetails.set(details);
+    // this.shopDetailsLoading.set(false);
+    // this.loading.set(false);
   }
 
   protected readonly currentMonthClosures = computed<DailySummary[]>(() => {

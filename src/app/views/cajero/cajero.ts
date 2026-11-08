@@ -24,7 +24,7 @@ import { GetSales, PostSales } from '../../api/sales';
 import { GuarantorDTO } from '../../dto/guarantor.dto';
 import { CreateGuarantor, GetGuarantors } from '../../api/guarantor';
 import { LoaderService } from '../../ui/loader/loader.service';
-import { GetCurShopReg, SetOpneningCash } from '../../api/shopRegister';
+import { CloseShopReg, GetCurShopReg, SetOpneningCash } from '../../api/shopRegister';
 import { ShopRegisterDTO } from '../../dto/shopRegister.dto';
 
 @Component({
@@ -64,10 +64,10 @@ export class CajeroComponent implements OnInit {
   protected readonly fiadoMethod = signal<FiadoMethod>('efectivo');
   protected readonly fiadoCard = signal(0);
   protected readonly fiadoCash = signal(0);
-  protected readonly initialCash = signal<number | null>(loadNumber(CAJA_INITIAL_KEY));
+  protected readonly initialCash = signal<number | null>(null);
   protected readonly initialDraft = signal(this.initialCash() !== null ? String(this.initialCash()) : '');
   protected readonly editingInitial = signal(this.initialCash() === null);
-  
+
   protected readonly productsSold = signal(loadNumber(CAJA_PRODUCTS_KEY) ?? 0);
   protected readonly salesHistory = signal<SaleRecord[]>(loadHistory());
   protected readonly recentSales = signal<SaleDTO[]>([]);
@@ -75,7 +75,7 @@ export class CajeroComponent implements OnInit {
   protected readonly closeOpen = signal(false);
   protected readonly addFiadoPersonOpen = signal(false);
   protected readonly ventasOpen = signal(false);
-  
+
   // -- Preview de caja -- //
   protected readonly previewShopReg = signal(false);
 
@@ -84,6 +84,11 @@ export class CajeroComponent implements OnInit {
   protected readonly openingShopReg = signal<{ modalOpen: boolean, amount: number }>({ modalOpen: false, amount: 0 });
 
   async ngOnInit() {
+    await this.loadAll();
+  }
+
+  // -- Loaders -- //
+  protected async loadAll() {
     this.loader.show('Cargando productos...');
     await Promise.all([
       this.loadProducts(),
@@ -91,9 +96,9 @@ export class CajeroComponent implements OnInit {
       this.loadShopRegister()
     ])
     this.loader.hide();
+    return true;
   }
 
-  // -- Loaders -- //
   async loadProducts() {
     const products = await GetProducts(this.toast);
     this.products.set(products);
@@ -106,6 +111,9 @@ export class CajeroComponent implements OnInit {
 
   async loadShopRegister() {
     const shopReg = await GetCurShopReg(this.toast);
+    if (shopReg) {
+      this.initialCash.set(shopReg.openingCash)
+    }
     this.curShopReg.set(shopReg);
   }
 
@@ -479,7 +487,7 @@ export class CajeroComponent implements OnInit {
     // await this.updateStock();
 
     // -- Reiniciar datos -- //
-    
+
     this.cart.set([]);
     this.receivedPayment.set(0);
     this.receivedCard.set(0);
@@ -487,7 +495,7 @@ export class CajeroComponent implements OnInit {
     this.fiadoQuery.set('');
     this.selectedFiadoPerson.set('');
 
-    
+
     localStorage.setItem(CAJA_PRODUCTS_KEY, String(this.productsSold()));
     localStorage.setItem(CAJA_HISTORY_KEY, JSON.stringify(this.salesHistory()));
 
@@ -504,7 +512,7 @@ export class CajeroComponent implements OnInit {
     }
   }
 
-  protected togglePreviewShop(state:boolean){
+  protected togglePreviewShop(state: boolean) {
     this.previewShopReg.set(state);
   }
 
@@ -554,21 +562,35 @@ export class CajeroComponent implements OnInit {
     return saleProductCount(sale);
   }
 
+  // Cerrar Caja
   protected askClose(): void {
     if (this.initialCash() === null) {
-      this.toast.error('Sin fondo inicial', 'Registra el monto inicial antes de cerrar la caja.');
+      this.toast.error('Registra el monto inicial antes de cerrar la caja.', 'Sin fondo inicial');
       return;
     }
     this.closeOpen.set(true);
   }
 
-  protected cancelClose(): void {
-    this.closeOpen.set(false);
-  }
+  protected async toggleCloseShopReg(state: boolean) {
+    if (!state) {
+      this.closeOpen.set(false)
+      return;
+    };
 
-  protected confirmClose(): void {
+    if (this.initialCash() === null) {
+      this.toast.error('Registra el monto inicial antes de cerrar la caja.', 'Sin fondo inicial');
+      return;
+    }
+
+    const res = await CloseShopReg(this.initialCash()!, this.toast)
+    if (res) {
+      this.toast.success('Cierre de caja', 'La caja se cerró y quedó registrada.');
+      await this.loadAll();
+    } else {
+      this.toast.error('Cierre de caja no exitoso', 'Algo en el cierre fallo, porfavor intentelo de nuevo mas tarde');
+    }
     
-    this.toast.success('Cierre de caja', 'La caja se cerró y quedó registrada.');
+    this.closeOpen.set(false);
   }
 
   protected paymentMethodLabel(method: PaymentMethod | undefined): string {

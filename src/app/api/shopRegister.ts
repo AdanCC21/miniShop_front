@@ -23,13 +23,14 @@ export async function SetOpneningCash(openingCash: number, toast: ToastService) 
     }
 }
 
-export async function CloseShopReg(openingCash: number, toast: ToastService) {
+export async function CloseShopReg(openingCash: number, toast: ToastService):Promise<boolean> {
     try {
-        const res = await axios.patch(`${backendRoute}/shopregister/clode`, { openingCash }, { withCredentials: true });
-        return res.data;
+        const res = await axios.patch(`${backendRoute}/shopregister/close`, { openingCash }, { withCredentials: true });
+        console.log(res.data);
+        return true;
     } catch (e) {
         showError(e, toast);
-        return null
+        return false
     }
 }
 

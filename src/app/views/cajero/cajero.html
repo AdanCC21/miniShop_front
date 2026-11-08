@@ -334,7 +334,8 @@
   @if (closeOpen()) {
   <app-confirm-modal title="Cerrar caja" [danger]="true"
     [message]="'¿Registrar el cierre de caja de hoy? Se reiniciarán el fondo inicial y las ventas de la caja.'"
-    confirmText="Cerrar caja" cancelText="Cancelar" (confirm)="confirmClose()" (cancel)="cancelClose()" />
+    confirmText="Cerrar caja" cancelText="Cancelar" (confirm)="toggleCloseShopReg(true)"
+    (cancel)="toggleCloseShopReg(false)" />
   }
 
   <!-- Apertura de caja -->
@@ -361,8 +362,7 @@
   }
 
   @if (ventasOpen()) {
-  <app-modal [title]="selectedSale() ? 'Detalle de venta' : 'Ventas recientes'" size="4xl"
-    (close)="closeRecentSales()">
+  <app-modal [title]="selectedSale() ? 'Detalle de venta' : 'Ventas recientes'" size="4xl" (close)="closeRecentSales()">
     @if (selectedSale(); as sale) {
     <div class="flex flex-col gap-5">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -430,7 +430,9 @@
                 <td class="px-4 py-3 font-medium">${{ formatPrice(detail.unitPrice * detail.quantity) }}</td>
               </tr>
               } @empty {
-              <tr><td colspan="4" class="px-4 py-6 text-center text-gray-500">La venta no tiene artículos.</td></tr>
+              <tr>
+                <td colspan="4" class="px-4 py-6 text-center text-gray-500">La venta no tiene artículos.</td>
+              </tr>
               }
             </tbody>
           </table>
@@ -458,7 +460,9 @@
             <td class="px-4 py-3 text-gray-500">{{ recentSaleTime(sale) }}</td>
           </tr>
           } @empty {
-          <tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">No hay ventas recientes.</td></tr>
+          <tr>
+            <td colspan="4" class="px-4 py-8 text-center text-gray-500">No hay ventas recientes.</td>
+          </tr>
           }
         </tbody>
       </table>

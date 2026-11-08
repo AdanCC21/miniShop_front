@@ -3,6 +3,79 @@
     <h1 class="text-2xl font-bold text-black">Tiendita</h1>
   </div>
 
+  <section>
+    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Información de la tiendita</h2>
+    <div class="rounded-lg border border-gray-200 bg-(--card) p-5 sm:p-6">
+      @if (shopDetailsLoading()) {
+      <p class="text-sm text-gray-500">Cargando datos de la tiendita...</p>
+      } @else if (auth.user()?.role === 'empleado') {
+      <p class="text-sm text-red-600">No tienes permiso para consultar los detalles de la tiendita.</p>
+      } @else if (shopDetails(); as details) {
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="min-w-0 space-y-2">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Nombre</p>
+            <p class="text-xl font-bold text-black sm:text-2xl">{{ details.name }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">UUID</p>
+            <p class="break-all font-mono text-sm text-gray-700">{{ details.uuid }}</p>
+          </div>
+        </div>
+        <button type="button"
+          class="inline-flex shrink-0 items-center gap-2 self-start rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:self-center"
+          [attr.aria-expanded]="shopInfoExpanded()" (click)="toggleShopInfo()">
+          {{ shopInfoExpanded() ? 'Ocultar detalles' : 'Ver detalles' }}
+          <span aria-hidden="true" class="transition-transform" [class.rotate-90]="shopInfoExpanded()">></span>
+        </button>
+      </div>
+
+      @if (shopInfoExpanded()) {
+      <div class="mt-5 space-y-5 border-t border-gray-200 pt-5" animate.enter="ms-fade-in" animate.leave="ms-fade-out">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="sm:col-span-2">
+            <p class="mb-1 text-sm font-medium text-gray-500">Dirección</p>
+            <p class="text-sm text-gray-700">{{ details.address }}</p>
+          </div>
+          <div>
+            <p class="mb-1 text-sm font-medium text-gray-500">Creada</p>
+            <p class="text-sm text-gray-700">{{ formatShopDate(details.createdAt) }}</p>
+          </div>
+          <div>
+            <p class="mb-1 text-sm font-medium text-gray-500">Última actualización</p>
+            <p class="text-sm text-gray-700">{{ formatShopDate(details.updatedAt) }}</p>
+          </div>
+        </div>
+        <div>
+          <p class="mb-1 text-sm font-medium text-gray-700">Días de apertura</p>
+          <div class="flex flex-wrap gap-2">
+            @for (day of weekDays; track day.value) {
+            <button type="button" class="cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition" [class]="draftOpenDays().includes(day.value)
+                  ? 'bg-(--primary) text-(--primary-foreground)'
+                  : 'border border-gray-300 bg-(--card) text-gray-600 hover:bg-gray-100'"
+              (click)="toggleOpenDay(day.value)">
+              {{ day.label }}
+            </button>
+            }
+          </div>
+          <p class="mt-1 text-xs text-gray-400">Marca los días en que tu tiendita abre al público.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <app-button text="Guardar cambios" (clicked)="save()" />
+          @if (saved()) {
+          <span class="text-sm font-medium text-green-600" animate.enter="ms-fade-in-up">Cambios guardados</span>
+          }
+        </div>
+      </div>
+      }
+      } @else if (auth.user()?.role === 'admin' && !auth.user()?.shopUuid) {
+      <p class="text-sm text-gray-500">Para ver los detalles, consulta una tiendita por su UUID.</p>
+      } @else {
+      <p class="text-sm text-gray-500">No se pudieron cargar los datos de la tiendita.</p>
+      }
+    </div>
+  </section>
+
   @if (currentSales(); as month) {
   <section>
     <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">
@@ -120,67 +193,6 @@
     </div>
   </section>
 
-  <section>
-    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Información de la tiendita</h2>
-    <div class="flex flex-col gap-4 rounded-lg border border-gray-200 bg-(--card) p-6">
-
-      @if (shopDetailsLoading()) {
-      <p class="text-sm text-gray-500">Cargando datos de la tiendita...</p>
-      } @else if (auth.user()?.role === 'empleado') {
-      <p class="text-sm text-red-600">No tienes permiso para consultar los detalles de la tiendita.</p>
-      } @else if (shopDetails(); as details) {
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <p class="mb-1 text-sm font-medium text-gray-500">Nombre</p>
-          <p class="text-base font-semibold text-black">{{ details.name }}</p>
-        </div>
-        <div>
-          <p class="mb-1 text-sm font-medium text-gray-500">UUID</p>
-          <p class="break-all font-mono text-sm text-gray-700">{{ details.uuid }}</p>
-        </div>
-        <div class="sm:col-span-2">
-          <p class="mb-1 text-sm font-medium text-gray-500">Dirección</p>
-          <p class="text-sm text-gray-700">{{ details.address }}</p>
-        </div>
-        <div>
-          <p class="mb-1 text-sm font-medium text-gray-500">Creada</p>
-          <p class="text-sm text-gray-700">{{ formatShopDate(details.createdAt) }}</p>
-        </div>
-        <div>
-          <p class="mb-1 text-sm font-medium text-gray-500">Última actualización</p>
-          <p class="text-sm text-gray-700">{{ formatShopDate(details.updatedAt) }}</p>
-        </div>
-      </div>
-      } @else if (auth.user()?.role === 'admin' && !auth.user()?.shopUuid) {
-      <p class="text-sm text-gray-500">Para ver los detalles, consulta una tiendita por su UUID.</p>
-      } @else {
-      <p class="text-sm text-gray-500">No se pudieron cargar los datos de la tiendita.</p>
-      }
-
-      <div>
-        <p class="mb-1 text-sm font-medium text-gray-700">Días de apertura</p>
-        <div class="flex flex-wrap gap-2">
-          @for (day of weekDays; track day.value) {
-          <button type="button" class="rounded-lg px-3 py-1.5 text-sm font-medium transition cursor-pointer" [class]="draftOpenDays().includes(day.value)
-                ? 'bg-(--primary) text-(--primary-foreground)'
-                : 'border border-gray-300 bg-(--card) text-gray-600 hover:bg-gray-100'"
-            (click)="toggleOpenDay(day.value)">
-            {{ day.label }}
-          </button>
-          }
-        </div>
-        <p class="mt-1 text-xs text-gray-400">Marca los días en que tu tiendita abre al público.</p>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <app-button text="Guardar cambios" (clicked)="save()" />
-        @if (saved()) {
-        <span class="text-sm font-medium text-green-600" animate.enter="ms-fade-in-up">Cambios guardados</span>
-        }
-      </div>
-
-    </div>
-  </section>
 </div>
 
 @if (conflicts().length > 0) {
