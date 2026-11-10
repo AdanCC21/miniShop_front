@@ -78,6 +78,9 @@
           </tbody>
         </table>
       </div>
+      <div class="mt-4 flex justify-end">
+        <app-button variant="secondary" text="Saldar cuenta total" (clicked)="requestAdjust('pay-all')" />
+      </div>
     </div>
   </div>
 </app-modal>
@@ -104,7 +107,7 @@
     <p class="-mt-2 text-xs text-gray-500">Usa un valor positivo para aumentar la deuda o negativo para abonar.</p>
     <div class="flex flex-wrap gap-2 mt-2 justify-end">
       <app-button variant="outline" text="Cancelar" (clicked)="toggleAdjustCredit(null)" />
-      <app-button variant="secondary" text="Saldar cuenta" (clicked)="requestAdjust('pay')" />
+      <app-button variant="secondary" text="Saldar venta" (clicked)="requestAdjust('pay')" />
       <app-button text="Actualizar" (clicked)="requestAdjust('update')" />
     </div>
   </div>
@@ -113,7 +116,7 @@
 
 @if (pendingAdjust(); as action) {
 <app-confirm-modal [title]="adjustConfirmTitle(action)" [message]="adjustConfirmMessage(action)"
-  [confirmText]="action === 'pay' ? 'Saldar cuenta' : 'Confirmar'"
+  [confirmText]="action === 'pay' ? 'Saldar venta' : action === 'pay-all' ? 'Saldar cuenta total' : 'Confirmar'"
   cancelText="Cancelar" [danger]="action === 'update' && adjustCredit() < 0" (confirm)="confirmAdjust()"
   (cancel)="cancelAdjust()" />
 }
