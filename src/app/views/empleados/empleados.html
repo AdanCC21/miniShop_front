@@ -94,13 +94,8 @@
                 </td>
                 <td class="px-4 py-3 text-gray-600">{{ formatDate(employee.createdAt.toString()) }}</td>
                 <td class="px-4 py-3 text-right">
-                  <button
-                    type="button"
-                    class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50"
-                    (click)="confirmRemove(employee)"
-                  >
-                    Quitar acceso
-                  </button>
+                  <app-button variant="danger" text="Quitar acceso"
+                    extraClass="!rounded-md !px-2 !py-1 text-xs" (clicked)="confirmRemove(employee)" />
                 </td>
               </tr>
             }
@@ -117,7 +112,7 @@
 
 @if (removeTarget(); as employee) {
   <app-confirm-modal
-    title="Quitar acceso"
+    [title]="'Quitar acceso'"
     [message]="'¿Quieres quitarle el acceso a ' + employee.name + '? El usuario dejará de pertenecer a esta tiendita.'"
     confirmText="Quitar acceso"
     cancelText="Cancelar"

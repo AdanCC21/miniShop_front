@@ -1,4 +1,5 @@
 import { Component, input, output } from '@angular/core';
+import { ButtonComponent } from '../button/button';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | 'wide';
 
@@ -15,6 +16,7 @@ const sizeClasses: Record<ModalSize, string> = {
 
 @Component({
   selector: 'app-modal',
+  imports: [ButtonComponent],
   templateUrl: './modal.html'
 })
 export class ModalComponent {

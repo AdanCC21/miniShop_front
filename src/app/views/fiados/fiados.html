@@ -42,7 +42,7 @@
 </div>
 
 @if (detailsOpen() && selectedPerson(); as person ) {
-<app-modal title="Fiados de {{ person.name }}" size="4xl" (close)="toggleDetails(null)">
+<app-modal [title]="'Fiados de ' + person.name" size="4xl" (close)="toggleDetails(null)">
   <div class="flex flex-col gap-2">
     <h2 class="text-xl font-bold">{{person.name}}</h2>
     <div class="flex flex-wrap items-center justify-between gap-3">
@@ -84,7 +84,7 @@
 }
 
 @if (addOpen()) {
-<app-modal title="Agregar persona" size="md" (close)="toggleAddPerson(false)">
+<app-modal [title]="'Agregar persona'" size="md" (close)="toggleAddPerson(false)">
   <div class="flex flex-col gap-4">
     <app-input label="Nombre de la persona" placeholder="Escribe el nombre" id="new-person-name"
       [value]="newPersonName()" (valueChange)="onNewPersonNameChange($event)" />
@@ -97,7 +97,7 @@
 }
 
 @if(selectedCredit(); as credit;){
-<app-modal title="Modificar credito" size="2xl" (close)="toggleAdjustCredit(null)">
+<app-modal [title]="'Modificar credito'" size="2xl" (close)="toggleAdjustCredit(null)">
   <div class="flex flex-col gap-4">
     <h2 class="text-lg">Ajustar credito</h2>
     <app-input label="Cantidad" type="number" (valueChange)="onAdjustCredit($event)" [value]="this.adjustCredit()" />

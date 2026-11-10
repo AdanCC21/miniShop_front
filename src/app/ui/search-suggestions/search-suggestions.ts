@@ -1,9 +1,10 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, HostListener, input, output, signal, TemplateRef } from '@angular/core';
+import { ButtonComponent } from '../button/button';
 
 @Component({
   selector: 'app-search-suggestions',
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, ButtonComponent],
   templateUrl: './search-suggestions.html'
 })
 export class SearchSuggestionsComponent<T> {

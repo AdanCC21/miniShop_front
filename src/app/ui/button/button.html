@@ -1,3 +1,15 @@
-<button type="button" class="{{ classList() }}" [disabled]="disabled()" (click)="clicked.emit()">
-  <span>{{ text() }}</span>
+<button
+  [type]="type()"
+  [attr.aria-label]="ariaLabel() || null"
+  [attr.aria-expanded]="ariaExpanded() ?? null"
+  [attr.aria-pressed]="ariaPressed() ?? null"
+  [title]="title()"
+  class="{{ classList() }}"
+  [disabled]="disabled()"
+  (click)="clicked.emit()"
+>
+  @if (text()) {
+    <span>{{ text() }}</span>
+  }
+  <ng-content />
 </button>

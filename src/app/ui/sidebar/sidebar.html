@@ -20,16 +20,12 @@
   ></div>
   <div class="mb-6 flex items-center justify-between px-4">
     <span class="text-xl font-bold tracking-tight text-black">miniShop </span>
-    <button
-      type="button"
-      aria-label="Cerrar menú"
-      class="rounded-md p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-black md:hidden"
-      (click)="close.emit()"
-    >
+    <app-button ariaLabel="Cerrar menú" variant="ghost" extraClass="!rounded-md !p-1.5 text-gray-500 hover:bg-gray-100 hover:text-black md:hidden"
+      (clicked)="close.emit()">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
       </svg>
-    </button>
+    </app-button>
   </div>
   <nav class="flex flex-1 flex-col gap-1 px-3">
     @if (isStoreMember()) {
@@ -52,6 +48,16 @@
             d="M12 6v6m0 0l-3-3m3 3l3-3M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
         Cajero
+      </a>
+
+      <a routerLink="/ventas" routerLinkActive="bg-gray-100 text-black"
+        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-black">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 3v18h18M8 15l4-4 4 3 5-7" />
+        </svg>
+        Ventas
       </a>
 
       <a routerLink="/pedidos" routerLinkActive="bg-gray-100 text-black"
@@ -138,20 +144,15 @@
           <p class="truncate text-xs capitalize text-gray-500">{{ user.role }}</p>
         </div>
       </div>
-      <button
-        type="button"
-        class="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-        (click)="requestLogout()"
-      >
-        Cerrar sesión
-      </button>
+      <app-button variant="outline" text="Cerrar sesión" extraClass="mt-3 w-full"
+        (clicked)="requestLogout()" />
     </div>
   }
 </aside>
 
 @if (showLogoutConfirmation()) {
   <app-confirm-modal
-    title="Cerrar sesión"
+    [title]="'Cerrar sesión'"
     message="¿Estás seguro de que quieres cerrar sesión?"
     confirmText="Cerrar sesión"
     cancelText="Seguir aquí"

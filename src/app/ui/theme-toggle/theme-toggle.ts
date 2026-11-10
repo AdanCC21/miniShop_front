@@ -1,9 +1,11 @@
 import { Component, computed, inject } from '@angular/core';
 
 import { ThemeService } from './theme.service';
+import { ButtonComponent } from '../button/button';
 
 @Component({
   selector: 'app-theme-toggle',
+  imports: [ButtonComponent],
   templateUrl: './theme-toggle.html'
 })
 export class ThemeToggleComponent {

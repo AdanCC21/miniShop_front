@@ -9,23 +9,16 @@
 
   <div class="grid grid-cols-3 gap-1 rounded-lg bg-gray-100 p-1">
     @for (item of tabs; track item.id) {
-    <button type="button" class="rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-      [class]="tab() === item.id ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'"
-      (click)="selectTab(item.id)">
-      {{ item.label }}
-    </button>
+    <app-button variant="segmented" [selected]="tab() === item.id" [ariaPressed]="tab() === item.id" [text]="item.label"
+      extraClass="!rounded-md flex-1" (clicked)="selectTab(item.id)" />
     }
   </div>
 
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div class="flex flex-wrap items-center gap-2">
       @for (filter of dateFilters; track filter.id) {
-      <button type="button" class="rounded-lg px-3 py-1.5 text-sm font-medium transition cursor-pointer" [class]="dateFilter() === filter.id
-            ? 'bg-(--primary) text-(--primary-foreground)'
-            : 'border border-gray-300 bg-(--card) text-gray-600 hover:bg-gray-100'"
-        (click)="selectDateFilter(filter.id)">
-        {{ filter.label }}
-      </button>
+      <app-button [variant]="dateFilter() === filter.id ? 'primary' : 'outline'" [text]="filter.label"
+        extraClass="!px-3 !py-1.5" (clicked)="selectDateFilter(filter.id)" />
       }
     </div>
 
@@ -83,8 +76,9 @@
   @if (visibleOrders().length > 0) {
   <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     @for (order of visibleOrders(); track order.id; let i = $index) {
-    <button type="button" (click)="openDetails(order)" animate.enter="ms-card-in" [style.--index]="i"
-      class="cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-(--card) p-5 text-left transition hover:shadow-md">
+    <app-button variant="ghost" animate.enter="ms-card-in" [style.--index]="i"
+      extraClass="!flex !w-full !justify-start !overflow-hidden !rounded-lg !border !border-gray-200 !bg-(--card) !p-5 !text-left !font-normal !text-gray-900 hover:!shadow-md"
+      (clicked)="openDetails(order)">
       <div class="flex items-center gap-3">
         <span class="flex h-11 w-11 items-center justify-center rounded-lg text-sm font-bold text-white"
           [style.background]="order.companyColor">
@@ -98,7 +92,7 @@
       <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs">
         <span class="text-gray-500">Registrado el {{ formatDate(order.createdDate) }}</span>
       </div>
-    </button>
+    </app-button>
     }
   </section>
   } @else {
@@ -125,7 +119,7 @@
 </div>
 
 @if (selectedOrder(); as order) {
-<app-modal title="Detalles del pedido" size="4xl" (close)="closeDetails()">
+<app-modal [title]="'Detalles del pedido'" size="4xl" (close)="closeDetails()">
   <div class="space-y-4">
     <div class="flex items-center gap-3">
       <span class="flex h-12 w-12 items-center justify-center rounded-lg text-base font-bold text-white"
@@ -258,12 +252,8 @@
         <span class="text-sm font-medium text-gray-700">Selecciona los días de la semana</span>
         <div class="flex flex-wrap gap-2">
           @for (day of weekDays; track day.value) {
-          <button type="button" class="rounded-lg px-3 py-1.5 text-sm font-medium transition cursor-pointer" [class]="recurrenceDays().includes(day.value)
-              ? 'bg-(--primary) text-(--primary-foreground)'
-              : 'border border-gray-300 bg-(--card) text-gray-600 hover:bg-gray-100'"
-            (click)="toggleRecurrenceDay(day.value)">
-            {{ day.label }}
-          </button>
+          <app-button [variant]="recurrenceDays().includes(day.value) ? 'primary' : 'outline'"
+            [text]="day.label" extraClass="!px-3 !py-1.5" (clicked)="toggleRecurrenceDay(day.value)" />
           }
         </div>
       </div>
@@ -288,16 +278,10 @@
         <div>
           <span class="mb-1 block text-sm font-medium text-gray-700">Unidad</span>
           <div class="grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1">
-            <button type="button" class="rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-              [class]="manualUnit() === 'unidad' ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'"
-              (click)="onManualUnitChange('unidad')">
-              Unidad
-            </button>
-            <button type="button" class="rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-              [class]="manualUnit() === 'kg' ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'"
-              (click)="onManualUnitChange('kg')">
-              Kilo
-            </button>
+            <app-button variant="segmented" [selected]="manualUnit() === 'unidad'" [ariaPressed]="manualUnit() === 'unidad'" text="Unidad"
+              extraClass="!rounded-md flex-1" (clicked)="onManualUnitChange('unidad')" />
+            <app-button variant="segmented" [selected]="manualUnit() === 'kg'" [ariaPressed]="manualUnit() === 'kg'" text="Kilo"
+              extraClass="!rounded-md flex-1" (clicked)="onManualUnitChange('kg')" />
           </div>
         </div>
         <div class="w-32">
@@ -393,11 +377,8 @@
               </td>
               <td class="px-4 py-3 font-medium text-gray-900">${{ lineTotal(item) }}</td>
               <td class="px-4 py-3 text-right">
-                <button type="button"
-                  class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50"
-                  (click)="removeCartItem($index)">
-                  Eliminar
-                </button>
+                <app-button variant="danger" text="Eliminar" extraClass="!rounded-md !px-2 !py-1 text-xs"
+                  (clicked)="removeCartItem($index)" />
               </td>
             </tr>
             }
@@ -418,26 +399,26 @@
 }
 
 @if (cancelTarget(); as order) {
-<app-confirm-modal title="Cancelar programación"
+<app-confirm-modal [title]="'Cancelar programación'"
   [message]="'¿Estás seguro de cancelar la programación de ' + order.company + '? Dejará de repetirse.'"
   confirmText="Cancelar programación" cancelText="Volver" [danger]="true" (confirm)="cancelScheduled()"
   (cancel)="cancelCancel()" />
 }
 
 @if (finalizeTarget(); as order) {
-<app-confirm-modal title="Marcar como finalizado"
+<app-confirm-modal [title]="'Marcar como finalizado'"
   [message]="'¿Estás seguro de marcar como finalizado el pedido de ' + order.company + '?'" confirmText="Finalizar"
   cancelText="Volver" (confirm)="markAsFinalized()" (cancel)="cancelFinalize()" />
 }
 
 @if (deliveryTarget(); as order) {
-<app-confirm-modal title="Registrar entrega"
+<app-confirm-modal [title]="'Registrar entrega'"
   [message]="'¿Registrar la entrega de ' + order.company + '? La próxima entrega se programará automáticamente.'"
   confirmText="Registrar entrega" cancelText="Volver" (confirm)="confirmDelivery()" (cancel)="cancelDelivery()" />
 }
 
 @if (receivedOrder(); as order) {
-<app-modal title="Registrar lo recibido" size="lg" (close)="closeReceived()">
+<app-modal [title]="'Registrar lo recibido'" size="lg" (close)="closeReceived()">
   <div class="space-y-4">
     <div class="flex items-center gap-3">
       <span class="flex h-12 w-12 items-center justify-center rounded-lg text-base font-bold text-white"
@@ -484,6 +465,6 @@
 }
 
 @if (receivedSaveConfirm()) {
-<app-confirm-modal title="Guardar lo recibido" message="¿Guardar las cantidades recibidas? Se actualizará el pedido."
+<app-confirm-modal [title]="'Guardar lo recibido'" message="¿Guardar las cantidades recibidas? Se actualizará el pedido."
   confirmText="Guardar" cancelText="Volver" (confirm)="confirmSaveReceived()" (cancel)="cancelSaveReceived()" />
 }

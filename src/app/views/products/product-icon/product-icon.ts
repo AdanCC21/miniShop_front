@@ -1,4 +1,5 @@
 import { Component, input, output } from '@angular/core';
+import { ButtonComponent } from '../../../ui/button/button';
 
 export interface ProductIconOption {
   id: string;
@@ -55,7 +56,7 @@ export class ProductIconComponent {
 
 @Component({
   selector: 'app-product-icon-picker',
-  imports: [ProductIconComponent],
+  imports: [ProductIconComponent, ButtonComponent],
   templateUrl: './product-icon-picker.html',
 })
 export class ProductIconPickerComponent {

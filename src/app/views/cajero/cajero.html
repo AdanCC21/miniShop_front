@@ -44,11 +44,8 @@
                   class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
               </label>
 
-              <button type="button" (click)="toggleByWeight()"
-                class="rounded-lg px-4 py-2 text-sm font-medium transition cursor-pointer"
-                [class]="byWeight() ? 'bg-(--primary) text-(--primary-foreground)' : 'border border-gray-300 bg-(--card) text-gray-700 hover:bg-gray-100'">
-                Kg
-              </button>
+              <app-button [variant]="byWeight() ? 'primary' : 'outline'" text="Kg"
+                (clicked)="toggleByWeight()" />
 
               <app-button text="Agregar" (clicked)="addToCart()" />
             </div>
@@ -94,10 +91,8 @@
               </td>
               <td class="px-4 py-3 font-medium text-gray-900">${{ formatPrice(line.price * line.quantity) }}</td>
               <td class="px-4 py-3 text-right">
-                <button type="button" (click)="removeLine(line.code)"
-                  class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50">
-                  Eliminar
-                </button>
+                <app-button variant="danger" text="Eliminar" extraClass="!rounded-md !px-2 !py-1 text-xs"
+                  (clicked)="removeLine(line.code)" />
               </td>
             </tr>
             } @empty {
@@ -132,26 +127,14 @@
         <div class="flex flex-col gap-2">
           <span class="text-xs uppercase tracking-wider text-gray-400">Método de pago</span>
           <div class="flex rounded-lg bg-gray-100 p-1">
-            <button type="button" (click)="selectPaymentMethod(PaymentMethod.CASH)"
-              class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-              [class]="paymentMethod() === PaymentMethod.CASH ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
-              Efectivo
-            </button>
-            <button type="button" (click)="selectPaymentMethod(PaymentMethod.CARD)"
-              class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-              [class]="paymentMethod() === PaymentMethod.CARD ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
-              Tarjeta
-            </button>
-            <button type="button" (click)="selectPaymentMethod(PaymentMethod.MIXED)"
-              class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-              [class]="paymentMethod() === PaymentMethod.MIXED ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
-              Múltiple
-            </button>
-            <button type="button" (click)="selectPaymentMethod(PaymentMethod.CREDIT)"
-              class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-              [class]="paymentMethod() === PaymentMethod.CREDIT ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
-              Fiar
-            </button>
+            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.CASH" [ariaPressed]="paymentMethod() === PaymentMethod.CASH" text="Efectivo"
+              extraClass="!rounded-md flex-1 !px-2" (clicked)="selectPaymentMethod(PaymentMethod.CASH)" />
+            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.CARD" [ariaPressed]="paymentMethod() === PaymentMethod.CARD" text="Tarjeta"
+              extraClass="!rounded-md flex-1 !px-2" (clicked)="selectPaymentMethod(PaymentMethod.CARD)" />
+            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.MIXED" [ariaPressed]="paymentMethod() === PaymentMethod.MIXED" text="Múltiple"
+              extraClass="!rounded-md flex-1 !px-2" (clicked)="selectPaymentMethod(PaymentMethod.MIXED)" />
+            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.CREDIT" [ariaPressed]="paymentMethod() === PaymentMethod.CREDIT" text="Fiar"
+              extraClass="!rounded-md flex-1 !px-2" (clicked)="selectPaymentMethod(PaymentMethod.CREDIT)" />
           </div>
         </div>
 
@@ -200,11 +183,9 @@
             <span class="text-xs uppercase tracking-wider text-gray-400">Método de pago del fiado</span>
             <div class="flex rounded-lg bg-gray-100 p-1">
               @for (option of fiadoMethodOptions; track option.id) {
-              <button type="button" (click)="selectFiadoMethod(option.id)"
-                class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-                [class]="fiadoMethod() === option.id ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'">
-                {{ option.label }}
-              </button>
+              <app-button variant="segmented" [selected]="fiadoMethod() === option.id" [ariaPressed]="fiadoMethod() === option.id"
+                [text]="option.label" extraClass="!rounded-md flex-1 !px-2"
+                (clicked)="selectFiadoMethod(option.id)" />
               }
             </div>
 
@@ -260,14 +241,13 @@
             <span class="font-medium text-gray-800">{{ person.name }}</span>
           </ng-template>
 
-          <button type="button" (click)="openAddFiadoPerson()"
-            class="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 cursor-pointer">
+          <app-button variant="outline" extraClass="w-full" (clicked)="openAddFiadoPerson()">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
               stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            Agregar persona
-          </button>
+            <span>Agregar persona</span>
+          </app-button>
 
           @if (selectedFiadoPerson() !== '' && paymentOk()) {
           <p class="text-sm text-gray-500">
@@ -332,7 +312,7 @@
 
   <!-- MODALES -->
   @if (closeOpen()) {
-  <app-confirm-modal title="Cerrar caja" [danger]="true"
+  <app-confirm-modal [title]="'Cerrar caja'" [danger]="true"
     [message]="'¿Registrar el cierre de caja de hoy? Se reiniciarán el fondo inicial y las ventas de la caja.'"
     confirmText="Cerrar caja" cancelText="Cancelar" (confirm)="toggleCloseShopReg(true)"
     (cancel)="toggleCloseShopReg(false)" />
@@ -340,7 +320,7 @@
 
   <!-- Apertura de caja -->
   @if (previewShopReg()) {
-  <app-modal title="Caja actual" size="lg" (close)="togglePreviewShop(false)">
+  <app-modal [title]="'Caja actual'" size="lg" (close)="togglePreviewShop(false)">
     <ul class="grid grid-cols-3 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
       <li>
         <p class="text-xs uppercase tracking-wider text-gray-400">Dinero en caja</p>
@@ -447,7 +427,7 @@
   }
 
   @if(openingShopReg().modalOpen){
-  <app-modal title="Abrir caja" size="lg" (close)="toggleShopRegister(false)">
+  <app-modal [title]="'Abrir caja'" size="lg" (close)="toggleShopRegister(false)">
     <app-input label="Fondo inicial" type="number" [value]="this.openingShopReg().amount"
       (valueChange)="handleShopRegister($event)" />
     <div class="flex gap-2 justify-end mt-4">
@@ -458,7 +438,7 @@
   }
 
   @if (addFiadoPersonOpen()) {
-  <app-modal title="Agregar persona" size="md" (close)="closeAddFiadoPerson()">
+  <app-modal [title]="'Agregar persona'" size="md" (close)="closeAddFiadoPerson()">
     <div class="space-y-4">
       <app-input label="Nombre de la persona" placeholder="Escribe el nombre" id="new-fiado-person"
         [value]="fiadoQuery()" (valueChange)="onFiadoQueryChange($event)" />

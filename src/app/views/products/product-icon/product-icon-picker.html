@@ -2,14 +2,12 @@
   <legend class="mb-2 text-sm font-medium text-gray-700">Icono del producto</legend>
   <div class="grid max-h-64 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
     @for (icon of options; track icon.id) {
-      <button type="button" (click)="select(icon.id)"
-        class="flex cursor-pointer flex-col items-center gap-1 rounded-lg border p-2 text-sm transition hover:border-blue-500"
-        [class.border-blue-500]="value() === icon.id"
-        [class.border-gray-200]="value() !== icon.id"
-        [attr.aria-pressed]="value() === icon.id">
+      <app-button variant="ghost" [ariaPressed]="value() === icon.id"
+        [extraClass]="'!flex !h-full !w-full !flex-col !gap-1 !rounded-lg !border !p-2 !text-sm !font-normal hover:!border-blue-500 ' + (value() === icon.id ? '!border-blue-500' : '!border-gray-200')"
+        (clicked)="select(icon.id)">
         <app-product-icon [icon]="icon.id" size="picker" />
         <span class="text-center">{{ icon.label }}</span>
-      </button>
+      </app-button>
     }
   </div>
 </fieldset>

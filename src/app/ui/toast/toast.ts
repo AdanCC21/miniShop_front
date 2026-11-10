@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 
 import { ToastVariant } from './toast.service';
 import { ToastService } from './toast.service';
+import { ButtonComponent } from '../button/button';
 
 const borderClasses: Record<ToastVariant, string> = {
   success: 'border-emerald-200 bg-emerald-50',
@@ -19,6 +20,7 @@ const iconClasses: Record<ToastVariant, string> = {
 
 @Component({
   selector: 'app-toast',
+  imports: [ButtonComponent],
   templateUrl: './toast.html'
 })
 export class ToastComponent {

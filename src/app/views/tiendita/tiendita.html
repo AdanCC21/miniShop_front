@@ -22,12 +22,11 @@
             <p class="break-all font-mono text-sm text-gray-700">{{ details.uuid }}</p>
           </div>
         </div>
-        <button type="button"
-          class="inline-flex shrink-0 items-center gap-2 self-start rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:self-center"
-          [attr.aria-expanded]="shopInfoExpanded()" (click)="toggleShopInfo()">
-          {{ shopInfoExpanded() ? 'Ocultar detalles' : 'Ver detalles' }}
+        <app-button variant="outline" [text]="shopInfoExpanded() ? 'Ocultar detalles' : 'Ver detalles'"
+          [ariaExpanded]="shopInfoExpanded()" extraClass="shrink-0 self-start sm:self-center"
+          (clicked)="toggleShopInfo()">
           <span aria-hidden="true" class="transition-transform" [class.rotate-90]="shopInfoExpanded()">></span>
-        </button>
+        </app-button>
       </div>
 
       @if (shopInfoExpanded()) {
@@ -50,12 +49,8 @@
           <p class="mb-1 text-sm font-medium text-gray-700">Días de apertura</p>
           <div class="flex flex-wrap gap-2">
             @for (day of weekDays; track day.value) {
-            <button type="button" class="cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition" [class]="draftOpenDays().includes(day.value)
-                  ? 'bg-(--primary) text-(--primary-foreground)'
-                  : 'border border-gray-300 bg-(--card) text-gray-600 hover:bg-gray-100'"
-              (click)="toggleOpenDay(day.value)">
-              {{ day.label }}
-            </button>
+            <app-button [variant]="draftOpenDays().includes(day.value) ? 'primary' : 'outline'"
+              [text]="day.label" extraClass="!px-3 !py-1.5" (clicked)="toggleOpenDay(day.value)" />
             }
           </div>
           <p class="mt-1 text-xs text-gray-400">Marca los días en que tu tiendita abre al público.</p>
@@ -196,7 +191,7 @@
 </div>
 
 @if (conflicts().length > 0) {
-<app-modal title="Conflicto de horario" size="lg" (close)="closeConflicts()">
+<app-modal [title]="'Conflicto de horario'" size="lg" (close)="closeConflicts()">
   <div class="space-y-4">
     <p class="text-sm text-gray-600">
       Hay pedidos programados para recibirse en un día que ahora está cerrado. Resuélvelos marcándolos como
@@ -236,7 +231,7 @@
 }
 
 @if (todayDetailsOpen() && todayClosure(); as closure) {
-<app-modal title="Detalles del cierre de hoy" size="4xl" (close)="closeTodayDetails()">
+<app-modal [title]="'Detalles del cierre de hoy'" size="4xl" (close)="closeTodayDetails()">
   <div class="space-y-4">
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       <div>

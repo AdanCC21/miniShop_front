@@ -4,11 +4,12 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { LogOut } from '../../api/auth';
 import { ConfirmModalComponent } from '../confirm-modal/confirm-modal';
+import { ButtonComponent } from '../button/button';
 import { ToastService } from '../toast/toast.service';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive, ConfirmModalComponent],
+  imports: [RouterLink, RouterLinkActive, ConfirmModalComponent, ButtonComponent],
   templateUrl: './sidebar.html'
 })
 export class SidebarComponent {

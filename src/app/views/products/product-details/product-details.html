@@ -63,7 +63,7 @@
 }
 
 @if (this.product() && editOpen()) {
-<app-modal title="Editar producto" size="4xl" (close)="closeEdit()">
+<app-modal [title]="'Editar producto'" size="4xl" (close)="closeEdit()">
   <form class="flex flex-col gap-4">
     <app-product-icon-picker [value]="editIcon()" (valueChange)="editIcon.set($event)" />
 
@@ -83,23 +83,17 @@
 }
 
 @if (this.product() && this.editQuantity()) {
-<app-modal title="Actualizar cantidad" size="xl" (close)="toggleUpdateQuantity(false)">
+<app-modal [title]="'Actualizar cantidad'" size="xl" (close)="toggleUpdateQuantity(false)">
   <form class="flex flex-col gap-4">
     <p class="text-sm text-gray-500">
       Agrega unidades a la cantidad actual del inventario o establece una nueva cantidad total disponible.
     </p>
 
     <div class="grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1">
-      <button type="button" class="rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-        [class]="quantityMode() === 'add' ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'"
-        (click)="changeQuantityMode('add')">
-        Agregar al inventario
-      </button>
-      <button type="button" class="rounded-md px-3 py-2 text-sm font-medium transition cursor-pointer"
-        [class]="quantityMode() === 'set' ? 'bg-(--card) text-black shadow' : 'text-gray-500 hover:text-black'"
-        (click)="changeQuantityMode('set')">
-        Establecer total
-      </button>
+      <app-button variant="segmented" [selected]="quantityMode() === 'add'" [ariaPressed]="quantityMode() === 'add'" extraClass="!rounded-md flex-1"
+        text="Agregar al inventario" (clicked)="changeQuantityMode('add')" />
+      <app-button variant="segmented" [selected]="quantityMode() === 'set'" [ariaPressed]="quantityMode() === 'set'" extraClass="!rounded-md flex-1"
+        text="Establecer total" (clicked)="changeQuantityMode('set')" />
     </div>
 
     @if (quantityMode() === 'add') {
@@ -131,7 +125,7 @@
 }
 
 @if (this.product() && this.deleteProd()) {
-<app-modal title="Confirmar eliminacion" size="md" (close)="toggleDelProd(false)">
+<app-modal [title]="'Confirmar eliminacion'" size="md" (close)="toggleDelProd(false)">
   <form class="flex flex-col gap-4">
     <span class="text-lg font-medium">Seguro de <strong class="text-red-500">ELIMINAR</strong> este producto</span>
     <div class="flex justify-end gap-3">

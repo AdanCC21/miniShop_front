@@ -12,6 +12,7 @@ import { TienditaComponent } from './views/tiendita/tiendita';
 import { EmpleadosComponent } from './views/empleados/empleados';
 import { AdminComponent } from './views/admin/admin';
 import { StoreDetailsComponent } from './views/admin/store-details/store-details';
+import { SalesComponent } from './views/sales/sales';
 
 import { authGuard } from './auth/auth.guard';
 
@@ -37,6 +38,11 @@ export const routes: Routes = [
   {
     path: 'cajero',
     component: CajeroComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'ventas',
+    component: SalesComponent,
     canActivate: [authGuard]
   },
   {

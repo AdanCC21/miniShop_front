@@ -90,20 +90,10 @@
                 <td class="px-4 py-3 text-gray-600">{{ member.joinedAt }}</td>
                 <td class="px-4 py-3">
                   <div class="flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      class="rounded-md border border-gray-300 bg-(--card) px-2.5 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-100 cursor-pointer"
-                      (click)="changeRole(member)"
-                    >
-                      {{ roleActionLabel(member) }}
-                    </button>
-                    <button
-                      type="button"
-                      class="rounded-md border border-red-200 bg-(--card) px-2.5 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 cursor-pointer"
-                      (click)="confirmRemove(member)"
-                    >
-                      Remover
-                    </button>
+                    <app-button variant="outline" [text]="roleActionLabel(member)"
+                      extraClass="!rounded-md !px-2.5 !py-1.5 text-xs" (clicked)="changeRole(member)" />
+                    <app-button variant="danger" text="Remover"
+                      extraClass="!rounded-md !px-2.5 !py-1.5 text-xs" (clicked)="confirmRemove(member)" />
                   </div>
                 </td>
               </tr>
@@ -128,7 +118,7 @@
 
 @if (removeTarget(); as member) {
   <app-confirm-modal
-    title="Remover empleado"
+    [title]="'Remover empleado'"
     [message]="'¿Estás seguro de remover a ' + member.name + ' de la tiendita?'"
     confirmText="Remover"
     cancelText="Cancelar"

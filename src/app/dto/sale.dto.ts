@@ -7,13 +7,44 @@ export interface SaleDTO {
     
     paidCash: number;
     paidCard: number;
-    credit: number | null;
+    credit: SaleCreditDTO | null;
     method: PaymentMethod;
     
     details?: SaleDetail[]
     total: number;
     
-    date: Date;
+    date: Date | string;
+}
+
+export interface SaleCreditDTO {
+    id: string;
+    guarantorId: string;
+    saleId: string;
+    totalAmount: number;
+    paidAmount: number;
+    status: string;
+    createdAt: Date | string;
+    guarantor?: { id: string; name: string };
+}
+
+export interface ShopRegisterClosureDTO {
+    uuid: string;
+    shopUuid: string;
+    openingCash: number;
+    totalCollected: number;
+    currentCash: number;
+    openedAt: Date | string;
+    closedAt: Date | string;
+    salesCount: number;
+    productsSold: number;
+    totalSales: number;
+    cashReceived: number;
+    cardReceived: number;
+    creditOutstanding: number;
+}
+
+export interface ShopRegisterClosureDetailsDTO extends ShopRegisterClosureDTO {
+    sales: SaleDTO[];
 }
 
 export interface SaleDetail {
