@@ -1,20 +1,36 @@
 import { TestBed } from '@angular/core/testing';
+import { computed, signal } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 
 import { App } from './app';
-import { AuthService } from './auth/auth.service';
+import type { SessionProfile } from './api/user';
 import { SessionService } from './auth/session.service';
 import { routes } from './app.routes';
 
+let mockedProfile: SessionProfile | null = null;
+const mockedUser = signal<SessionProfile | null>(null);
 const sessionServiceMock = {
-  current: vi.fn()
+  current: vi.fn(async () => {
+    mockedUser.set(mockedProfile);
+    return mockedProfile;
+  }),
+  user: mockedUser.asReadonly(),
+  isStoreMember: computed(() => ['EMPLOYEE', 'MANAGER'].includes(mockedUser()?.role ?? '')),
+  isManager: computed(() => mockedUser()?.role === 'MANAGER'),
+  isAdmin: computed(() => mockedUser()?.role === 'ADMIN'),
+  clear: vi.fn(() => mockedUser.set(null)),
+  logout: vi.fn(async () => true)
 };
 
 describe('App', () => {
   beforeEach(async () => {
-    localStorage.clear();
+    mockedProfile = null;
+    mockedUser.set(null);
     sessionServiceMock.current.mockReset();
-    sessionServiceMock.current.mockResolvedValue(null);
+    sessionServiceMock.current.mockImplementation(async () => {
+      mockedUser.set(mockedProfile);
+      return mockedProfile;
+    });
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
@@ -30,17 +46,17 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render the brand for a logged-in store member', async () => {
-    sessionServiceMock.current.mockResolvedValue({
+  it('should render the backend profile for a logged-in store member', async () => {
+    mockedProfile = {
       userId: '1',
       email: 'carlos.ruiz@ejemplo.com',
       role: 'MANAGER',
       shopUuid: 'ST-0001'
-    });
+    };
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('app-sidebar')?.textContent).toContain('miniShop');
+    expect(compiled.querySelector('app-sidebar')?.textContent).toContain('carlos.ruiz@ejemplo.com');
   });
 
   it('should hide sidebar and header on the auth page', async () => {
@@ -55,13 +71,12 @@ describe('App', () => {
   });
 
   it('should hide sidebar and header on the esperando page', async () => {
-    sessionServiceMock.current.mockResolvedValue({
+    mockedProfile = {
       userId: '3',
       email: 'ana.torres@ejemplo.com',
       role: 'WAITING',
       shopUuid: 'ST-0001'
-    });
-    TestBed.inject(AuthService).login('ana.torres@ejemplo.com', 'pendiente123');
+    };
     const router = TestBed.inject(Router);
     const fixture = TestBed.createComponent(App);
     await router.navigate(['/esperando']);

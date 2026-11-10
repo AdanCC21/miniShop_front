@@ -7,7 +7,7 @@ import { InputComponent } from "../../ui/input/input";
 import { ModalComponent } from "../../ui/modal/modal";
 import { CreateProduct, GetProducts } from '../../api/products';
 import { ToastService } from '../../ui/toast/toast.service';
-import { AuthService } from '../../auth/auth.service';
+import { SessionService } from '../../auth/session.service';
 import { CreateCategory, GetCategories } from '../../api/category';
 import { CategoryDTO } from '../../dto/category.dto';
 import { ProductIconPickerComponent } from './product-icon/product-icon';
@@ -21,7 +21,7 @@ export type SortOption = 'date' | 'price' | 'name';
 })
 export class ProductsComponent implements OnInit {
   protected readonly toast = inject(ToastService);
-  protected readonly auth = inject(AuthService);
+  protected readonly session = inject(SessionService);
   protected readonly storeName = 'miniShop';
 
   protected readonly products = signal<any[]>([]);
@@ -179,7 +179,7 @@ export class ProductsComponent implements OnInit {
       return;
     }
 
-    const shopUuid = this.auth.user()?.shopUuid;
+    const shopUuid = this.session.user()?.shopUuid;
     if (!shopUuid) {
       this.toast.error('Sin tienda', 'No se pudo determinar la tienda de la sesión.');
       return;

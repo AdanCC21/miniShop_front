@@ -1,11 +1,11 @@
 import axios from 'axios';
 import { Router } from '@angular/router';
 
-import { AuthService } from '../auth/auth.service';
+import { SessionService } from '../auth/session.service';
 
 let registered = false;
 
-export function registerAuthErrorHandler(auth: AuthService, router: Router): void {
+export function registerAuthErrorHandler(session: SessionService, router: Router): void {
   if (registered) {
     return;
   }
@@ -17,7 +17,7 @@ export function registerAuthErrorHandler(auth: AuthService, router: Router): voi
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         const url = error.config?.url ?? '';
         if (!url.includes('/auth/profile') && !router.url.startsWith('/auth')) {
-          auth.logout();
+          session.clear();
           router.navigate(['/auth']);
         }
       }

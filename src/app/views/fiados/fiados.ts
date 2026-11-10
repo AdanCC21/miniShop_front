@@ -1,5 +1,4 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { StoreService } from '../../store.service';
 import { ButtonComponent } from '../../ui/button/button';
 import { ConfirmModalComponent } from '../../ui/confirm-modal/confirm-modal';
 import { GuarantorCardComponent } from '../../ui/guarantor-card/guarantor-card';

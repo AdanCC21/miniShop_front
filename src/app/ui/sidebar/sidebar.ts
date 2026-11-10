@@ -1,12 +1,10 @@
-import { Component, computed, HostListener, inject, input, OnInit, output, signal } from '@angular/core';
+import { Component, HostListener, inject, input, OnInit, output, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-
-import { AuthService } from '../../auth/auth.service';
-import { LogOut } from '../../api/auth';
 import { ConfirmModalComponent } from '../confirm-modal/confirm-modal';
 import { ButtonComponent } from '../button/button';
 import { ToastService } from '../toast/toast.service';
 import { GetMyShop } from '../../api/shop';
+import { SessionService } from '../../auth/session.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -20,32 +18,22 @@ export class SidebarComponent implements OnInit {
 
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
-  private readonly auth = inject(AuthService);
+  private readonly session = inject(SessionService);
 
+  protected readonly user = this.session.user;
+  protected readonly isStoreMember = this.session.isStoreMember;
+  protected readonly isManager = this.session.isManager;
+  protected readonly isAdmin = this.session.isAdmin;
   protected readonly shop = signal<{uuid:string, name:string} | null>(null);
-  protected readonly user = computed(() => this.auth.user());
   protected readonly showLogoutConfirmation = signal(false);
 
   async ngOnInit() {
-    const shopName = await GetMyShop(this.toast, false, false, true);
-    if (shopName) this.shop.set(shopName);
-  }
-
-  protected readonly isStoreMember = computed(() => {
-    const currentUser = this.auth.user();
-    if (!currentUser || currentUser.status !== 'approved') {
-      return false;
+    const user = await this.session.current();
+    if (user && this.session.isStoreMember()) {
+      const shop = await GetMyShop(this.toast, false, false, true);
+      if (shop) this.shop.set(shop);
     }
-    return currentUser.role === 'empleado' || currentUser.role === 'encargado';
-  });
-
-  protected readonly isManager = computed(() => {
-    return this.auth.role === 'encargado';
-  });
-
-  protected readonly isAdmin = computed(() => {
-    return this.auth.role === 'admin';
-  });
+  }
 
   protected requestLogout(): void {
     this.showLogoutConfirmation.set(true);
@@ -57,12 +45,9 @@ export class SidebarComponent implements OnInit {
 
   protected async logout() {
     this.showLogoutConfirmation.set(false);
-    try {
-      await LogOut(this.toast);
-    } finally {
-      this.auth.logout();
-      this.router.navigate(['/auth']);
-    }
+    const loggedOut = await this.session.logout(this.toast);
+    if (!loggedOut) return;
+    this.router.navigate(['/auth']);
   }
 
   private readonly minWidthVw = 10;

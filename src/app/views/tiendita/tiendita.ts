@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
 import { StoreService } from '../../store.service';
-import { AuthService } from '../../auth/auth.service';
+import { SessionService } from '../../auth/session.service';
 import { PaymentMethod } from '../../entities/PaymentMethod';
 import { formatDate, Order } from '../orders/orders.data';
 import { ButtonComponent } from '../../ui/button/button';
@@ -46,7 +46,8 @@ interface PaymentLine {
 })
 export class TienditaComponent implements OnInit {
   private readonly store = inject(StoreService);
-  protected readonly auth = inject(AuthService);
+  protected readonly session = inject(SessionService);
+  protected readonly user = this.session.user;
   protected readonly toast = inject(ToastService);
 
   protected readonly PaymentMethod = PaymentMethod;

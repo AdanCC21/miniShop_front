@@ -7,7 +7,7 @@ import { SidebarComponent } from './ui/sidebar/sidebar';
 import { ToastComponent } from './ui/toast/toast';
 import { LoaderComponent } from './ui/loader/loader';
 import { registerAuthErrorHandler } from './api/auth-errors';
-import { AuthService } from './auth/auth.service';
+import { SessionService } from './auth/session.service';
 
 @Component({
   selector: 'app-root',
@@ -25,8 +25,8 @@ export class App {
   });
 
   constructor(private readonly router: Router) {
-    const auth = inject(AuthService);
-    registerAuthErrorHandler(auth, this.router);
+    const session = inject(SessionService);
+    registerAuthErrorHandler(session, this.router);
 
     this.currentUrl.set(this.router.url);
     this.router.events

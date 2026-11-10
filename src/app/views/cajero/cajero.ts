@@ -1,7 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 
 import { CartLine, SaleRecord, saleCashPortion, salePaymentLines } from './cajero.data';
-import { StoreService } from '../../store.service';
 import { ButtonComponent } from '../../ui/button/button';
 import { ConfirmModalComponent } from '../../ui/confirm-modal/confirm-modal';
 import { InputComponent } from '../../ui/input/input';
@@ -35,7 +34,6 @@ import { ShopRegisterDTO } from '../../dto/shopRegister.dto';
 })
 export class CajeroComponent implements OnInit {
   private readonly toast = inject(ToastService);
-  private readonly store = inject(StoreService);
   protected readonly loader = inject(LoaderService);
 
   protected readonly PaymentMethod = PaymentMethod;

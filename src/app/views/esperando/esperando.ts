@@ -1,10 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { AuthService } from '../../auth/auth.service';
+import { SessionService } from '../../auth/session.service';
 import { ButtonComponent } from '../../ui/button/button';
 import { ThemeToggleComponent } from '../../ui/theme-toggle/theme-toggle';
-import { LogOut } from '../../api/auth';
 import { ToastService } from '../../ui/toast/toast.service';
 
 @Component({
@@ -13,18 +12,14 @@ import { ToastService } from '../../ui/toast/toast.service';
   templateUrl: './esperando.html'
 })
 export class EsperandoComponent {
-  private readonly auth = inject(AuthService);
+  private readonly session = inject(SessionService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
-  protected readonly user = this.auth.user;
+  protected readonly user = this.session.user;
 
   protected async logout(): Promise<void> {
-    try {
-      await LogOut(this.toast);
-    } finally {
-      this.auth.logout();
-      this.router.navigate(['/auth']);
-    }
+    const loggedOut = await this.session.logout(this.toast);
+    if (loggedOut) this.router.navigate(['/auth']);
   }
 }

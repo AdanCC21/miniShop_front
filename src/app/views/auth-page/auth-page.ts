@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { AuthService } from '../../auth/auth.service';
+import { SessionService } from '../../auth/session.service';
 
 import { ButtonComponent } from '../../ui/button/button';
 import { InputComponent } from '../../ui/input/input';
@@ -19,7 +19,7 @@ import { AuthMode, AuthTabsComponent } from './components/auth-tabs/auth-tabs';
   templateUrl: './auth-page.html'
 })
 export class AuthPageComponent {
-  private readonly auth = inject(AuthService);
+  private readonly session = inject(SessionService);
   private readonly router = inject(Router);
   protected readonly toast = inject(ToastService);
   private readonly loader = inject(LoaderService);
@@ -99,7 +99,7 @@ export class AuthPageComponent {
 
     const data = await Login({ email: this.loginEmail(), password: this.loginPassword(), }, this.toast);
     if (data) {
-      this.auth.setSessionFromBackend(data.user);
+      this.session.setFromLogin(data.user);
       this.redirectAfterAuth(data.user.role);
     }
     this.loader.hide();

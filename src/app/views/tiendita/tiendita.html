@@ -8,7 +8,7 @@
     <div class="rounded-lg border border-gray-200 bg-(--card) p-5 sm:p-6">
       @if (shopDetailsLoading()) {
       <p class="text-sm text-gray-500">Cargando datos de la tiendita...</p>
-      } @else if (auth.user()?.role === 'empleado') {
+      } @else if (user()?.role === 'EMPLOYEE') {
       <p class="text-sm text-red-600">No tienes permiso para consultar los detalles de la tiendita.</p>
       } @else if (shopDetails(); as details) {
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -63,7 +63,7 @@
         </div>
       </div>
       }
-      } @else if (auth.user()?.role === 'admin' && !auth.user()?.shopUuid) {
+      } @else if (user()?.role === 'ADMIN' && !user()?.shopUuid) {
       <p class="text-sm text-gray-500">Para ver los detalles, consulta una tiendita por su UUID.</p>
       } @else {
       <p class="text-sm text-gray-500">No se pudieron cargar los datos de la tiendita.</p>
