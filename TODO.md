@@ -2,7 +2,7 @@
 
 ### Prioridad alta: antes de usar la caja en operación real
 
-- [ ] **Completar el cierre de caja.** La confirmación actual muestra un mensaje de éxito, pero no llama a la operación de cierre del backend ni limpia el estado relacionado con la caja. La interfaz puede dar a entender que el cierre se registró cuando no ocurrió.
+- [ x ] **Completar el cierre de caja.** La confirmación actual muestra un mensaje de éxito, pero no llama a la operación de cierre del backend ni limpia el estado relacionado con la caja. La interfaz puede dar a entender que el cierre se registró cuando no ocurrió.
 - [ ] **Conectar y corregir la gestión de empleados.** Aprobar, rechazar o eliminar empleados modifica datos guardados en el navegador, no la cuenta real del servidor. Además, las listas comparan el UUID de la tienda con su nombre, por lo que pueden aparecer vacías.
 - [ ] **Conectar el panel de administración a datos reales.** La lista de tiendas, sus estados y miembros son datos fijos de ejemplo; sus acciones no se guardan en el servidor.
 - [ ] **Persistir el horario de apertura.** La pantalla muestra “Cambios guardados”, pero el horario se actualiza en una señal en memoria y se pierde al recargar.
@@ -18,6 +18,8 @@
 En la revisión estática del frontend no se identificó uso explícito de `eval`, `innerHTML` o mecanismos para omitir la sanitización de Angular. Esto no sustituye una auditoría dinámica ni una revisión del backend.
 
 ### Otras tareas pendientes
+
+- [ ] **Permitir que un usuario removido de una tiendita vuelva a solicitar acceso.** Al rechazar/remover exitosamente a un usuario, asignarle un estado sin tienda (por ejemplo, `NOSHOP`) en vez de dejarlo inutilizable. Cuando esté en ese estado, mostrar como pantalla principal una modal que explique brevemente su situación y le permita enviar una solicitud para entrar a otra tiendita.
 
 - [ ] **Corregir la información de caja derivada de historiales locales.** Hay estructuras de ventas en `localStorage` que no se actualizan con las ventas registradas en el backend; no deben utilizarse para mostrar totales oficiales.
 - [ ] **Distinguir errores de carga de listas vacías.** Algunas funciones de API devuelven `[]` al fallar, igual que cuando no hay resultados. La interfaz debería conservar un estado de error separado del estado vacío.

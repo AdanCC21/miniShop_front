@@ -36,10 +36,10 @@
         <h2 class="text-lg font-semibold text-black">Crea tu cuenta</h2>
         <p class="text-sm text-gray-500">Selecciona tu rol para continuar.</p>
 
-        <div class="grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1">
-          <app-button variant="segmented" [selected]="role() === 'encargado'" [ariaPressed]="role() === 'encargado'" extraClass="!rounded-md flex-1"
+        <div class="flex justify-around rounded-lg bg-gray-100 p-1">
+          <app-button variant="segmented" [selected]="role() === 'encargado'" [ariaPressed]="role() === 'encargado'" extraClass="flex-1" class="flex flex-1"
             text="Encargado" (clicked)="onRoleChange('encargado')" />
-          <app-button variant="segmented" [selected]="role() === 'empleado'" [ariaPressed]="role() === 'empleado'" extraClass="!rounded-md flex-1"
+          <app-button variant="segmented" [selected]="role() === 'empleado'" [ariaPressed]="role() === 'empleado'" extraClass="flex-1" class="flex flex-1"
             text="Empleado" (clicked)="onRoleChange('empleado')" />
         </div>
 

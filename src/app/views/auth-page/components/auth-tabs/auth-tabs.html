@@ -1,0 +1,6 @@
+<div class="mb-4 flex rounded-lg justify-around bg-gray-100 p-1">
+  <app-button variant="segmented" [selected]="mode() === 'login'" [ariaPressed]="mode() === 'login'" extraClass="flex-1" class="flex flex-1"
+    text="Iniciar sesión" (clicked)="switchMode.emit('login')" />
+  <app-button variant="segmented" [selected]="mode() === 'register'" [ariaPressed]="mode() === 'register'" extraClass="flex-1" class="flex flex-1"
+    text="Registrarse" (clicked)="switchMode.emit('register')" />
+</div>

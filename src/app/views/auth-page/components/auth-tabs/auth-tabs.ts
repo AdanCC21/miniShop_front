@@ -1,5 +1,6 @@
 import { Component, input, output } from '@angular/core';
-import { ButtonComponent } from '../button/button';
+import { ButtonComponent } from '../../../../ui/button/button';
+
 
 export type AuthMode = 'login' | 'register';
 

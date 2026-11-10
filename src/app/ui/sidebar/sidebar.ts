@@ -1,4 +1,4 @@
-import { Component, computed, HostListener, inject, input, output, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, input, OnInit, output, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../auth/auth.service';
@@ -6,13 +6,14 @@ import { LogOut } from '../../api/auth';
 import { ConfirmModalComponent } from '../confirm-modal/confirm-modal';
 import { ButtonComponent } from '../button/button';
 import { ToastService } from '../toast/toast.service';
+import { GetMyShop } from '../../api/shop';
 
 @Component({
   selector: 'app-sidebar',
   imports: [RouterLink, RouterLinkActive, ConfirmModalComponent, ButtonComponent],
   templateUrl: './sidebar.html'
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   readonly open = input(false);
   readonly close = output<void>();
   readonly widthChange = output<number>();
@@ -21,8 +22,14 @@ export class SidebarComponent {
   private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthService);
 
+  protected readonly shop = signal<{uuid:string, name:string} | null>(null);
   protected readonly user = computed(() => this.auth.user());
   protected readonly showLogoutConfirmation = signal(false);
+
+  async ngOnInit() {
+    const shopName = await GetMyShop(this.toast, false, false, true);
+    if (shopName) this.shop.set(shopName);
+  }
 
   protected readonly isStoreMember = computed(() => {
     const currentUser = this.auth.user();

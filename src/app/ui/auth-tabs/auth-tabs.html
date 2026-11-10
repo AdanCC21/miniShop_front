@@ -1,6 +1,0 @@
-<div class="mb-4 grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1">
-  <app-button variant="segmented" [selected]="mode() === 'login'" [ariaPressed]="mode() === 'login'" extraClass="!rounded-md flex-1"
-    text="Iniciar sesión" (clicked)="switchMode.emit('login')" />
-  <app-button variant="segmented" [selected]="mode() === 'register'" [ariaPressed]="mode() === 'register'" extraClass="!rounded-md flex-1"
-    text="Registrarse" (clicked)="switchMode.emit('register')" />
-</div>

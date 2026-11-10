@@ -10,6 +10,7 @@ import { ToastService } from '../../ui/toast/toast.service';
 import { GetSales } from '../../api/sales';
 import { SaleDTO } from '../../dto/sale.dto';
 import { ShopDTO } from '../../dto/shop.dto';
+import { GetMyShop } from '../../api/shop';
 
 interface DailySummary {
   date: string;
@@ -84,22 +85,24 @@ export class TienditaComponent implements OnInit {
   protected readonly loading = signal(true);
 
   async ngOnInit() {
-    // const shop = await 
-    // const user = this.auth.user();
-    // // const detailsRequest = user?.shopUuid && user.role !== 'empleado'
-    // //   ? GetShopDetails(user.shopUuid, this.toast)
-    // //   : Promise.resolve(null);
+    this.loadShop()
+  }
 
-    // const [sales, details] = await Promise.all([
-    //   GetSales(false, this.toast),
-    //   detailsRequest
-    // ]);
-    // if (sales) {
-    //   this.sales.set(sales);
-    // }
-    // this.shopDetails.set(details);
-    // this.shopDetailsLoading.set(false);
-    // this.loading.set(false);
+  protected async loadShop() {
+    this.shopDetailsLoading.set(true);
+    this.loading.set(true);
+
+    const [shop, sales] = await Promise.all([
+      await GetMyShop(this.toast),
+      await GetSales(false, this.toast)
+    ])
+    if (sales) this.sales.set(sales)
+    this.shopDetails.set(shop);
+    console.log(shop)
+    console.log(sales)
+
+    this.shopDetailsLoading.set(false);
+    this.loading.set(false);
   }
 
   protected readonly currentMonthClosures = computed<DailySummary[]>(() => {

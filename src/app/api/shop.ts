@@ -11,9 +11,9 @@ export interface MyShopDTO extends ShopDTO {
   waiting?: UserDTO[];
 }
 
-export async function GetMyShop(toast: ToastService, employees = false, waiting = false): Promise<MyShopDTO | null> {
+export async function GetMyShop(toast: ToastService, employees = false, waiting = false, onlyname = false): Promise<MyShopDTO | null> {
   try {
-    const res = await axios.get(`${backendRoute}/shop/myshop`, { params: { employees, waiting }, withCredentials: true })
+    const res = await axios.get(`${backendRoute}/shop/myshop`, { params: { employees, waiting, onlyname }, withCredentials: true })
     return res.data as MyShopDTO;
   } catch (e) {
     showError(e, toast);

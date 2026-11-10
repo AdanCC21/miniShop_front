@@ -1,8 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { AuthService, UserRole } from '../../auth/auth.service';
-import { AuthMode, AuthTabsComponent } from '../../ui/auth-tabs/auth-tabs';
+import { AuthService } from '../../auth/auth.service';
+
 import { ButtonComponent } from '../../ui/button/button';
 import { InputComponent } from '../../ui/input/input';
 import { ThemeToggleComponent } from '../../ui/theme-toggle/theme-toggle';
@@ -11,6 +11,7 @@ import { LoaderService } from '../../ui/loader/loader.service';
 import { Login, Register } from '../../api/auth';
 import { RegisterDTO, RegShopDTO, RegUserDto } from '../../dto/auth';
 import { Role } from '../../entities/Role';
+import { AuthMode, AuthTabsComponent } from './components/auth-tabs/auth-tabs';
 
 @Component({
   selector: 'app-auth-page',
@@ -131,7 +132,7 @@ export class AuthPageComponent {
     if (res) {
       this.toast.info("Su usuario fue creado de manera exitosa, porfavor inicia sesion para ingresar.")
       setTimeout(() => {
-        window.location.reload();
+        this.mode.set('login')
       }, 3200);
     }
   }
