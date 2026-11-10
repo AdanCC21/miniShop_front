@@ -7,6 +7,7 @@ import { ConfirmModalComponent } from '../../ui/confirm-modal/confirm-modal';
 import { InputComponent } from '../../ui/input/input';
 import { ModalComponent } from '../../ui/modal/modal';
 import { SearchSuggestionsComponent } from '../../ui/search-suggestions/search-suggestions';
+import { SalesTableComponent } from '../../ui/sales-table/sales-table';
 import { ToastService } from '../../ui/toast/toast.service';
 import { GetProducts, updateQuantity } from '../../api/products';
 import { ProductDTO } from '../../dto/product.dto';
@@ -29,7 +30,7 @@ import { ShopRegisterDTO } from '../../dto/shopRegister.dto';
 
 @Component({
   selector: 'app-cajero',
-  imports: [ButtonComponent, ConfirmModalComponent, InputComponent, ModalComponent, SearchSuggestionsComponent],
+  imports: [ButtonComponent, ConfirmModalComponent, InputComponent, ModalComponent, SearchSuggestionsComponent, SalesTableComponent],
   templateUrl: './cajero.html'
 })
 export class CajeroComponent implements OnInit {
@@ -540,14 +541,6 @@ export class CajeroComponent implements OnInit {
 
   protected showRecentSalesList(): void {
     this.selectedSale.set(null);
-  }
-
-  protected recentSaleItemCount(sale: SaleDTO): number {
-    return sale.details?.reduce((total, detail) => total + Number(detail.quantity), 0) ?? 0;
-  }
-
-  protected recentSaleTime(sale: SaleDTO): string {
-    return new Date(sale.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
   }
 
   protected recentSaleCashChange(sale: SaleDTO): number {

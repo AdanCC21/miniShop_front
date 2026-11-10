@@ -141,10 +141,22 @@
       <button
         type="button"
         class="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-        (click)="logout()"
+        (click)="requestLogout()"
       >
         Cerrar sesión
       </button>
     </div>
   }
 </aside>
+
+@if (showLogoutConfirmation()) {
+  <app-confirm-modal
+    title="Cerrar sesión"
+    message="¿Estás seguro de que quieres cerrar sesión?"
+    confirmText="Cerrar sesión"
+    cancelText="Seguir aquí"
+    [danger]="true"
+    (confirm)="logout()"
+    (cancel)="cancelLogout()"
+  />
+}

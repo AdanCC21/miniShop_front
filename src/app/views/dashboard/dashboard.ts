@@ -7,10 +7,11 @@ import { ModalComponent } from '../../ui/modal/modal';
 import { SaleDetailItem } from './component/sale-detail-item/sale-detail-item';
 import { PaymentMethod } from '../../entities/PaymentMethod';
 import { comparePaymant, getMethodUsed } from '../../scripts/paymant';
+import { SalesTableComponent } from '../../ui/sales-table/sales-table';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, ModalComponent, SaleDetailItem],
+  imports: [CommonModule, ModalComponent, SaleDetailItem, SalesTableComponent],
   templateUrl: './dashboard.html'
 })
 export class DashboardComponent implements OnInit {
@@ -47,15 +48,6 @@ export class DashboardComponent implements OnInit {
     return amount
   }
 
-  getTotalQuantity(sale: SaleDTO) {
-    if (!sale.details) return 0;
-    let amount = 0;
-    sale.details.forEach((cur) => {
-      amount += cur.quantity;
-    })
-    return amount;
-  }
-
   getLastSale(): string {
     if (this.salesToday().length === 0) return `Sin ventas`
 
@@ -65,9 +57,7 @@ export class DashboardComponent implements OnInit {
     return `${lastSale.details?.length} productos - $${lastSale.total}`
   }
 
-  selectSale(id: string) {
-    const sale = this.salesToday().find(sal => sal.id === id) || null;
-    console.log(sale);
+  selectSale(sale: SaleDTO) {
     this.saleDetails.set(sale);
   }
 

@@ -1,0 +1,31 @@
+<div class="overflow-x-auto rounded-lg border border-gray-200 bg-(--card)">
+  <table class="w-full text-left text-sm">
+    <thead>
+      <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+        <th class="px-4 py-3 font-semibold">ID</th>
+        <th class="px-4 py-3 font-semibold">No. artículos</th>
+        <th class="px-4 py-3 font-semibold">Tipo de pago</th>
+        <th class="px-4 py-3 font-semibold">Total vendido</th>
+        <th class="px-4 py-3 font-semibold">Hora de venta</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (sale of sales(); track sale.id) {
+        <tr
+          class="cursor-pointer border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50"
+          (click)="saleSelected.emit(sale)"
+        >
+          <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ sale.id }}</td>
+          <td class="px-4 py-3 text-gray-700">{{ itemCount(sale) }}</td>
+          <td class="px-4 py-3 text-gray-700">{{ paymentMethodLabel(sale.method) }}</td>
+          <td class="px-4 py-3 font-medium text-gray-900">${{ formatPrice(sale.total) }}</td>
+          <td class="px-4 py-3 text-gray-500">{{ saleTime(sale.date) }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5" class="px-4 py-8 text-center text-gray-500">{{ emptyMessage() }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

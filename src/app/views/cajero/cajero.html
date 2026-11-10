@@ -31,7 +31,7 @@
             <ng-template #productTpl let-product>
               <span class="font-medium text-gray-800">{{ product.name }}</span>
               <span class="ml-auto text-xs text-gray-500">
-                {{ product.code }} · ${{ formatPrice(product.price) }}
+                {{ product.code }} · ${{ formatPrice(product.price) }} · Disponibles: {{ product.quantity }}
               </span>
             </ng-template>
 
@@ -440,33 +440,8 @@
       </div>
     </div>
     } @else {
-    <div class="overflow-x-auto rounded-lg border border-gray-200">
-      <table class="w-full text-left text-sm">
-        <thead>
-          <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-            <th class="px-4 py-3 font-semibold">ID</th>
-            <th class="px-4 py-3 font-semibold">No. artículos</th>
-            <th class="px-4 py-3 font-semibold">Total vendido</th>
-            <th class="px-4 py-3 font-semibold">Hora de venta</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (sale of recentSales(); track sale.id) {
-          <tr class="cursor-pointer border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50"
-            (click)="selectRecentSale(sale)">
-            <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ sale.id }}</td>
-            <td class="px-4 py-3 text-gray-700">{{ recentSaleItemCount(sale) }}</td>
-            <td class="px-4 py-3 font-medium text-gray-900">${{ formatPrice(sale.total) }}</td>
-            <td class="px-4 py-3 text-gray-500">{{ recentSaleTime(sale) }}</td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="4" class="px-4 py-8 text-center text-gray-500">No hay ventas recientes.</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <app-sales-table [sales]="recentSales()" emptyMessage="No hay ventas recientes."
+      (saleSelected)="selectRecentSale($event)" />
     }
   </app-modal>
   }

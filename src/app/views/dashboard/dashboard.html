@@ -38,29 +38,7 @@
 
     <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Historial de ventas del día de hoy
     </h2>
-    <div class="overflow-x-auto rounded-lg border border-gray-200 bg-(--card)">
-      <table class="w-full text-left text-sm">
-        <thead>
-          <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-            <th class="px-4 py-3 font-semibold">ID</th>
-            <th class="px-4 py-3 font-semibold">No. Products</th>
-            <th class="px-4 py-3 font-semibold">Total vendido</th>
-            <th class="px-4 py-3 font-semibold">Hora de venta</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for(sale of this.salesToday(); track sale.id){
-          <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50"
-            (click)="this.selectSale(sale.id)">
-            <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ sale.id }}</td>
-            <td class="px-4 py-3 text-gray-700">{{ this.getTotalQuantity(sale) }}</td>
-            <td class="px-4 py-3 font-medium text-gray-900">${{ sale.total }}</td>
-            <td class="px-4 py-3 text-gray-500">{{ sale.date }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <app-sales-table [sales]="salesToday()" (saleSelected)="selectSale($event)" />
   </section>
   }
 </div>

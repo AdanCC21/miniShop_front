@@ -3,11 +3,12 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../auth/auth.service';
 import { LogOut } from '../../api/auth';
+import { ConfirmModalComponent } from '../confirm-modal/confirm-modal';
 import { ToastService } from '../toast/toast.service';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, ConfirmModalComponent],
   templateUrl: './sidebar.html'
 })
 export class SidebarComponent {
@@ -20,6 +21,7 @@ export class SidebarComponent {
   private readonly auth = inject(AuthService);
 
   protected readonly user = computed(() => this.auth.user());
+  protected readonly showLogoutConfirmation = signal(false);
 
   protected readonly isStoreMember = computed(() => {
     const currentUser = this.auth.user();
@@ -37,7 +39,16 @@ export class SidebarComponent {
     return this.auth.role === 'admin';
   });
 
+  protected requestLogout(): void {
+    this.showLogoutConfirmation.set(true);
+  }
+
+  protected cancelLogout(): void {
+    this.showLogoutConfirmation.set(false);
+  }
+
   protected async logout() {
+    this.showLogoutConfirmation.set(false);
     try {
       await LogOut(this.toast);
     } finally {
