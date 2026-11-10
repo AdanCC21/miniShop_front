@@ -2,15 +2,9 @@ import axios from "axios";
 import { backendRoute } from "../constants/global";
 import { showError } from "../scripts/error";
 import { ToastService } from "../ui/toast/toast.service";
-import {
-    CreateSaleDetailDTO,
-    CreateSaleDTO,
-    SaleDTO,
-    ShopRegisterClosureDTO,
-    ShopRegisterClosureDetailsDTO,
-} from "../dto/sale.dto";
+import { CreateSaleDetailDTO, CreateSaleDTO, SaleDTO, ShopRegisterClosureDTO, ShopRegisterClosureDetailsDTO, } from "../dto/sale.dto";
 
-export async function GetSales(today: boolean = false, toast: ToastService):Promise<SaleDTO[] | null> {
+export async function GetSales(today: boolean = false, toast: ToastService): Promise<SaleDTO[] | null> {
     try {
         const res = await axios.get(`${backendRoute}/sale/myshop?today=${today}`, { withCredentials: true })
         return res.data;
@@ -20,10 +14,17 @@ export async function GetSales(today: boolean = false, toast: ToastService):Prom
     }
 }
 
-export async function GetRegisterClosures(
-    hours: number,
-    toast: ToastService,
-): Promise<ShopRegisterClosureDTO[] | null> {
+export async function GetCurrentRegisterSales(toast: ToastService): Promise<SaleDTO[] | null> {
+    try {
+        const res = await axios.get(`${backendRoute}/sale/myshop/current-register`, { withCredentials: true });
+        return res.data;
+    } catch (e) {
+        showError(e, toast);
+        return null;
+    }
+}
+
+export async function GetRegisterClosures(hours: number, toast: ToastService): Promise<ShopRegisterClosureDTO[] | null> {
     try {
         const res = await axios.get(`${backendRoute}/shopregister/closures`, {
             params: { hours },

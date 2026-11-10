@@ -3,10 +3,12 @@ import { Component, input, output } from '@angular/core';
 import { SaleDTO } from '../../dto/sale.dto';
 import { PaymentMethod } from '../../entities/PaymentMethod';
 import { getMethodUsed } from '../../scripts/paymant';
+import { ButtonComponent } from '../button/button';
 
 @Component({
   selector: 'app-sales-table',
-  templateUrl: './sales-table.html'
+  templateUrl: './sales-table.html',
+  imports: [ButtonComponent]
 })
 export class SalesTableComponent {
   readonly sales = input.required<SaleDTO[]>();
@@ -25,7 +27,7 @@ export class SalesTableComponent {
     return Number(value).toFixed(2);
   }
 
-  protected saleTime(date: Date): string {
+  protected saleTime(date: Date | string): string {
     return new Date(date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
   }
 }

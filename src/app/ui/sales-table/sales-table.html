@@ -7,19 +7,22 @@
         <th class="px-4 py-3 font-semibold">Tipo de pago</th>
         <th class="px-4 py-3 font-semibold">Total vendido</th>
         <th class="px-4 py-3 font-semibold">Hora de venta</th>
+        <th class="px-4 py-3 font-semibold">Detalles</th>
       </tr>
     </thead>
     <tbody>
       @for (sale of sales(); track sale.id) {
         <tr
           class="cursor-pointer border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50"
-          (click)="saleSelected.emit(sale)"
         >
           <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ sale.id }}</td>
           <td class="px-4 py-3 text-gray-700">{{ itemCount(sale) }}</td>
           <td class="px-4 py-3 text-gray-700">{{ paymentMethodLabel(sale.method) }}</td>
           <td class="px-4 py-3 font-medium text-gray-900">${{ formatPrice(sale.total) }}</td>
           <td class="px-4 py-3 text-gray-500">{{ saleTime(sale.date) }}</td>
+          <td class="px-4 py-3 text-gray-500">
+            <app-button text="Ver detalles" (clicked)="saleSelected.emit(sale)" variant="outline"/>
+          </td>
         </tr>
       } @empty {
         <tr>

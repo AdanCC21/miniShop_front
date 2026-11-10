@@ -195,7 +195,7 @@
             <label for="received-fiar" class="font-medium text-gray-700">
               Recibido
               <input id="received-fiar" type="number" min="0" step="0.01" placeholder="0.00"
-                [value]="receivedCard() || ''" (input)="onReceivedCardChange($event)"
+                [value]="fiadoCard() || ''" (input)="onFiadoCardChange($event)"
                 class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
             </label>
             }
@@ -205,13 +205,13 @@
               <label for="fiado-card" class="font-medium text-gray-700">
                 Recibido con tarjeta
                 <input id="fiado-card" type="number" min="0" step="0.01" placeholder="0.00"
-                  [value]="receivedCard() || ''" (input)="onReceivedCardChange($event)"
+                  [value]="fiadoCard() || ''" (input)="onFiadoCardChange($event)"
                   class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
               </label>
               <label for="fiado-cash" class="font-medium text-gray-700">
                 Recibido con efectivo
                 <input id="fiado-cash" type="number" min="0" step="0.01" placeholder="0.00"
-                  [value]="receivedCash() || ''" (input)="onReceivedCashChange($event)"
+                  [value]="fiadoCash() || ''" (input)="onFiadoCashChange($event)"
                   class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
               </label>
             </div>
@@ -221,7 +221,7 @@
             <label for="received-fiar" class="font-medium text-gray-700">
               Recibido
               <input id="received-fiar" type="number" min="0" step="0.01" placeholder="0.00"
-                [value]="receivedCash() || ''" (input)="onReceivedCashChange($event)"
+                [value]="fiadoCash() || ''" (input)="onFiadoCashChange($event)"
                 class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
             </label>
             }
@@ -256,7 +256,7 @@
           </p>
           }
 
-          @if (receivedPayment() >= total() && total() > 0) {
+          @if (fiadoRemaining() === 0 && total() > 0) {
           <p class="text-base text-red-600">El pago cubre el total, no hay resto para fiar.</p>
           }
         </div>
@@ -342,7 +342,7 @@
   }
 
   @if (ventasOpen()) {
-  <app-modal [title]="selectedSale() ? 'Detalle de venta' : 'Ventas recientes'" size="4xl" (close)="closeRecentSales()">
+  <app-modal [title]="selectedSale() ? 'Detalle de venta' : 'Ventas recientes'" size="6xl" (close)="closeRecentSales()">
     @if (selectedSale(); as sale) {
     <div class="flex flex-col gap-5">
       <div class="flex flex-wrap items-center justify-between gap-3">

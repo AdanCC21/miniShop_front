@@ -21,7 +21,7 @@
     @for (product of visibleProducts(); track product.code; let i = $index) {
     <app-product-card animate.enter="ms-card-in" [style.--index]="i" [name]="product.name"
       [categories]="product.category ? [product.category.name] : []" [image]="product.image"
-      [code]="product.code" [price]="product.price" />
+      [code]="product.code" [price]="product.price" [quantity]="product.quantity" />
     }
     @empty {
     <p class="col-span-full py-10 text-center text-sm text-gray-500">No se encontraron productos.</p>
@@ -30,7 +30,7 @@
 </div>
 
 @if (addOpen()) {
-<app-modal title="Agregar producto" size="4xl" (close)="closeAdd()">
+<app-modal [title]="'Agregar producto'" size="4xl" (close)="closeAdd()">
   <form class="flex flex-col gap-4" autocomplete="off">
     <app-product-icon-picker [value]="selectedIcon()" (valueChange)="selectedIcon.set($event)" />
     <app-input id="add-name" label="Nombre" type="text" autocomplete="off" placeholder="Nombre del producto" [value]="addName()"

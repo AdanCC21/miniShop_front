@@ -1,19 +1,21 @@
-<article
-  [routerLink]="['/products', code()]"
-  class="cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-(--card) transition hover:shadow-md"
->
+<article [routerLink]="['/products', code()]"
+  class="cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-(--card) transition hover:shadow-md">
   @if (isIcon(image())) {
-    <app-product-icon [icon]="image() || 'general'" />
+  <app-product-icon [icon]="image() || 'general'" />
   } @else {
-    <img [src]="image()!" [alt]="name()" class="h-44 w-full object-cover" />
+  <img [src]="image()!" [alt]="name()" class="h-44 w-full object-cover" />
   }
   <div class="p-4">
-    <h3 class="text-sm font-semibold text-black">{{ name() }}</h3>
+
+    <div class="flex justify-between items-center">
+      <h3 class="text-sm font-semibold text-black">{{ name() }}</h3>
+      <span class="text-xs text-(--primary-bright)">{{ quantity() }} u</span>
+    </div>
     <div class="mt-2 flex flex-wrap gap-1">
       @for (category of categories(); track category) {
-        <span class="rounded-md bg-(--secondary) px-2 py-0.5 text-xs font-medium text-(--secondary-foreground)">
-          {{ category }}
-        </span>
+      <span class="rounded-md bg-(--secondary) px-2 py-0.5 text-xs font-medium text-(--secondary-foreground)">
+        {{ category }}
+      </span>
       }
     </div>
     <div class="mt-3 flex items-center justify-between">

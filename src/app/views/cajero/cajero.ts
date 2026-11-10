@@ -21,7 +21,7 @@ import { buildStockUpdates } from './scripts/inventory';
 import { saleProductCount } from './scripts/sales';
 import { PaymentMethod } from '../../entities/PaymentMethod';
 import { CreateSaleDetailDTO, CreateSaleDTO, SaleDTO } from '../../dto/sale.dto';
-import { GetSales, PostSales } from '../../api/sales';
+import { GetCurrentRegisterSales, PostSales } from '../../api/sales';
 import { GuarantorDTO } from '../../dto/guarantor.dto';
 import { CreateGuarantor, GetGuarantors } from '../../api/guarantor';
 import { LoaderService } from '../../ui/loader/loader.service';
@@ -175,9 +175,21 @@ export class CajeroComponent implements OnInit {
 
   });
 
-  protected readonly fiadoRemaining = computed(() =>
-    Math.max(0, this.total() - (this.receivedCard() + this.receivedCash()))
-  );
+  protected readonly fiadoPaid = computed(() => {
+    switch (this.fiadoMethod()) {
+      case 'tarjeta':
+        return { cash: 0, card: this.fiadoCard() };
+      case 'mixto':
+        return { cash: this.fiadoCash(), card: this.fiadoCard() };
+      default:
+        return { cash: this.fiadoCash(), card: 0 };
+    }
+  });
+
+  protected readonly fiadoRemaining = computed(() => {
+    const paid = this.fiadoPaid();
+    return Math.max(0, this.total() - (paid.cash + paid.card));
+  });
 
   protected readonly paymentOk = computed(() => {
     if (this.total() <= 0) {
@@ -191,7 +203,7 @@ export class CajeroComponent implements OnInit {
       return this.receivedCash() >= this.cardRemaining();
     }
     if (method === PaymentMethod.CREDIT) {
-      return this.receivedPayment() < this.total() && this.selectedFiadoPerson() !== '';
+      return this.fiadoRemaining() > 0 && this.selectedFiadoPerson() !== '';
     }
     return this.receivedPayment() >= this.total();
   });
@@ -365,6 +377,8 @@ export class CajeroComponent implements OnInit {
     this.receivedPayment.set(0);
     this.receivedCard.set(0);
     this.receivedCash.set(0);
+    this.fiadoCard.set(0);
+    this.fiadoCash.set(0);
     this.fiadoQuery.set('');
     this.selectedFiadoPerson.set('');
   }
@@ -375,6 +389,8 @@ export class CajeroComponent implements OnInit {
 
   protected selectFiadoMethod(method: FiadoMethod): void {
     this.fiadoMethod.set(method);
+    if (method === 'efectivo') this.fiadoCard.set(0);
+    if (method === 'tarjeta') this.fiadoCash.set(0);
   }
 
   protected onFiadoCardChange(event: Event): void {
@@ -447,14 +463,16 @@ export class CajeroComponent implements OnInit {
           return;
         }
 
-        if (this.receivedPayment() >= total || (this.receivedCard() + this.receivedCash()) >= total) {
+        const fiadoPaid = this.fiadoPaid();
+        if (fiadoPaid.cash + fiadoPaid.card >= total) {
           this.toast.error('Pago completo', 'El pago cubre el total, no hay resto para fiar.');
           return;
         }
 
         fiadoName = name;
-        receivedCard = this.receivedCard()
-        receivedCash = this.receivedCash();
+        receivedCard = fiadoPaid.card;
+        receivedCash = fiadoPaid.cash;
+        fiadoAmount = this.fiadoRemaining();
         guarantorId = guar.id;
         break;
       default:
@@ -493,6 +511,8 @@ export class CajeroComponent implements OnInit {
     this.receivedPayment.set(0);
     this.receivedCard.set(0);
     this.receivedCash.set(0);
+    this.fiadoCard.set(0);
+    this.fiadoCash.set(0);
     this.fiadoQuery.set('');
     this.selectedFiadoPerson.set('');
 
@@ -519,7 +539,8 @@ export class CajeroComponent implements OnInit {
 
   protected async openRecentSales(): Promise<void> {
     this.loader.show('Cargando ventas recientes...');
-    const sales = await GetSales(true, this.toast);
+    this.recentSales.set([]);
+    const sales = await GetCurrentRegisterSales(this.toast);
     if (sales) {
       this.recentSales.set([...sales].sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()

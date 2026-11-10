@@ -13,6 +13,7 @@ export class ProductCardComponent {
   readonly categories = input<string[]>([]);
   readonly code = input.required<string>();
   readonly price = input.required<number>();
+  readonly quantity = input.required<number>();
 
   protected isIcon(value: string | null): boolean {
     return !value || value === 'drink' || PRODUCT_ICONS.some((option) => option.id === value);

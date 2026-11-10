@@ -28,6 +28,7 @@ export class SalesComponent implements OnInit {
   protected readonly loadError = signal(false);
   protected readonly loadingDetails = signal<string | null>(null);
   protected readonly selectedClosure = signal<ShopRegisterClosureDetailsDTO | null>(null);
+  protected readonly selectedSale = signal<SaleDTO | null>(null);
 
   protected readonly productLines = computed<ClosureProductLine[]>(() => {
     const products = new Map<string, ClosureProductLine>();
@@ -57,10 +58,12 @@ export class SalesComponent implements OnInit {
   protected async loadClosures(): Promise<void> {
     this.loading.set(true);
     this.loadError.set(false);
+
     const closures = await GetRegisterClosures(48, this.toast);
     if (closures === null) {
       this.loadError.set(true);
     } else {
+      console.log(closures);
       this.closures.set([...closures].sort(
         (a, b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime()
       ));
@@ -73,12 +76,22 @@ export class SalesComponent implements OnInit {
     const details = await GetRegisterClosureDetails(closure.uuid, this.toast);
     if (details) {
       this.selectedClosure.set(details);
+      console.log(details);
     }
     this.loadingDetails.set(null);
   }
 
   protected closeDetails(): void {
+    this.selectedSale.set(null);
     this.selectedClosure.set(null);
+  }
+
+  protected showSaleDetails(sale: SaleDTO): void {
+    this.selectedSale.set(sale);
+  }
+
+  protected returnToClosure(): void {
+    this.selectedSale.set(null);
   }
 
   protected formatMoney(value: number): string {
