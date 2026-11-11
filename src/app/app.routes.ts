@@ -13,66 +13,71 @@ import { EmpleadosComponent } from './views/empleados/empleados';
 import { AdminComponent } from './views/admin/admin';
 import { StoreDetailsComponent } from './views/admin/store-details/store-details';
 import { SalesComponent } from './views/sales/sales';
+import { NoAutorizadoComponent } from './views/no-autorizado/no-autorizado';
 
-import { authGuard } from './auth/auth.guard';
+import { roleGuard } from './auth/role.guard';
+import { Role } from './entities/Role';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'auth', component: AuthPageComponent },
-  { path: 'esperando', component: EsperandoComponent, canActivate: [authGuard] },
+  { path: 'no-autorizado', component: NoAutorizadoComponent },
+  { path: 'esperando', component: EsperandoComponent, canActivate: [roleGuard] },
   {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: [authGuard]
+    canActivate: [roleGuard]
   },
   {
     path: 'products',
     component: ProductsComponent,
-    canActivate: [authGuard]
+    canActivate: [roleGuard]
   },
   {
     path: 'products/:code',
     component: ProductDetailsComponent,
-    canActivate: [authGuard]
+    canActivate: [roleGuard]
   },
   {
     path: 'cajero',
     component: CajeroComponent,
-    canActivate: [authGuard]
+    canActivate: [roleGuard]
   },
   {
     path: 'ventas',
     component: SalesComponent,
-    canActivate: [authGuard]
+    canActivate: [roleGuard]
   },
   {
     path: 'fiados',
     component: FiadosComponent,
-    canActivate: [authGuard]
+    canActivate: [roleGuard]
   },
   {
     path: 'pedidos',
     component: OrdersComponent,
-    canActivate: [authGuard]
+    canActivate: [roleGuard]
   },
   {
     path: 'tiendita',
     component: TienditaComponent,
-    canActivate: [authGuard]
+    canActivate: [roleGuard]
   },
   {
     path: 'empleados',
     component: EmpleadosComponent,
-    canActivate: [authGuard]
+    canActivate: [roleGuard]
   },
   {
     path: 'admin',
     component: AdminComponent,
-    canActivate: [authGuard]
+    canActivate: [roleGuard],
+    data: { roles: [Role.ADMIN] }
   },
   {
     path: 'admin/:id',
     component: StoreDetailsComponent,
-    canActivate: [authGuard]
+    canActivate: [roleGuard],
+    data: { roles: [Role.ADMIN] }
   }
 ];

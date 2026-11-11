@@ -44,8 +44,7 @@
                   class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
               </label>
 
-              <app-button [variant]="byWeight() ? 'primary' : 'outline'" text="Kg"
-                (clicked)="toggleByWeight()" />
+              <app-button [variant]="byWeight() ? 'primary' : 'outline'" text="Kg" (clicked)="toggleByWeight()" />
 
               <app-button text="Agregar" (clicked)="addToCart()" />
             </div>
@@ -127,14 +126,18 @@
         <div class="flex flex-col gap-2">
           <span class="text-xs uppercase tracking-wider text-gray-400">Método de pago</span>
           <div class="flex rounded-lg bg-gray-100 p-1">
-            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.CASH" [ariaPressed]="paymentMethod() === PaymentMethod.CASH" text="Efectivo"
-              extraClass="!rounded-md flex-1 !px-2" (clicked)="selectPaymentMethod(PaymentMethod.CASH)" />
-            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.CARD" [ariaPressed]="paymentMethod() === PaymentMethod.CARD" text="Tarjeta"
-              extraClass="!rounded-md flex-1 !px-2" (clicked)="selectPaymentMethod(PaymentMethod.CARD)" />
-            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.MIXED" [ariaPressed]="paymentMethod() === PaymentMethod.MIXED" text="Múltiple"
-              extraClass="!rounded-md flex-1 !px-2" (clicked)="selectPaymentMethod(PaymentMethod.MIXED)" />
-            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.CREDIT" [ariaPressed]="paymentMethod() === PaymentMethod.CREDIT" text="Fiar"
-              extraClass="!rounded-md flex-1 !px-2" (clicked)="selectPaymentMethod(PaymentMethod.CREDIT)" />
+            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.CASH"
+              [ariaPressed]="paymentMethod() === PaymentMethod.CASH" text="Efectivo" extraClass="w-full" class="flex-1"
+              (clicked)="selectPaymentMethod(PaymentMethod.CASH)" />
+            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.CARD"
+              [ariaPressed]="paymentMethod() === PaymentMethod.CARD" text="Tarjeta" extraClass="w-full" class="flex-1"
+              (clicked)="selectPaymentMethod(PaymentMethod.CARD)" />
+            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.MIXED"
+              [ariaPressed]="paymentMethod() === PaymentMethod.MIXED" text="Múltiple" extraClass="w-full" class="flex-1"
+              (clicked)="selectPaymentMethod(PaymentMethod.MIXED)" />
+            <app-button variant="segmented" [selected]="paymentMethod() === PaymentMethod.CREDIT"
+              [ariaPressed]="paymentMethod() === PaymentMethod.CREDIT" text="Fiar" extraClass="w-full" class="flex-1"
+              (clicked)="selectPaymentMethod(PaymentMethod.CREDIT)" />
           </div>
         </div>
 
@@ -183,8 +186,8 @@
             <span class="text-xs uppercase tracking-wider text-gray-400">Método de pago del fiado</span>
             <div class="flex rounded-lg bg-gray-100 p-1">
               @for (option of fiadoMethodOptions; track option.id) {
-              <app-button variant="segmented" [selected]="fiadoMethod() === option.id" [ariaPressed]="fiadoMethod() === option.id"
-                [text]="option.label" extraClass="!rounded-md flex-1 !px-2"
+              <app-button variant="segmented" [selected]="fiadoMethod() === option.id"
+                [ariaPressed]="fiadoMethod() === option.id" [text]="option.label" extraClass="!rounded-md flex-1 !px-2"
                 (clicked)="selectFiadoMethod(option.id)" />
               }
             </div>
@@ -194,8 +197,8 @@
             <p class="mt-1 text-sm text-gray-500">El fiado se registrará con tarjeta.</p>
             <label for="received-fiar" class="font-medium text-gray-700">
               Recibido
-              <input id="received-fiar" type="number" min="0" step="0.01" placeholder="0.00"
-                [value]="fiadoCard() || ''" (input)="onFiadoCardChange($event)"
+              <input id="received-fiar" type="number" min="0" step="0.01" placeholder="0.00" [value]="fiadoCard() || ''"
+                (input)="onFiadoCardChange($event)"
                 class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
             </label>
             }
@@ -204,14 +207,14 @@
             <div class="mt-2 flex flex-col gap-4">
               <label for="fiado-card" class="font-medium text-gray-700">
                 Recibido con tarjeta
-                <input id="fiado-card" type="number" min="0" step="0.01" placeholder="0.00"
-                  [value]="fiadoCard() || ''" (input)="onFiadoCardChange($event)"
+                <input id="fiado-card" type="number" min="0" step="0.01" placeholder="0.00" [value]="fiadoCard() || ''"
+                  (input)="onFiadoCardChange($event)"
                   class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
               </label>
               <label for="fiado-cash" class="font-medium text-gray-700">
                 Recibido con efectivo
-                <input id="fiado-cash" type="number" min="0" step="0.01" placeholder="0.00"
-                  [value]="fiadoCash() || ''" (input)="onFiadoCashChange($event)"
+                <input id="fiado-cash" type="number" min="0" step="0.01" placeholder="0.00" [value]="fiadoCash() || ''"
+                  (input)="onFiadoCashChange($event)"
                   class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
               </label>
             </div>
@@ -220,8 +223,8 @@
             <p class="mt-1 text-sm text-gray-500">El fiado se registrará en efectivo.</p>
             <label for="received-fiar" class="font-medium text-gray-700">
               Recibido
-              <input id="received-fiar" type="number" min="0" step="0.01" placeholder="0.00"
-                [value]="fiadoCash() || ''" (input)="onFiadoCashChange($event)"
+              <input id="received-fiar" type="number" min="0" step="0.01" placeholder="0.00" [value]="fiadoCash() || ''"
+                (input)="onFiadoCashChange($event)"
                 class="mt-1 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-(--primary)" />
             </label>
             }
@@ -288,7 +291,8 @@
 
         <div class="flex gap-2 w-full">
           <app-button text="Limpiar" (clicked)="clearCart()" variant="outline" extraClass=" w-full " class="w-full" />
-          <app-button text="Cobrar" (clicked)="charge()" variant="primary" extraClass=" w-full " class="w-full" />
+          <app-button text="Cobrar" (clicked)="requestCharge()" variant="primary" extraClass=" w-full "
+            class="w-full" />
         </div>
       </section>
 
@@ -311,6 +315,58 @@
   }
 
   <!-- MODALES -->
+  @if (chargeConfirmationOpen()) {
+  <app-modal [title]="'Confirmar cobro'" size="xl" (close)="cancelCharge()">
+    <div class="space-y-4">
+      <p class="text-base text-gray-600">
+        @switch (paymentMethod()) {
+        @case (PaymentMethod.CASH) {
+        Estás a punto de cobrar <strong>${{ formatPrice(total()) }}</strong> en efectivo.
+        Recibirás <strong>${{ formatPrice(receivedPayment()) }}</strong>
+        @if (change() > 0) { y devolverás <strong>${{ formatPrice(change()) }}</strong> de cambio. }
+        @else { y no habrá cambio. }
+        }
+        @case (PaymentMethod.CARD) {
+        Estás a punto de cobrar <strong>${{ formatPrice(total()) }}</strong> con tarjeta.
+        }
+        @case (PaymentMethod.MIXED) {
+        Estás a punto de cobrar <strong>${{ formatPrice(total()) }}</strong>:
+        recibirás <strong>${{ formatPrice(receivedCard()) }}</strong> con tarjeta y
+        <strong>${{ formatPrice(receivedCash()) }}</strong> en efectivo.
+        @if (cashChange() > 0) { Devolverás <strong>${{ formatPrice(cashChange()) }}</strong> de cambio en efectivo. }
+        @else { No habrá cambio. }
+        }
+        @case (PaymentMethod.CREDIT) {
+        Estás a punto de registrar un fiado de <strong>${{ formatPrice(total()) }}</strong> a
+        <strong>{{ selectedFiadoPerson() }}</strong>.
+        @if (fiadoMethod() === 'efectivo') {
+        Recibirás un adelanto de <strong>${{ formatPrice(fiadoPaid().cash) }}</strong> en efectivo.
+        } @else if (fiadoMethod() === 'tarjeta') {
+        Recibirás un adelanto de <strong>${{ formatPrice(fiadoPaid().card) }}</strong> con tarjeta.
+        } @else {
+        Recibirás un adelanto de <strong>${{ formatPrice(fiadoPaid().card) }}</strong> con tarjeta más
+        <strong>${{ formatPrice(fiadoPaid().cash) }}</strong> en efectivo.
+        }
+        Faltarán <strong>${{ formatPrice(fiadoRemaining()) }}</strong> por pagar.
+        }
+        }
+      </p>
+      <p class="rounded-lg bg-gray-50 px-4 py-3 text-base font-medium text-gray-700">
+        Total de la venta: ${{ formatPrice(total()) }}
+      </p>
+      @if((paymentMethod() !== PaymentMethod.CARD || paymentMethod() !== PaymentMethod.CREDIT) && change() > 0){
+      <p class="rounded-lg bg-gray-50 px-4 py-3 text-base font-medium text-gray-700">
+        Devolverás <strong>${{ formatPrice(change()) }}</strong> de cambio.
+      </p>
+      }
+      <div class="flex justify-end gap-2">
+        <app-button text="Revisar" variant="outline" (clicked)="cancelCharge()" />
+        <app-button text="Confirmar cobro" (clicked)="confirmCharge()" />
+      </div>
+    </div>
+  </app-modal>
+  }
+
   @if (closeOpen()) {
   <app-confirm-modal [title]="'Cerrar caja'" [danger]="true"
     [message]="'¿Registrar el cierre de caja de hoy? Se reiniciarán el fondo inicial y las ventas de la caja.'"

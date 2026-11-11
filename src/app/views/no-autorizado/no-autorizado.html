@@ -1,0 +1,16 @@
+<main class="relative flex size-full items-center justify-center bg-(--surface) px-4" animate.enter="ms-fade-in-up">
+  <section class="w-full max-w-md rounded-lg border border-gray-200 bg-(--card) p-8 text-center shadow-sm">
+    <p class="text-sm font-semibold uppercase tracking-widest text-gray-500">Error 403</p>
+    <h1 class="mt-2 text-2xl font-bold text-black">No tienes autorización</h1>
+    <p class="mt-3 text-sm text-gray-500">
+      Tu cuenta no tiene permisos para acceder a esta página.
+    </p>
+    <app-button
+      class="mt-6 block"
+      variant="primary"
+      extraClass="w-full"
+      text="Regresar al dashboard"
+      (clicked)="returnToDashboard()"
+    />
+  </section>
+</main>

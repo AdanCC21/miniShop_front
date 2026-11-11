@@ -74,6 +74,7 @@ export class CajeroComponent implements OnInit {
   protected readonly closeOpen = signal(false);
   protected readonly addFiadoPersonOpen = signal(false);
   protected readonly ventasOpen = signal(false);
+  protected readonly chargeConfirmationOpen = signal(false);
 
   // -- Preview de caja -- //
   protected readonly previewShopReg = signal(false);
@@ -403,7 +404,39 @@ export class CajeroComponent implements OnInit {
     return salePaymentLines(sale);
   }
 
-  protected async charge() {
+  protected requestCharge(): void {
+    if (this.total() <= 0) {
+      this.toast.error('Venta vacía', 'Agrega productos antes de cobrar.');
+      return;
+    }
+
+    const stockError = firstStockError(this.cart(), this.products());
+    if (stockError) {
+      this.toast.error(stockError.title, stockError.message);
+      return;
+    }
+
+    if (!this.paymentOk()) {
+      this.toast.error('Pago incompleto', 'Revisa el monto recibido antes de continuar.');
+      return;
+    }
+    if (this.paymentMethod() === PaymentMethod.CREDIT) {
+      const person = this.selectedFiadoPerson().trim();
+      if (!person || !this.guarantors().some((guarantor) => guarantor.name === person)) {
+        this.toast.error('Falta la persona', 'Selecciona una persona registrada a quien fiar.');
+        return;
+      }
+    }
+
+    this.chargeConfirmationOpen.set(true);
+  }
+
+  protected cancelCharge(): void {
+    this.chargeConfirmationOpen.set(false);
+  }
+
+  protected async confirmCharge() {
+    this.chargeConfirmationOpen.set(false);
     const total = this.total();
     if (total <= 0) {
       this.toast.error('Venta vacía', 'Agrega productos antes de cobrar.');
