@@ -1,129 +1,116 @@
-@if (tienda(); as tienda) {
-  <div class="space-y-6" animate.enter="ms-fade-in-up">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <a
-          routerLink="/admin"
-          class="inline-flex items-center gap-1 text-sm font-medium text-gray-500 transition hover:text-black"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Volver a tienditas
-        </a>
-        <h1 class="mt-2 text-2xl font-bold text-black">{{ tienda.name }}</h1>
-        <p class="font-mono text-sm text-gray-500">{{ tienda.uuid }}</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <span
-          class="rounded-full px-3 py-1 text-xs font-medium"
-          [class]="tienda.status === 'Activa' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
-        >
-          {{ tienda.status }}
-        </span>
-        <app-button
-          variant="outline"
-          [text]="tienda.status === 'Activa' ? 'Desactivar tienda' : 'Activar tienda'"
-          (clicked)="toggleStatus()"
-        />
-      </div>
+@if (shop(); as shop) {
+<div class="space-y-6" animate.enter="ms-fade-in-up">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <a routerLink="/admin" class="inline-flex items-center gap-1 text-sm font-medium text-gray-500 transition hover:text-black">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        Volver a tienditas
+      </a>
+      <h1 class="mt-2 text-2xl font-bold text-black">{{ shop.shop.name }}</h1>
+      <p class="font-mono text-sm text-gray-500">{{ shop.shop.uuid }}</p>
     </div>
-
-    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="rounded-lg border border-gray-200 bg-(--card) p-5">
-        <p class="text-sm font-medium text-gray-500">Encargado</p>
-        <p class="mt-2 text-base font-semibold text-black">{{ encargado()?.name }}</p>
-        <p class="truncate text-sm text-gray-500">{{ encargado()?.email }}</p>
-      </div>
-      <div class="rounded-lg border border-gray-200 bg-(--card) p-5">
-        <p class="text-sm font-medium text-gray-500">Nombre</p>
-        <p class="mt-2 text-base font-semibold text-black">{{ tienda.name }}</p>
-      </div>
-      <div class="rounded-lg border border-gray-200 bg-(--card) p-5">
-        <p class="text-sm font-medium text-gray-500">Dirección</p>
-        <p class="mt-2 text-base font-semibold text-black">{{ tienda.address }}</p>
-      </div>
-      <div class="rounded-lg border border-gray-200 bg-(--card) p-5">
-        <p class="text-sm font-medium text-gray-500">UUID</p>
-        <p class="mt-2 font-mono text-base font-semibold text-black">{{ tienda.uuid }}</p>
-      </div>
-    </section>
-
-    <section>
-      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Empleados</h2>
-      <div class="overflow-x-auto rounded-lg border border-gray-200 bg-(--card)">
-        <table class="w-full text-left text-sm">
-          <thead>
-            <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-              <th class="px-4 py-3 font-semibold">Nombre</th>
-              <th class="px-4 py-3 font-semibold">Correo</th>
-              <th class="px-4 py-3 font-semibold">Rol</th>
-              <th class="px-4 py-3 font-semibold">Fecha de ingreso</th>
-              <th class="px-4 py-3 text-right font-semibold">Acción</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (member of tienda.members; track member.id) {
-              <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
-                <td class="px-4 py-3">
-                  <div class="flex items-center gap-3">
-                    <span
-                      class="flex h-8 w-8 items-center justify-center rounded-full bg-(--secondary) text-xs font-bold text-(--secondary-foreground)"
-                    >
-                      {{ initial(member.name) }}
-                    </span>
-                    <span class="font-medium text-gray-900">{{ member.name }}</span>
-                  </div>
-                </td>
-                <td class="px-4 py-3 text-gray-600">{{ member.email }}</td>
-                <td class="px-4 py-3">
-                  <span
-                    class="rounded-full px-2.5 py-1 text-xs font-medium"
-                    [class]="member.role === 'Encargado'
-                      ? 'bg-(--secondary) text-(--secondary-foreground)'
-                      : 'bg-gray-100 text-gray-600'"
-                  >
-                    {{ member.role }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-gray-600">{{ member.joinedAt }}</td>
-                <td class="px-4 py-3">
-                  <div class="flex items-center justify-end gap-2">
-                    <app-button variant="outline" [text]="roleActionLabel(member)"
-                      extraClass="!rounded-md !px-2.5 !py-1.5 text-xs" (clicked)="changeRole(member)" />
-                    <app-button variant="danger" text="Remover"
-                      extraClass="!rounded-md !px-2.5 !py-1.5 text-xs" (clicked)="confirmRemove(member)" />
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <div class="flex items-center gap-3">
+      <span class="rounded-full px-3 py-1 text-xs font-medium"
+        [class]="shop.shop.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
+        {{ shop.shop.active ? 'Activo' : 'Desactivado' }}
+      </span>
+      <app-button variant="outline" [text]="shop.shop.active ? 'Desactivar tienda' : 'Activar tienda'"
+        (clicked)="openStatusConfirmation()" />
+    </div>
   </div>
+
+  <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-lg border border-gray-200 bg-(--card) p-5">
+      <p class="text-sm font-medium text-gray-500">Encargado</p>
+      @if (shop.manager) {
+        <p class="mt-2 text-base font-semibold text-black">{{ shop.manager.name }}</p>
+        <p class="truncate text-sm text-gray-500">{{ shop.manager.email }}</p>
+      } @else {
+        <p class="mt-2 text-base font-semibold text-black">No registrado</p>
+      }
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-(--card) p-5">
+      <p class="text-sm font-medium text-gray-500">Nombre</p>
+      <p class="mt-2 text-base font-semibold text-black">{{ shop.shop.name }}</p>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-(--card) p-5">
+      <p class="text-sm font-medium text-gray-500">Dirección</p>
+      <p class="mt-2 text-base font-semibold text-black">{{ shop.shop.address }}</p>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-(--card) p-5">
+      <p class="text-sm font-medium text-gray-500">UUID</p>
+      <p class="mt-2 font-mono text-base font-semibold text-black">{{ shop.shop.uuid }}</p>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Empleados</h2>
+    <div class="overflow-x-auto rounded-lg border border-gray-200 bg-(--card)">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+            <th class="px-4 py-3 font-semibold">Nombre</th>
+            <th class="px-4 py-3 font-semibold">Correo</th>
+            <th class="px-4 py-3 font-semibold">Rol</th>
+            <th class="px-4 py-3 font-semibold">Fecha de ingreso</th>
+            <th class="px-4 py-3 text-right font-semibold">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (member of members(); track member.id) {
+          <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-(--secondary) text-xs font-bold text-(--secondary-foreground)">
+                  {{ initial(member.name) }}
+                </span>
+                <span class="font-medium text-gray-900">{{ member.name }}</span>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-gray-600">{{ member.email }}</td>
+            <td class="px-4 py-3">
+              <span class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+                {{ member.role === 'MANAGER' ? 'Encargado' : 'Empleado' }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-600">{{ member.createdAt }}</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center justify-end gap-2">
+                <app-button variant="outline" [text]="roleActionLabel(member)"
+                  extraClass="!rounded-md !px-2.5 !py-1.5 text-xs" (clicked)="openRoleConfirmation(member)" />
+                <app-button variant="danger" text="Remover"
+                  extraClass="!rounded-md !px-2.5 !py-1.5 text-xs" (clicked)="openRemoveConfirmation(member)" />
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">Esta tiendita aún no tiene empleados.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
 } @else {
-  <div class="space-y-4" animate.enter="ms-fade-in-up">
-    <h1 class="text-2xl font-bold text-black">Tiendita no encontrada</h1>
-    <p class="text-sm text-gray-500">La tiendita que buscas no existe.</p>
-    <a
-      routerLink="/admin"
-      class="inline-block rounded-lg border border-gray-300 bg-(--card) px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-    >
-      Volver a tienditas
-    </a>
-  </div>
+<div class="space-y-4" animate.enter="ms-fade-in-up">
+  <h1 class="text-2xl font-bold text-black">Tiendita no encontrada</h1>
+  <p class="text-sm text-gray-500">La tiendita que buscas no existe.</p>
+  <a routerLink="/admin" class="inline-block rounded-lg border border-gray-300 bg-(--card) px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100">
+    Volver a tienditas
+  </a>
+</div>
 }
 
-@if (removeTarget(); as member) {
+@if (pendingAction()) {
   <app-confirm-modal
-    [title]="'Remover empleado'"
-    [message]="'¿Estás seguro de remover a ' + member.name + ' de la tiendita?'"
-    confirmText="Remover"
+    [title]="confirmationTitle()"
+    [message]="confirmationMessage()"
+    [confirmText]="confirmationText()"
     cancelText="Cancelar"
-    [danger]="true"
-    (confirm)="removeEmployee()"
-    (cancel)="cancelRemove()"
+    [danger]="isDangerAction()"
+    (confirm)="confirmAction()"
+    (cancel)="closeConfirmation()"
   />
 }

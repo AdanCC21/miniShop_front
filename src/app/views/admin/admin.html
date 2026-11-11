@@ -20,9 +20,9 @@
   </section>
 
   <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    @for (tienda of tiendas(); track tienda.id; let i = $index) {
+    @for (tienda of tiendas(); track tienda.uuid; let i = $index) {
       <div
-        (click)="openDetails(tienda)"
+        (click)="openDetails(tienda.uuid)"
         animate.enter="ms-card-in"
         [style.--index]="i"
         class="cursor-pointer rounded-lg border border-gray-200 bg-(--card) p-5 transition hover:shadow-md"
@@ -34,22 +34,15 @@
           </div>
           <span
             class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium"
-            [class]="tienda.status === 'Activa' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+            [class]="tienda.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
           >
-            {{ tienda.status }}
+            {{ tienda.active }}
           </span>
         </div>
 
         <div class="mt-4 space-y-1 border-t border-gray-100 pt-3 text-xs">
           <p class="text-gray-500">
-            Encargado:
-            <span class="font-medium text-gray-900">{{ encargado(tienda)?.name }}</span>
-          </p>
-          <p class="text-gray-500">
             UUID: <span class="font-mono text-gray-900">{{ tienda.uuid }}</span>
-          </p>
-          <p class="text-gray-500">
-            Empleados: <span class="font-medium text-gray-900">{{ tienda.members.length }}</span>
           </p>
         </div>
 

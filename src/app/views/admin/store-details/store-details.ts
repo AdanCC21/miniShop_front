@@ -1,75 +1,124 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
-import { findTiendaById, StoreMember } from '../admin.data';
+import {
+  GetShop,
+  RemoveShopMember,
+  SetShopActive,
+  UpdateShopMemberRole,
+} from '../../../api/shop';
+import { ShopDTO } from '../../../dto/shop.dto';
+import { UserDTO } from '../../../dto/user.dto';
+import { Role } from '../../../entities/Role';
 import { ButtonComponent } from '../../../ui/button/button';
 import { ConfirmModalComponent } from '../../../ui/confirm-modal/confirm-modal';
+import { ToastService } from '../../../ui/toast/toast.service';
+
+type ShopDetails = { shop: ShopDTO; manager: UserDTO | null; employees: UserDTO[]; waiting: UserDTO[] };
+type PendingAction = { type: 'status' } | { type: 'role' | 'remove'; member: UserDTO };
 
 @Component({
   selector: 'app-store-details',
   imports: [ButtonComponent, ConfirmModalComponent, RouterLink],
-  templateUrl: './store-details.html'
+  templateUrl: './store-details.html',
 })
-export class StoreDetailsComponent {
+export class StoreDetailsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly toast = inject(ToastService);
+  private readonly shopUuid = this.route.snapshot.paramMap.get('id') ?? '';
+  protected readonly shop = signal<ShopDetails | null>(null);
+  protected readonly pendingAction = signal<PendingAction | null>(null);
+  protected readonly members = computed(() => {
+    const details = this.shop();
+    if (!details) return [];
+    const all = details.manager ? [details.manager, ...details.employees] : details.employees;
+    return all.filter((member, index) => all.findIndex((item) => item.id === member.id) === index);
+  });
 
-  protected readonly tienda = signal(findTiendaById(this.route.snapshot.paramMap.get('id') ?? ''));
+  async ngOnInit() {
+    await this.loadShopDetails();
+  }
 
-  protected readonly removeTarget = signal<StoreMember | null>(null);
+  protected async loadShopDetails() {
+    const data = await GetShop(this.toast, this.shopUuid);
+    this.shop.set(data && !Array.isArray(data) ? data as ShopDetails : null);
+  }
 
-  protected readonly encargado = computed<StoreMember | undefined>(() =>
-    this.tienda()?.members.find((member) => member.role === 'Encargado')
-  );
+  protected openStatusConfirmation() {
+    this.pendingAction.set({ type: 'status' });
+  }
 
-  protected toggleStatus(): void {
-    const tienda = this.tienda();
-    if (!tienda) {
-      return;
+  protected openRoleConfirmation(member: UserDTO) {
+    this.pendingAction.set({ type: 'role', member });
+  }
+
+  protected openRemoveConfirmation(member: UserDTO) {
+    this.pendingAction.set({ type: 'remove', member });
+  }
+
+  protected closeConfirmation() {
+    this.pendingAction.set(null);
+  }
+
+  protected confirmationTitle(): string {
+    const action = this.pendingAction();
+    if (action?.type === 'status') return this.shop()?.shop.active ? 'Desactivar tienda' : 'Activar tienda';
+    if (action?.type === 'role') return 'Cambiar rol';
+    return 'Remover usuario';
+  }
+
+  protected confirmationMessage(): string {
+    const action = this.pendingAction();
+    if (action?.type === 'status') {
+      return this.shop()?.shop.active
+        ? 'La tienda quedará desactivada y sus datos se conservarán. ¿Deseas continuar?'
+        : 'La tienda volverá a quedar activa. ¿Deseas continuar?';
     }
-    this.tienda.set({
-      ...tienda,
-      status: tienda.status === 'Activa' ? 'Desactivada' : 'Activa'
-    });
-  }
-
-  protected changeRole(member: StoreMember): void {
-    const tienda = this.tienda();
-    if (!tienda) {
-      return;
+    if (action?.type === 'role') {
+      const nextRole = action.member.role === Role.MANAGER ? 'empleado' : 'encargado';
+      return `¿Deseas cambiar a ${action.member.name} al rol de ${nextRole}?`;
     }
-    this.tienda.set({
-      ...tienda,
-      members: tienda.members.map((item) =>
-        item.id === member.id
-          ? { ...item, role: item.role === 'Encargado' ? 'Empleado' : 'Encargado' }
-          : item
-      )
-    });
+    return action?.type === 'remove'
+      ? `¿Deseas desligar a ${action.member.name} de esta tiendita? Su cuenta quedará en espera.`
+      : '';
   }
 
-  protected confirmRemove(member: StoreMember): void {
-    this.removeTarget.set(member);
+  protected confirmationText(): string {
+    const action = this.pendingAction();
+    if (action?.type === 'status') return this.shop()?.shop.active ? 'Desactivar' : 'Activar';
+    if (action?.type === 'role') return 'Cambiar rol';
+    return 'Remover';
   }
 
-  protected cancelRemove(): void {
-    this.removeTarget.set(null);
-  }
+  protected async confirmAction() {
+    const action = this.pendingAction();
+    const details = this.shop();
+    if (!action || !details) return;
 
-  protected removeEmployee(): void {
-    const member = this.removeTarget();
-    const tienda = this.tienda();
-    this.removeTarget.set(null);
-    if (!tienda || !member) {
-      return;
+    let succeeded = false;
+    if (action.type === 'status') {
+      succeeded = await SetShopActive(this.shopUuid, !details.shop.active, this.toast);
+    } else if (action.type === 'role') {
+      const role = action.member.role === Role.MANAGER ? Role.EMPLOYEE : Role.MANAGER;
+      succeeded = await UpdateShopMemberRole(this.shopUuid, action.member.id, role, this.toast);
+    } else {
+      succeeded = await RemoveShopMember(this.shopUuid, action.member.id, this.toast);
     }
-    this.tienda.set({
-      ...tienda,
-      members: tienda.members.filter((item) => item.id !== member.id)
-    });
+
+    this.pendingAction.set(null);
+    if (succeeded) {
+      this.toast.success('Los cambios se guardaron correctamente.');
+      await this.loadShopDetails();
+    }
   }
 
-  protected roleActionLabel(member: StoreMember): string {
-    return member.role === 'Encargado' ? 'Cambiar a empleado' : 'Hacer encargado';
+  protected roleActionLabel(member: UserDTO): string {
+    return member.role === Role.MANAGER ? 'Bajar a empleado' : 'Hacer encargado';
+  }
+
+  protected isDangerAction(): boolean {
+    const action = this.pendingAction();
+    return action?.type === 'remove' || (action?.type === 'status' && !!this.shop()?.shop.active);
   }
 
   protected initial(name: string): string {
