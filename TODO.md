@@ -1,37 +1,52 @@
-## Pendientes urgentes
+# Pendientes para terminar miniShop
 
-### Prioridad alta: antes de usar la caja en operación real
+Alcance de esta revisión: frontend y backend para los roles `EMPLOYEE`, `MANAGER`, `WAITING` y `ADMIN`. Se excluyen las funciones de proveedores/pedidos a proveedores.
 
-- [ x ] **Completar el cierre de caja.** La confirmación actual muestra un mensaje de éxito, pero no llama a la operación de cierre del backend ni limpia el estado relacionado con la caja. La interfaz puede dar a entender que el cierre se registró cuando no ocurrió.
-- [ ] **Conectar y corregir la gestión de empleados.** Aprobar, rechazar o eliminar empleados modifica datos guardados en el navegador, no la cuenta real del servidor. Además, las listas comparan el UUID de la tienda con su nombre, por lo que pueden aparecer vacías.
-- [ ] **Conectar el panel de administración a datos reales.** La lista de tiendas, sus estados y miembros son datos fijos de ejemplo; sus acciones no se guardan en el servidor.
-- [ ] **Persistir el horario de apertura.** La pantalla muestra “Cambios guardados”, pero el horario se actualiza en una señal en memoria y se pierde al recargar.
-- [ ] **Completar la persistencia de pedidos.** Los pedidos y sus cambios viven en datos de ejemplo y memoria del navegador; no se conservan de forma fiable entre sesiones o dispositivos.
+## Antes del deploy
 
-### Seguridad
+### P0 — Seguridad y aislamiento de datos
 
-- [ ] **Eliminar las cuentas de demostración del frontend de producción.** El formulario actual inicia sesión con el backend, pero `AuthService` conserva cuentas y contraseñas de ejemplo y escribe esos registros en `localStorage` en texto legible cuando se consultan las listas locales de empleados. No deben tratarse como credenciales reales ni servir para autorizar operaciones.
-- [ ] **Añadir autorización por rol a las rutas del frontend.** `authGuard` comprueba que haya una sesión, pero no limita por rol rutas como `/admin`, `/empleados` o `/tiendita`. Ocultar enlaces en el menú no impide que se escriba una URL directamente. El backend debe seguir validando cada permiso; el control de interfaz sirve solo como complemento.
-- [ ] **Revisar el uso de almacenamiento local para datos operativos.** Los pedidos, cierres, fondo de caja y datos de demostración se guardan en el navegador o en memoria. El usuario puede modificarlos desde el navegador y no son una fuente confiable para saldos ni reportes.
-- [ ] **Verificar la configuración de las cookies de sesión en el servidor.** El frontend envía cookies con `withCredentials`; las opciones `HttpOnly`, `Secure` y `SameSite` dependen del backend y no se pueden confirmar en este análisis del frontend.
+- [ ] **Cerrar el acceso al API de usuarios.** `UsersController` no tiene guardas: listado, consulta, alta, edición y eliminación quedan expuestos. `getUsers` y `createUser` además pueden devolver el hash de contraseña. Exigir autenticación y permisos por operación, limitar consultas al ámbito autorizado y nunca serializar `password`.
+- [ ] **Asegurar las rutas de administración de tiendas.** `PATCH /shop/byid/:uuid` y `DELETE /shop/:uuid` no tienen autenticación ni rol; protegerlas para `ADMIN` y exigir confirmación/registro de auditoría para operaciones destructivas.
+- [ ] **Aplicar autorización y propiedad por tienda en todo el API.** `CreditController` no tiene guardas. `ShopRegisterController`, `ProductController` y `CategoryController` solo verifican JWT en el controlador y varios métodos aceptan IDs arbitrarios sin comprobar rol ni que el recurso pertenezca a `req.user.shopUuid`. Aplicar guardas por rol y validar dueño/tienda en cada lectura y mutación; no confiar en el guard del frontend.
+- [ ] **Revisar límites en ventas y fiados.** `SaleController` permite `EMPLOYEE`, `MANAGER` y `ADMIN` a nivel de clase, y varias operaciones trabajan por ID o por query de tienda. Comprobar que un usuario solo vea o modifique datos de su tienda y decidir explícitamente qué acciones puede hacer cada rol.
+- [ ] **Endurecer las transiciones de empleados.** El servidor debe aceptar solicitudes solo para cuentas elegibles y de una tienda válida; al aprobar/rechazar/remover, comprobar rol actual y pertenencia a la tienda para impedir trasladar cuentas entre tiendas arbitrariamente.
+- [ ] **Revisar sesión para producción.** El backend ya configura la cookie como `HttpOnly`, `Secure` y `SameSite=None`. Confirmar HTTPS, CORS con origen explícito y credenciales, expiración/renovación y borrado de cookie en el entorno de deploy.
 
-En la revisión estática del frontend no se identificó uso explícito de `eval`, `innerHTML` o mecanismos para omitir la sanitización de Angular. Esto no sustituye una auditoría dinámica ni una revisión del backend.
+### P1 — Roles y flujos operativos
 
-### Otras tareas pendientes
+- [x] **Proteger la navegación de cuentas en espera en el frontend.** `roleGuard` redirige a `WAITING` a `/esperando` y solo permite esa vista (además de `/auth` y la ruta inicial, que redirige allí). El backend todavía necesita los controles del bloque P0.
+- [ ] **Restringir rutas de encargado en frontend.** `/empleados` y `/tiendita` usan el guard, pero no declaran roles permitidos; un `EMPLOYEE` puede abrirlas por URL aunque el menú o la pantalla escondan acciones. Declarar permisos por ruta (`MANAGER` para gestión de empleados y horario; `EMPLOYEE` solo donde corresponda).
+- [x] **Conectar la pantalla de empleados a datos reales.** Carga solicitudes/empleados desde `/shop/myshop` y usa endpoints de aceptar, rechazar y quitar acceso; ya no depende de listas locales ni compara el UUID con el nombre.
+- [ ] **Permitir que una cuenta removida vuelva a solicitar acceso.** Backend deja `shopUuid: null` y `role: WAITING`, pero el frontend no ofrece un flujo para encontrar/solicitar otra tienda; definir una pantalla de cuenta sin tienda y la solicitud correspondiente.
+- [ ] **Persistir los días de apertura.** `TienditaComponent.save()` solo actualiza `StoreService` en memoria, aunque confirma que guardó. Crear endpoint y persistencia en backend, cargar el horario al entrar y distinguir error de éxito.
+- [x] **Registrar el cierre de caja en el backend.** El cajero invoca `PATCH /shopregister/close` y refresca los datos tras éxito. Revisar autorización por rol/tienda del endpoint (ver P0) antes de producción.
+- [ ] **Completar apertura/fondo de caja y reportes con fuente única.** Aclarar qué campos se mantienen en backend y retirar `CAJA_HISTORY_KEY`, ventas/productos locales y cálculos oficiales basados en `localStorage`; el historial de cierres ya tiene endpoints, pero validar consistencia de totales y saldos.
+- [ ] **Completar estados de carga, error y vacío.** Varias funciones convierten fallos en `[]` o `null`, y vistas como empleados pueden mostrar “sin resultados” en vez de error. Mantener estados separados y permitir reintentar.
 
-- [ ] **Permitir que un usuario removido de una tiendita vuelva a solicitar acceso.** Al rechazar/remover exitosamente a un usuario, asignarle un estado sin tienda (por ejemplo, `NOSHOP`) en vez de dejarlo inutilizable. Cuando esté en ese estado, mostrar como pantalla principal una modal que explique brevemente su situación y le permita enviar una solicitud para entrar a otra tiendita.
+## Administración (`ADMIN`)
 
-- [ ] **Corregir la información de caja derivada de historiales locales.** Hay estructuras de ventas en `localStorage` que no se actualizan con las ventas registradas en el backend; no deben utilizarse para mostrar totales oficiales.
-- [ ] **Distinguir errores de carga de listas vacías.** Algunas funciones de API devuelven `[]` al fallar, igual que cuando no hay resultados. La interfaz debería conservar un estado de error separado del estado vacío.
-- [ ] **Agregar pruebas de los flujos de negocio.** Priorizar acceso y permisos, cobro, cambio de inventario, cierre de caja, pago de fiados y persistencia de empleados y pedidos.
-- [ ] **Revisar la pantalla de administración para que use identificadores reales.** El catálogo actual usa identificadores y UUID de ejemplo; no corresponde con tiendas registradas en el backend.
+- [ ] **Reemplazar el catálogo demo de tiendas por datos reales.** `admin.data.ts`, `AdminComponent` y `StoreDetailsComponent` usan `TIENDAS` ficticias; la API ya expone `GET /shop` y `GET /shop/byid/:uuid`, pero falta conectar las vistas y sus DTOs.
+- [ ] **Definir qué significa activar/desactivar una tienda.** La UI cambia un estado local; el modelo Prisma `Shop` no tiene campo de estado. Decidir si se requiere suspensión y sus efectos, agregar migración/validación/API, o retirar esa acción del alcance inicial.
+- [ ] **Completar gestión administrativa de miembros.** La vista demo permite cambiar encargado/empleado y remover miembros localmente. Definir política de cambio de rol, proteger al menos un encargado, exponer endpoints autorizados y reflejar los cambios persistidos.
+- [ ] **Definir el alcance del panel admin para el MVP.** Mínimo recomendado: listar/buscar tiendas, detalle real (dirección, encargado, empleados, fechas), indicadores calculados de datos reales y acciones administrativas explícitas con confirmación y auditoría.
+- [ ] **Crear el primer administrador de forma segura.** `backend/prisma/seed.ts` está vacío y el registro público bloquea el rol `ADMIN`, lo cual es adecuado. Usar un comando/seed de bootstrap idempotente con correo y contraseña desde secretos del entorno, contraseña hasheada con el mismo servicio, sin credenciales por defecto en el repo; documentar cómo rotar o recuperar el acceso.
+- [ ] **Asegurar el bootstrap antes de abrir el registro público.** Evitar que el despliegue quede sin administrador; comprobar el resultado del seed y tener un procedimiento de restauración de acceso probado.
 
-## Malas prácticas y deuda técnica
+## Revisión funcional por rol
 
-- [ ] **Reducir el uso de tipos sin validar.** Por ejemplo, el catálogo de productos usa `any[]` aunque existe un DTO para productos.
-- [ ] **Retirar datos de demostración y código comentado que ya no corresponde al flujo actual.** Hay listas de usuarios, tiendas y pedidos de ejemplo, además de funciones de almacenamiento local que ya no representan la operación real.
-- [ ] **Eliminar registros de depuración antes de producción.** Hay `console.log` que imprimen ventas, respuestas de API y datos de inventario en la consola del navegador.
-- [ ] **Evitar recargas completas de la página después de guardar.** Algunos flujos usan `window.location.reload()` en vez de actualizar el estado de Angular o navegar de forma controlada.
-- [ ] **Unificar los estados de carga y error.** Las pantallas usan distintas convenciones para representar carga, error y ausencia de datos.
-- [ ] **Corregir mensajes de éxito con valores locales incorrectos.** El alta de fiadores utiliza una referencia `name` que no se toma del campo del formulario, por lo que el mensaje puede mostrar un valor vacío o ajeno.
-- [ ] **Revisar la organización del código del cajero.** Aún conserva modelos e historial local de ventas junto con el flujo nuevo del backend, lo que hace difícil identificar cuál estado es la fuente oficial.
+- **`WAITING`:** pantalla de espera y redirección frontend implementadas. Falta garantizar que ningún endpoint del backend acepte este rol para operaciones de tienda y terminar el flujo cuando la cuenta no tiene tienda.
+- **`EMPLOYEE`:** ya puede acceder a operaciones comunes del negocio y su menú no muestra gestión de tienda. Falta denegar esas rutas también por guard de frontend y, sobre todo, definir y aplicar permisos/propiedad en backend; evaluar acceso de empleado a ventas, fiados, caja y datos sensibles.
+- **`MANAGER`:** gestión de solicitudes y empleados conectada; horario, pedidos y parte de los datos de tienda siguen en estado local/demo. Falta persistencia del horario y asegurar en servidor que solo administre su tienda.
+- **`ADMIN`:** guard frontend limita `/admin`; el panel es demo y el API administrativo está incompleto y parcialmente desprotegido. Priorizar primero seguridad de API y después modelo/endpoints/UI reales.
+
+## Calidad y preparación para producción
+
+- [ ] **Agregar pruebas de autorización y flujos críticos.** Cubrir matriz rol × endpoint/ruta, acceso cruzado entre tiendas, WAITING, aprobación/remoción, cobro, cierre de caja y fiados.
+- [ ] **Eliminar o acotar datos demo que siguen visibles.** El login usa backend y no se encontró el antiguo `AuthService`/almacenamiento de cuentas demo; quedan tiendas falsas en admin y otras pantallas con datos de muestra.
+- [ ] **Quitar logs de depuración del frontend.** Hay `console.log` en login, dashboard, caja, ventas, fiados y tiendita.
+- [ ] **Eliminar dependencias de datos locales para cifras oficiales.** El cajero mantiene historiales/cantidades en `localStorage`; conservar local solo para preferencias o borradores, no para caja ni reportes.
+- [ ] **Tipar los datos de productos y respuestas.** `ProductsComponent` todavía usa `any[]` aunque hay `ProductDTO`.
+- [ ] **Evitar recargas completas y mensajes falsos.** Producto editado usa `window.location.reload()`; revisar errores de UX y respuestas falsas de éxito. En fiados, `submitGuarantor()` muestra `${name}` sin que esa variable exista en el método.
+- [ ] **Unificar manejo de carga y error y revisar accesibilidad.** Añadir reintentos, deshabilitar acciones durante peticiones y comprobar teclado/foco en modales y formularios.
+- [ ] **Hacer una pasada final de configuración de deploy.** Variables de entorno frontend/backend, CORS/cookies, migraciones Prisma, seed de admin, HTTPS, logs, backups y procedimiento de rollback.

@@ -1,16 +1,19 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { isProductIcon, ProductIconComponent, ProductIconPickerComponent, PRODUCT_ICONS } from '../product-icon/product-icon';
 import { ModalComponent } from '../../../ui/modal/modal';
 import { ButtonComponent } from '../../../ui/button/button';
 import { InputComponent } from '../../../ui/input/input';
+import { SelectComponent, SelectOption } from '../../../ui/select/select';
 import { DeleteProduct, GetProdByCode, UpdateProduct, updateQuantity } from '../../../api/products';
+import { GetCategories } from '../../../api/category';
+import { CategoryDTO } from '../../../dto/category.dto';
 import { ToastService } from '../../../ui/toast/toast.service';
 import { ProductDTO, UpdateProductDTO } from '../../../dto/product.dto';
 
 @Component({
   selector: 'app-product-details',
-  imports: [ButtonComponent, InputComponent, ModalComponent, ProductIconComponent, ProductIconPickerComponent],
+  imports: [ButtonComponent, InputComponent, ModalComponent, ProductIconComponent, ProductIconPickerComponent, RouterLink, SelectComponent],
   templateUrl: './product-details.html'
 })
 export class ProductDetailsComponent implements OnInit {
@@ -28,6 +31,12 @@ export class ProductDetailsComponent implements OnInit {
   protected readonly editPrice = signal('');
   protected readonly editCode = signal('');
   protected readonly editIcon = signal('general');
+  protected readonly categories = signal<CategoryDTO[]>([]);
+  protected readonly editCategoryId = signal('');
+  protected readonly categoryOptions = computed<SelectOption[]>(() => [
+    { value: '', label: 'Sin categoría' },
+    ...this.categories().map((category) => ({ value: category.id, label: category.name }))
+  ]);
 
   protected readonly editQuantity = signal(false);
   protected readonly quantityMode = signal<'add' | 'set'>('add');
@@ -39,8 +48,12 @@ export class ProductDetailsComponent implements OnInit {
 
   async ngOnInit() {
     const code = this.route.snapshot.paramMap.get('code') ?? '';
-    const product = await GetProdByCode(code, this.toast);
+    const [product, categories] = await Promise.all([
+      GetProdByCode(code, this.toast),
+      GetCategories(this.toast)
+    ]);
     this.product.set(product);
+    this.categories.set(categories);
   }
 
   protected toggleUpdateQuantity(newState: boolean) {
@@ -103,6 +116,7 @@ export class ProductDetailsComponent implements OnInit {
     this.editName.set(this.product()!.name);
     this.editPrice.set(String(this.product()!.price));
     this.editCode.set(this.product()!.code);
+    this.editCategoryId.set(this.product()!.categoryId ?? this.product()!.category?.id ?? '');
     const currentIcon = this.product()!.image;
     this.editIcon.set(currentIcon === 'drink' ? 'medicine' :
       PRODUCT_ICONS.some((option) => option.id === currentIcon) ? currentIcon! : 'general');
@@ -125,6 +139,10 @@ export class ProductDetailsComponent implements OnInit {
     this.editCode.set(value);
   }
 
+  protected onCategoryChange(value: string): void {
+    this.editCategoryId.set(value);
+  }
+
   protected async saveEdit() {
     if (!this.product() || !this.editName().trim()) {
       return;
@@ -140,6 +158,7 @@ export class ProductDetailsComponent implements OnInit {
       price: Number(this.editPrice()) ?? this.product()!.price,
       code: this.editCode() ?? this.product()!.code,
       image: this.editIcon(),
+      categoryId: this.editCategoryId() || null,
     }
     const res = await UpdateProduct(dto, this.toast);
     if (res) {

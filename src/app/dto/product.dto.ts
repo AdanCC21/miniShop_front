@@ -11,7 +11,7 @@ export interface ProductDTO {
 
     shopUuid: string
 
-    categoryId: string
+    categoryId: string | null
     category?: CategoryDTO
 
     createdAt: string | Date
@@ -21,7 +21,7 @@ export interface ProductDTO {
 export interface CreateProductDTO {
     name: string
     code: string
-    categoryId: string
+    categoryId: string | null
     category?: CategoryDTO
     price: number
     quantity: number
@@ -34,5 +34,5 @@ export interface UpdateProductDTO {
     price?: number
     code?: string
     quantity?: number
-    categoryId?: string
+    categoryId?: string | null
 }
