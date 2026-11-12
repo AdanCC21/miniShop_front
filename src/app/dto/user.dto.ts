@@ -7,4 +7,5 @@ export interface UserDTO {
     role:Role
     createdAt:Date | string
     updatedAt:Date | string
+    shopUuid?: string | null
 }

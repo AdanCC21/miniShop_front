@@ -12,6 +12,7 @@ import { TienditaComponent } from './views/tiendita/tiendita';
 import { EmpleadosComponent } from './views/empleados/empleados';
 import { AdminComponent } from './views/admin/admin';
 import { StoreDetailsComponent } from './views/admin/store-details/store-details';
+import { AdminUsersComponent } from './views/admin/users/users';
 import { SalesComponent } from './views/sales/sales';
 import { NoAutorizadoComponent } from './views/no-autorizado/no-autorizado';
 
@@ -77,6 +78,12 @@ export const routes: Routes = [
   {
     path: 'admin/:id',
     component: StoreDetailsComponent,
+    canActivate: [roleGuard],
+    data: { roles: [Role.ADMIN] }
+  },
+  {
+    path: 'usuarios',
+    component: AdminUsersComponent,
     canActivate: [roleGuard],
     data: { roles: [Role.ADMIN] }
   }

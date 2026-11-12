@@ -1,0 +1,96 @@
+<div class="space-y-6" animate.enter="ms-fade-in-up">
+  <div>
+    <h1 class="text-2xl font-bold text-black">Usuarios</h1>
+    <p class="text-sm text-gray-500">Administra las cuentas, roles y pertenencia a tienditas.</p>
+  </div>
+
+  <section class="flex flex-col gap-3 rounded-lg border border-gray-200 bg-(--card) p-4 sm:flex-row sm:items-end">
+    <label class="flex-1 text-sm font-medium text-gray-700">
+      Buscar usuarios
+      <input type="search" [value]="search()" (input)="setSearch($any($event.target).value)"
+        placeholder="Nombre, correo o ID"
+        class="mt-1.5 w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-black outline-none focus:border-(--primary)" />
+    </label>
+    <label class="text-sm font-medium text-gray-700">
+      Filtrar por rol
+      <select [value]="roleFilter()" (change)="setRoleFilter($any($event.target).value)"
+        class="mt-1.5 block w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-black outline-none focus:border-(--primary) sm:min-w-40">
+        <option value="ALL">Todos los roles</option>
+        <option value="MANAGER">Encargado</option>
+        <option value="EMPLOYEE">Empleado</option>
+        <option value="ADMIN">Administrador</option>
+        <option value="WAITING">En espera</option>
+      </select>
+    </label>
+    <label class="text-sm font-medium text-gray-700">
+      Ordenar por
+      <select [value]="sortBy()" (change)="setSortBy($any($event.target).value)"
+        class="mt-1.5 block w-full rounded-lg border border-gray-300 bg-(--card) px-3 py-2 text-sm text-black outline-none focus:border-(--primary) sm:min-w-48">
+        <option value="recent">Más recientemente creado</option>
+        <option value="name">Nombre</option>
+        <option value="role">Rol</option>
+      </select>
+    </label>
+    <p class="pb-2 text-sm text-gray-500">{{ filteredUsers().length }} resultados</p>
+  </section>
+
+  <section class="overflow-x-auto rounded-lg border border-gray-200 bg-(--card)">
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+          <th class="px-4 py-3 font-semibold">ID</th>
+          <th class="px-4 py-3 font-semibold">Usuario</th>
+          <th class="px-4 py-3 font-semibold">Rol</th>
+          <th class="px-4 py-3 font-semibold">Email</th>
+          <th class="px-4 py-3 font-semibold">Creado</th>
+          <th class="px-4 py-3 font-semibold">Actualizado</th>
+          <th class="px-4 py-3 text-right font-semibold">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of filteredUsers(); track user.id) {
+        <tr class="border-b border-gray-100 last:border-b-0 transition hover:bg-gray-50">
+          <td class="px-4 py-3 font-mono text-xs text-gray-500">{{ user.id }}</td>
+          <td class="px-4 py-3 font-medium text-gray-900">{{ user.name }}</td>
+          <td class="px-4 py-3">
+            <span class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+              {{ roleLabel(user.role) }}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-gray-600">{{ user.email }}</td>
+          <td class="px-4 py-3 whitespace-nowrap text-gray-600">{{ formatDate(user.createdAt) }}</td>
+          <td class="px-4 py-3 whitespace-nowrap text-gray-600">{{ formatDate(user.updatedAt) }}</td>
+          <td class="px-4 py-3">
+            <div class="flex min-w-64 items-center justify-end gap-2">
+              <app-button variant="outline" text="Cambiar rol"
+                extraClass="!rounded-md !px-2.5 !py-1.5 text-xs" (clicked)="openAction('role', user)" />
+              <app-button variant="outline" text="Remover tiendita" [disabled]="!user.shopUuid"
+                extraClass="!rounded-md !px-2.5 !py-1.5 text-xs" (clicked)="openAction('shop', user)" />
+              <app-button variant="danger" text="Eliminar"
+                extraClass="!rounded-md !px-2.5 !py-1.5 text-xs" (clicked)="openAction('delete', user)" />
+            </div>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="7" class="px-4 py-10 text-center text-sm text-gray-500">
+            {{ loading() ? 'Cargando usuarios…' : 'No hay usuarios registrados.' }}
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+</div>
+
+@if (pendingAction()) {
+  <app-confirm-modal
+    [title]="actionTitle()"
+    [message]="actionMessage()"
+    [confirmText]="actionConfirmText()"
+    cancelText="Cancelar"
+    [danger]="isDangerAction()"
+    (confirm)="confirmAction()"
+    (cancel)="closeConfirmation()"
+  />
+}
