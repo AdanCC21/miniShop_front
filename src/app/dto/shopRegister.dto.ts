@@ -8,7 +8,7 @@ export interface ShopRegisterDTO {
     
     isOpen: boolean
 
-    closedAt: Date | string
-    openingAt: Date | string
+    openedAt: Date | string
+    closedAt: Date | string | null
     updatedAt: Date | string
 }

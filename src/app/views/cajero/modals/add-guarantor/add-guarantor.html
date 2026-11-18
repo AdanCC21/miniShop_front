@@ -1,0 +1,10 @@
+<app-modal title="Agregar persona" size="md" (close)="close.emit()">
+  <div class="space-y-4">
+    <app-input label="Nombre de la persona" placeholder="Escribe el nombre" id="new-fiado-person"
+      [value]="query()" (valueChange)="queryChange.emit($event)" />
+    <div class="flex justify-end gap-2">
+      <app-button text="Cancelar" variant="outline" (clicked)="close.emit()" />
+      <app-button text="Agregar" (clicked)="confirm.emit()" />
+    </div>
+  </div>
+</app-modal>

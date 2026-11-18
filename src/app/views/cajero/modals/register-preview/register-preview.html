@@ -1,0 +1,18 @@
+<app-modal title="Caja actual" size="lg" (close)="close.emit()">
+  @if (register(); as register) {
+    <ul class="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:grid-cols-3">
+      <li>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Dinero en caja</p>
+        <p class="mt-1 text-lg font-bold text-(--primary-bright)">${{ formatPrice(register.currentCash || 0) }}</p>
+      </li>
+      <li>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Ganancia</p>
+        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(register.totalSales || 0) }}</p>
+      </li>
+      <li>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Fondo inicial</p>
+        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(register.openingCash || 0) }}</p>
+      </li>
+    </ul>
+  }
+</app-modal>

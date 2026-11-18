@@ -1,0 +1,9 @@
+<app-confirm-modal
+  title="Cerrar caja"
+  message="¿Registrar el cierre de caja de hoy? Se reiniciarán el fondo inicial y las ventas de la caja."
+  confirmText="Cerrar caja"
+  cancelText="Cancelar"
+  [danger]="true"
+  (confirm)="confirm.emit()"
+  (cancel)="cancel.emit()"
+/>

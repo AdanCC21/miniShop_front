@@ -314,195 +314,33 @@
   </div>
   }
 
-  <!-- MODALES -->
   @if (chargeConfirmationOpen()) {
-  <app-modal [title]="'Confirmar cobro'" size="xl" (close)="cancelCharge()">
-    <div class="space-y-4">
-      <p class="text-base text-gray-600">
-        @switch (paymentMethod()) {
-        @case (PaymentMethod.CASH) {
-        Estás a punto de cobrar <strong>${{ formatPrice(total()) }}</strong> en efectivo.
-        Recibirás <strong>${{ formatPrice(receivedPayment()) }}</strong>
-        @if (change() > 0) { y devolverás <strong>${{ formatPrice(change()) }}</strong> de cambio. }
-        @else { y no habrá cambio. }
-        }
-        @case (PaymentMethod.CARD) {
-        Estás a punto de cobrar <strong>${{ formatPrice(total()) }}</strong> con tarjeta.
-        }
-        @case (PaymentMethod.MIXED) {
-        Estás a punto de cobrar <strong>${{ formatPrice(total()) }}</strong>:
-        recibirás <strong>${{ formatPrice(receivedCard()) }}</strong> con tarjeta y
-        <strong>${{ formatPrice(receivedCash()) }}</strong> en efectivo.
-        @if (cashChange() > 0) { Devolverás <strong>${{ formatPrice(cashChange()) }}</strong> de cambio en efectivo. }
-        @else { No habrá cambio. }
-        }
-        @case (PaymentMethod.CREDIT) {
-        Estás a punto de registrar un fiado de <strong>${{ formatPrice(total()) }}</strong> a
-        <strong>{{ selectedFiadoPerson() }}</strong>.
-        @if (fiadoMethod() === 'efectivo') {
-        Recibirás un adelanto de <strong>${{ formatPrice(fiadoPaid().cash) }}</strong> en efectivo.
-        } @else if (fiadoMethod() === 'tarjeta') {
-        Recibirás un adelanto de <strong>${{ formatPrice(fiadoPaid().card) }}</strong> con tarjeta.
-        } @else {
-        Recibirás un adelanto de <strong>${{ formatPrice(fiadoPaid().card) }}</strong> con tarjeta más
-        <strong>${{ formatPrice(fiadoPaid().cash) }}</strong> en efectivo.
-        }
-        Faltarán <strong>${{ formatPrice(fiadoRemaining()) }}</strong> por pagar.
-        }
-        }
-      </p>
-      <p class="rounded-lg bg-gray-50 px-4 py-3 text-base font-medium text-gray-700">
-        Total de la venta: ${{ formatPrice(total()) }}
-      </p>
-      @if((paymentMethod() !== PaymentMethod.CARD || paymentMethod() !== PaymentMethod.CREDIT) && change() > 0){
-      <p class="rounded-lg bg-gray-50 px-4 py-3 text-base font-medium text-gray-700">
-        Devolverás <strong>${{ formatPrice(change()) }}</strong> de cambio.
-      </p>
-      }
-      <div class="flex justify-end gap-2">
-        <app-button text="Revisar" variant="outline" (clicked)="cancelCharge()" />
-        <app-button text="Confirmar cobro" (clicked)="confirmCharge()" />
-      </div>
-    </div>
-  </app-modal>
+  <app-cajero-charge-modal [method]="paymentMethod()" [total]="total()" [receivedPayment]="receivedPayment()"
+    [change]="change()" [receivedCard]="receivedCard()" [receivedCash]="receivedCash()" [cashChange]="cashChange()"
+    [fiadoMethod]="fiadoMethod()" [fiadoPerson]="selectedFiadoPerson()" [fiadoPaid]="fiadoPaid()"
+    [fiadoRemaining]="fiadoRemaining()" (close)="cancelCharge()" (confirm)="confirmCharge()" />
   }
 
   @if (closeOpen()) {
-  <app-confirm-modal [title]="'Cerrar caja'" [danger]="true"
-    [message]="'¿Registrar el cierre de caja de hoy? Se reiniciarán el fondo inicial y las ventas de la caja.'"
-    confirmText="Cerrar caja" cancelText="Cancelar" (confirm)="toggleCloseShopReg(true)"
-    (cancel)="toggleCloseShopReg(false)" />
+  <app-cajero-close-register-modal (confirm)="toggleCloseShopReg(true)" (cancel)="toggleCloseShopReg(false)" />
   }
 
-  <!-- Apertura de caja -->
   @if (previewShopReg()) {
-  <app-modal [title]="'Caja actual'" size="lg" (close)="togglePreviewShop(false)">
-    <ul class="grid grid-cols-3 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <li>
-        <p class="text-xs uppercase tracking-wider text-gray-400">Dinero en caja</p>
-        <p class="mt-1 text-lg font-bold text-(--primary-bright)">${{ formatPrice(this.curShopReg()?.currentCash || 0)
-          }}</p>
-      </li>
-
-      <li>
-        <p class="text-xs uppercase tracking-wider text-gray-400">Ganancia</p>
-        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(this.curShopReg()?.totalSales || 0) }}</p>
-      </li>
-
-      <li>
-        <p class="text-xs uppercase tracking-wider text-gray-400">Fondo inicial</p>
-        <p class="mt-1 text-lg font-bold text-gray-900">${{ formatPrice(this.curShopReg()?.openingCash || 0) }}</p>
-      </li>
-    </ul>
-  </app-modal>
+  <app-cajero-register-preview-modal [register]="curShopReg()" (close)="togglePreviewShop(false)" />
   }
 
   @if (ventasOpen()) {
-  <app-modal [title]="selectedSale() ? 'Detalle de venta' : 'Ventas recientes'" size="6xl" (close)="closeRecentSales()">
-    @if (selectedSale(); as sale) {
-    <div class="flex flex-col gap-5">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p class="text-xs text-gray-500">ID de venta</p>
-          <p class="font-medium text-(--primary-bright)">{{ sale.id }}</p>
-        </div>
-        <app-button text="Volver a ventas" variant="outline" (clicked)="showRecentSalesList()" />
-      </div>
-
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div>
-          <p class="text-xs text-gray-500">Método de pago</p>
-          <p class="font-medium">{{ paymentMethodLabel(sale.method) }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-gray-500">Total vendido</p>
-          <p class="font-medium">${{ formatPrice(sale.total) }}</p>
-        </div>
-        @if (sale.method === PaymentMethod.CASH) {
-        <div>
-          <p class="text-xs text-gray-500">Efectivo recibido</p>
-          <p class="font-medium">${{ formatPrice(sale.paidCash) }}</p>
-        </div>
-        } @else {
-        @if (sale.paidCash > 0) {
-        <div>
-          <p class="text-xs text-gray-500">Pagado en efectivo</p>
-          <p class="font-medium">${{ formatPrice(sale.paidCash) }}</p>
-        </div>
-        }
-        @if (sale.paidCard > 0) {
-        <div>
-          <p class="text-xs text-gray-500">Pagado con tarjeta</p>
-          <p class="font-medium">${{ formatPrice(sale.paidCard) }}</p>
-        </div>
-        }
-        }
-        @if (recentSaleCashChange(sale) > 0) {
-        <div>
-          <p class="text-xs text-gray-500">Cambio entregado</p>
-          <p class="font-medium text-emerald-600">${{ formatPrice(recentSaleCashChange(sale)) }}</p>
-        </div>
-        }
-      </div>
-
-      <div>
-        <h3 class="mb-2 text-lg font-medium">Artículos</h3>
-        <div class="overflow-x-auto rounded-lg border border-gray-200">
-          <table class="w-full text-left text-sm">
-            <thead>
-              <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-                <th class="px-4 py-3 font-semibold">Producto</th>
-                <th class="px-4 py-3 font-semibold">Cantidad</th>
-                <th class="px-4 py-3 font-semibold">Precio por unidad</th>
-                <th class="px-4 py-3 font-semibold">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (detail of sale.details ?? []; track detail.id) {
-              <tr class="border-b border-gray-100 last:border-b-0">
-                <td class="px-4 py-3">{{ detail.product?.name ?? detail.productId }}</td>
-                <td class="px-4 py-3">{{ detail.quantity }}</td>
-                <td class="px-4 py-3">${{ formatPrice(detail.unitPrice) }}</td>
-                <td class="px-4 py-3 font-medium">${{ formatPrice(detail.unitPrice * detail.quantity) }}</td>
-              </tr>
-              } @empty {
-              <tr>
-                <td colspan="4" class="px-4 py-6 text-center text-gray-500">La venta no tiene artículos.</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    } @else {
-    <app-sales-table [sales]="recentSales()" emptyMessage="No hay ventas recientes."
-      (saleSelected)="selectRecentSale($event)" />
-    }
-  </app-modal>
+  <app-cajero-sales-modal [recentSales]="recentSales()" [selectedSale]="selectedSale()" (close)="closeRecentSales()"
+    (selectSale)="selectRecentSale($event)" (showSalesList)="showRecentSalesList()" />
   }
 
-  @if(openingShopReg().modalOpen){
-  <app-modal [title]="'Abrir caja'" size="lg" (close)="toggleShopRegister(false)">
-    <app-input label="Fondo inicial" type="number" [value]="this.openingShopReg().amount"
-      (valueChange)="handleShopRegister($event)" />
-    <div class="flex gap-2 justify-end mt-4">
-      <app-button text="Cancelar" variant="secondary" (clicked)="toggleShopRegister(false)" />
-      <app-button text="Abir caja" (clicked)="openShopReg()" />
-    </div>
-  </app-modal>
+  @if (openingShopReg().modalOpen) {
+  <app-cajero-open-register-modal [amount]="openingShopReg().amount" (amountChange)="handleShopRegister($event)"
+    (close)="toggleShopRegister(false)" (confirm)="openShopReg()" />
   }
 
   @if (addFiadoPersonOpen()) {
-  <app-modal [title]="'Agregar persona'" size="md" (close)="closeAddFiadoPerson()">
-    <div class="space-y-4">
-      <app-input label="Nombre de la persona" placeholder="Escribe el nombre" id="new-fiado-person"
-        [value]="fiadoQuery()" (valueChange)="onFiadoQueryChange($event)" />
-      <div class="flex justify-end gap-2">
-        <app-button text="Cancelar" variant="outline" (clicked)="closeAddFiadoPerson()" />
-        <app-button text="Agregar" (clicked)="confirmAddFiadoPerson()" />
-      </div>
-    </div>
-  </app-modal>
+  <app-cajero-add-guarantor-modal [query]="fiadoQuery()" (queryChange)="onFiadoQueryChange($event)"
+    (close)="closeAddFiadoPerson()" (confirm)="confirmAddFiadoPerson()" />
   }
 </div>

@@ -2,17 +2,13 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 
 import { CartLine, SaleRecord, saleCashPortion, salePaymentLines } from './cajero.data';
 import { ButtonComponent } from '../../ui/button/button';
-import { ConfirmModalComponent } from '../../ui/confirm-modal/confirm-modal';
-import { InputComponent } from '../../ui/input/input';
-import { ModalComponent } from '../../ui/modal/modal';
 import { SearchSuggestionsComponent } from '../../ui/search-suggestions/search-suggestions';
-import { SalesTableComponent } from '../../ui/sales-table/sales-table';
 import { ToastService } from '../../ui/toast/toast.service';
 import { GetProducts, updateQuantity } from '../../api/products';
 import { ProductDTO } from '../../dto/product.dto';
 
 import { exceedsStock, firstStockError } from './scripts/validations';
-import { formatPrice as formatPriceFn, paymentMethodLabel as paymentMethodLabelFn } from './scripts/formatters';
+import { formatPrice as formatPriceFn } from './scripts/formatters';
 import { nowTime, todayISO } from './scripts/dates';
 import { CAJA_COUNT_KEY, CAJA_HISTORY_KEY, CAJA_INITIAL_KEY, CAJA_PRODUCTS_KEY, CAJA_SALES_KEY, closeLocalStorage, loadHistory, loadNumber } from './scripts/storage';
 import { cartTotal, cartTotalQuantity } from './scripts/cart';
@@ -26,10 +22,25 @@ import { CreateGuarantor, GetGuarantors } from '../../api/guarantor';
 import { LoaderService } from '../../ui/loader/loader.service';
 import { CloseShopReg, GetCurShopReg, SetOpneningCash } from '../../api/shopRegister';
 import { ShopRegisterDTO } from '../../dto/shopRegister.dto';
+import { CajeroChargeModalComponent } from './modals/charge/charge';
+import { CajeroCloseRegisterModalComponent } from './modals/close-register/close-register';
+import { CajeroRegisterPreviewModalComponent } from './modals/register-preview/register-preview';
+import { CajeroSalesModalComponent } from './modals/sales/sales';
+import { CajeroOpenRegisterModalComponent } from './modals/open-register/open-register';
+import { CajeroAddGuarantorModalComponent } from './modals/add-guarantor/add-guarantor';
 
 @Component({
   selector: 'app-cajero',
-  imports: [ButtonComponent, ConfirmModalComponent, InputComponent, ModalComponent, SearchSuggestionsComponent, SalesTableComponent],
+  imports: [
+    ButtonComponent,
+    SearchSuggestionsComponent,
+    CajeroChargeModalComponent,
+    CajeroCloseRegisterModalComponent,
+    CajeroRegisterPreviewModalComponent,
+    CajeroSalesModalComponent,
+    CajeroOpenRegisterModalComponent,
+    CajeroAddGuarantorModalComponent,
+  ],
   templateUrl: './cajero.html'
 })
 export class CajeroComponent implements OnInit {
@@ -595,14 +606,6 @@ export class CajeroComponent implements OnInit {
     this.selectedSale.set(null);
   }
 
-  protected recentSaleCashChange(sale: SaleDTO): number {
-    if (sale.method !== PaymentMethod.CASH && sale.method !== PaymentMethod.MIXED) return 0;
-    const cashDue = sale.method === PaymentMethod.MIXED
-      ? Math.max(0, Number(sale.total) - Number(sale.paidCard))
-      : Number(sale.total);
-    return Math.max(0, Number(sale.paidCash) - cashDue);
-  }
-
   protected saleProducts(sale: SaleRecord): number {
     return saleProductCount(sale);
   }
@@ -636,10 +639,6 @@ export class CajeroComponent implements OnInit {
     }
     
     this.closeOpen.set(false);
-  }
-
-  protected paymentMethodLabel(method: PaymentMethod | undefined): string {
-    return paymentMethodLabelFn(method);
   }
 
   protected formatPrice(value: number): string {

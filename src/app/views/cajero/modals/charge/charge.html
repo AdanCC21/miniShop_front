@@ -1,0 +1,90 @@
+<app-modal title="Confirmar cobro" size="xl" (close)="close.emit()">
+  <div class="space-y-4">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      @switch (method()) {
+        @case (PaymentMethod.CASH) {
+          <ng-container>
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Total de venta</p>
+              <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(total()) }}</p>
+            </div>
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Recibes en efectivo</p>
+              <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(receivedPayment()) }}</p>
+            </div>
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 sm:col-span-2">
+              <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Devolverás</p>
+              <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(change()) }}</p>
+            </div>
+          </ng-container>
+        }
+        @case (PaymentMethod.CARD) {
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Total de venta</p>
+            <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(total()) }}</p>
+          </div>
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Cobro con tarjeta</p>
+            <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(total()) }}</p>
+          </div>
+        }
+        @case (PaymentMethod.MIXED) {
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Total de venta</p>
+            <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(total()) }}</p>
+          </div>
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Cobro con tarjeta</p>
+            <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(receivedCard()) }}</p>
+          </div>
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Recibes en efectivo</p>
+            <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(receivedCash()) }}</p>
+          </div>
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Devolverás en efectivo</p>
+            <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(cashChange()) }}</p>
+          </div>
+        }
+        @case (PaymentMethod.CREDIT) {
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Persona fiada</p>
+            <p class="mt-1 text-lg font-semibold text-gray-900">{{ fiadoPerson() }}</p>
+          </div>
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Total de venta fiada</p>
+            <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(total()) }}</p>
+          </div>
+          @if (fiadoMethod() === 'efectivo') {
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Adelanto en efectivo</p>
+              <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(fiadoPaid().cash) }}</p>
+            </div>
+          } @else if (fiadoMethod() === 'tarjeta') {
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Adelanto con tarjeta</p>
+              <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(fiadoPaid().card) }}</p>
+            </div>
+          } @else {
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Adelanto con tarjeta</p>
+              <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(fiadoPaid().card) }}</p>
+            </div>
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Adelanto en efectivo</p>
+              <p class="mt-1 text-xl font-semibold text-gray-900">${{ formatPrice(fiadoPaid().cash) }}</p>
+            </div>
+          }
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 sm:col-span-2">
+            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Saldo pendiente</p>
+            <p class="mt-1 text-xl font-semibold text-red-600">${{ formatPrice(fiadoRemaining()) }}</p>
+          </div>
+        }
+      }
+    </div>
+    <div class="flex justify-end gap-2">
+      <app-button text="Revisar" variant="outline" (clicked)="close.emit()" />
+      <app-button text="Confirmar cobro" (clicked)="confirm.emit()" />
+    </div>
+  </div>
+</app-modal>

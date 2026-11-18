@@ -1,0 +1,7 @@
+<app-modal title="Abrir caja" size="lg" (close)="close.emit()">
+  <app-input label="Fondo inicial" type="number" [value]="amount()" (valueChange)="amountChange.emit($event)" />
+  <div class="mt-4 flex justify-end gap-2">
+    <app-button text="Cancelar" variant="secondary" (clicked)="close.emit()" />
+    <app-button text="Abrir caja" (clicked)="confirm.emit()" />
+  </div>
+</app-modal>

@@ -1,0 +1,178 @@
+<app-modal [title]="selectedSale() ? 'Detalle de venta' : title()" size="4xl" (close)="closeModal()">
+  <div class="flex flex-col gap-y-4">
+    <section class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Fecha</p>
+        <p class="mt-1 text-sm font-semibold text-gray-900">{{ formatDate(closureDate()) }}</p>
+      </div>
+      @if (closure().openedAt) {
+        <div>
+          <p class="text-xs uppercase tracking-wider text-gray-400">Hora de apertura</p>
+          <p class="mt-1 text-sm font-semibold text-gray-900">{{ formatTime(closure().openedAt!) }}</p>
+        </div>
+      }
+      <div>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Hora de cierre</p>
+        <p class="mt-1 text-sm font-semibold text-gray-900">
+          @if (closure().closedAt) {
+            {{ formatTime(closure().closedAt!) }}
+          } @else if (closure().isOpen) {
+            Caja abierta
+          } @else {
+            —
+          }
+        </p>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Ventas</p>
+        <p class="mt-1 text-sm font-semibold text-gray-900">{{ closure().salesCount }}</p>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Productos vendidos</p>
+        <p class="mt-1 text-sm font-semibold text-gray-900">{{ closure().productsSold }}</p>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Total vendido</p>
+        <p class="mt-1 text-sm font-semibold text-(--primary-bright)">${{ formatMoney(closure().totalSales) }}</p>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-wider text-gray-400">Total cobrado</p>
+        <p class="mt-1 text-sm font-semibold text-(--primary-bright)">${{ formatMoney(closure().totalCollected) }}</p>
+      </div>
+    </section>
+
+    @if (selectedSale(); as sale) {
+      <section class="space-y-4">
+        <div class="my-2 mx-auto h-px w-3/4 bg-black/20"></div>
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div>
+            <p class="text-xs uppercase tracking-wider text-gray-400">ID de venta</p>
+            <p class="mt-1 break-all text-sm font-semibold text-gray-900">{{ sale.id }}</p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wider text-gray-400">Hora</p>
+            <p class="mt-1 text-sm font-semibold text-gray-900">{{ formatTime(sale.date) }}</p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wider text-gray-400">Método de pago</p>
+            <p class="mt-1 text-sm font-semibold text-gray-900">{{ paymentMethodLabel(sale.method) }}</p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wider text-gray-400">Total vendido</p>
+            <p class="mt-1 text-sm font-semibold text-gray-900">${{ formatMoney(sale.total) }}</p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wider text-gray-400">Desglose de pago</p>
+            <p class="mt-1 text-sm font-semibold text-gray-900">{{ salePaymentDescription(sale) }}</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-lg border border-gray-200">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                <th class="px-4 py-3 font-semibold">Código</th>
+                <th class="px-4 py-3 font-semibold">Producto</th>
+                <th class="px-4 py-3 font-semibold">Precio</th>
+                <th class="px-4 py-3 font-semibold">Cantidad</th>
+                <th class="px-4 py-3 font-semibold">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (detail of sale.details ?? []; track detail.id) {
+                <tr class="border-b border-gray-100 last:border-b-0">
+                  <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ detail.product?.code ?? detail.productId }}</td>
+                  <td class="px-4 py-3 text-gray-700">{{ detail.product?.name ?? 'Producto' }}</td>
+                  <td class="px-4 py-3 text-gray-900">${{ formatMoney(detail.unitPrice) }}</td>
+                  <td class="px-4 py-3 text-gray-900">{{ detail.quantity }}</td>
+                  <td class="px-4 py-3 font-medium text-gray-900">${{ formatMoney(detail.unitPrice * detail.quantity) }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">Esta venta no tiene productos registrados.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-button variant="outline" text="Volver al cierre" (clicked)="returnToClosure()" />
+      </section>
+    } @else {
+      <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <p class="text-xs uppercase tracking-wider text-gray-400">Efectivo</p>
+          <p class="mt-1 text-lg font-bold text-gray-900">${{ formatMoney(closure().cashReceived) }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <p class="text-xs uppercase tracking-wider text-gray-400">Tarjeta</p>
+          <p class="mt-1 text-lg font-bold text-gray-900">${{ formatMoney(closure().cardReceived) }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <p class="text-xs uppercase tracking-wider text-gray-400">Saldo fiado</p>
+          <p class="mt-1 text-lg font-bold text-red-600">${{ formatMoney(closure().creditOutstanding) }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <p class="text-xs uppercase tracking-wider text-gray-400">Fondo inicial</p>
+          <p class="mt-1 text-lg font-bold text-gray-900">${{ formatMoney(closure().openingCash) }}</p>
+        </div>
+      </section>
+
+      <div class="overflow-x-auto rounded-lg border border-gray-200">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+              <th class="px-4 py-3 font-semibold">Hora</th>
+              <th class="px-4 py-3 font-semibold">Productos</th>
+              <th class="px-4 py-3 font-semibold">Método</th>
+              <th class="px-4 py-3 font-semibold">Total</th>
+              <th class="px-4 py-3 text-right font-semibold">Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (sale of closure().sales; track sale.id) {
+              <tr class="border-b border-gray-100 last:border-b-0">
+                <td class="px-4 py-3 text-gray-700">{{ formatTime(sale.date) }}</td>
+                <td class="px-4 py-3 text-gray-700">{{ saleItemCount(sale) }}</td>
+                <td class="px-4 py-3 text-gray-700">
+                  <span class="font-medium">{{ paymentMethodLabel(sale.method) }}</span>
+                  <p class="mt-1 text-xs text-gray-500">{{ salePaymentDescription(sale) }}</p>
+                </td>
+                <td class="px-4 py-3 font-medium text-gray-900">${{ formatMoney(sale.total) }}</td>
+                <td class="px-4 py-3 text-right">
+                  <app-button variant="outline" text="Ver" extraClass="!px-3 !py-1.5 text-xs" (clicked)="openSale(sale)" />
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">No hay ventas registradas en este cierre.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="overflow-x-auto rounded-lg border border-gray-200">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+              <th class="px-4 py-3 font-semibold">Código</th>
+              <th class="px-4 py-3 font-semibold">Producto</th>
+              <th class="px-4 py-3 font-semibold">Precio</th>
+              <th class="px-4 py-3 font-semibold">Cantidad</th>
+              <th class="px-4 py-3 font-semibold">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of productLines(); track line.productId) {
+              <tr class="border-b border-gray-100 last:border-b-0">
+                <td class="px-4 py-3 font-medium text-(--primary-bright)">{{ line.code }}</td>
+                <td class="px-4 py-3 text-gray-700">{{ line.name }}</td>
+                <td class="px-4 py-3 text-gray-900">${{ formatMoney(line.unitPrice) }}</td>
+                <td class="px-4 py-3 text-gray-900">{{ line.quantity }}</td>
+                <td class="px-4 py-3 font-medium text-gray-900">${{ formatMoney(line.unitPrice * line.quantity) }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">No hay productos registrados en este cierre.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</app-modal>
