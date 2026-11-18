@@ -62,12 +62,14 @@ export const routes: Routes = [
   {
     path: 'tiendita',
     component: TienditaComponent,
-    canActivate: [roleGuard]
+    canActivate: [roleGuard],
+    data: { roles: [Role.MANAGER] }
   },
   {
     path: 'empleados',
     component: EmpleadosComponent,
-    canActivate: [roleGuard]
+    canActivate: [roleGuard],
+    data: { roles: [Role.ADMIN, Role.MANAGER] }
   },
   {
     path: 'admin',
