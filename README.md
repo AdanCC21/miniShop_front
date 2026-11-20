@@ -61,3 +61,20 @@ NG_APP_BACKEND_ROUTE=http://localhost:3000
 | `npm start` | Iniciar el servidor de desarrollo. |
 | `npm run build` | Compilar y verificar plantillas y tipos de Angular. |
 | `npm test` | Ejecutar las pruebas unitarias configuradas con Vitest. |
+
+### Docker
+
+Desde la carpeta `frontend`, copia la configuración de ejemplo, define la URL
+del backend y luego ejecuta Compose:
+
+```powershell
+Copy-Item .env.example .env
+# Edita NG_APP_BACKEND_ROUTE y luego:
+docker compose up --build
+```
+
+La aplicación quedará disponible en `http://localhost:8080`. Copia `.env.example` a `.env` y configura `NG_APP_BACKEND_ROUTE`; Compose la incluye al compilar los archivos estáticos. En AWS usa la URL pública HTTPS del backend, por ejemplo `https://api.example.com`, y reconstruye el frontend cuando cambie. El navegador del usuario llama directamente a esa URL.
+
+Para un frontend y backend separados, permite en el CORS del backend el origen exacto del frontend, por ejemplo `https://app.example.com`. En AWS, termina HTTPS en un Application Load Balancer con un certificado ACM y limita los security groups de las instancias para que reciban tráfico solo desde el ALB. Configura `HOST_BIND_IP=0.0.0.0` cuando el ALB deba alcanzar el puerto publicado por Compose; localmente se conserva `127.0.0.1`. Usa dos subdominios HTTPS del mismo dominio (`app.example.com` y `api.example.com`) para que los navegadores puedan usar la cookie de sesión cross-origin con menos problemas de restricciones de cookies de terceros.
+
+Para cambiar el puerto publicado, configura `FRONTEND_PORT` en el entorno de Compose.

@@ -1,0 +1,10 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NG_APP_BACKEND_ROUTE: ${NG_APP_BACKEND_ROUTE:-http://localhost:3000}
+    ports:
+      - "${HOST_BIND_IP:-127.0.0.1}:${FRONTEND_PORT:-8080}:80"
+    restart: unless-stopped
