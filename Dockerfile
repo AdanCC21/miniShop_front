@@ -8,8 +8,9 @@ RUN npm install --global npm@11.5.2 \
 
 COPY . .
 
+ARG NG_APP_BACKEND_ROUTE
+RUN test -n "$NG_APP_BACKEND_ROUTE" || (echo "NG_APP_BACKEND_ROUTE debe configurarse al construir el frontend." >&2; exit 1)
 ENV NG_APP_BACKEND_ROUTE=${NG_APP_BACKEND_ROUTE}
-ENV FRONTEND_PORT=${FRONTEND_PORT}
 
 RUN npm run build
 
